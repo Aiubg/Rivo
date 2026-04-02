@@ -10,8 +10,7 @@ export const FONT_PRESETS = [
 	{
 		id: 'system',
 		labelKey: 'settings.font_system_default',
-		stack:
-			"'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+		stack: "'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
 	}
 ] as const;
 
