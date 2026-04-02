@@ -1,0 +1,8 @@
+/* Layer 1: Primitive references (raw scales) */
+@import './tokens/primitives.css';
+
+/* Layer 2: Role-based colors */
+@import './tokens/semantics.css';
+
+/* Layer 3: Domain tokens (markdown/code syntax) */
+@import './tokens/code-highlight.css';

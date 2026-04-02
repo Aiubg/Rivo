@@ -1,0 +1,70 @@
+@import './fonts.css';
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+	}
+
+	*:hover {
+		scrollbar-color: var(--border) transparent;
+	}
+
+	*::-webkit-scrollbar {
+		width: var(--ui-scrollbar-size);
+		height: var(--ui-scrollbar-size);
+	}
+
+	*::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	*::-webkit-scrollbar-thumb {
+		background: transparent;
+		@apply rounded-full;
+		border: 1px solid transparent;
+		-webkit-background-clip: content-box;
+		background-clip: content-box;
+	}
+
+	*:hover::-webkit-scrollbar-thumb {
+		background: var(--border);
+	}
+
+	*::-webkit-scrollbar-thumb:hover {
+		background: var(--muted-foreground) !important;
+	}
+
+	html,
+	:host {
+		line-height: 1;
+		text-size-adjust: 100%;
+	}
+
+	html {
+		font-size: var(--ui-app-font-base);
+	}
+
+	html,
+	body {
+		@apply bg-background text-foreground h-full overflow-hidden antialiased;
+		font-family: var(--font-sans);
+		-webkit-text-size-adjust: 100%;
+		text-size-adjust: 100%;
+		text-rendering: optimizeLegibility;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply text-foreground/90 font-semibold tracking-tight;
+	}
+
+	p {
+		@apply text-foreground/80 leading-relaxed;
+	}
+}
