@@ -53,7 +53,7 @@
 	const fontOptions = $derived.by(() => FONT_PRESETS);
 	const currentFontLabel = $derived.by(() => {
 		const preset = FONT_PRESETS.find((item) => item.id === currentFontId);
-		return preset?.labelKey ?? FONT_PRESETS[0]?.labelKey ?? 'settings.font_harmonyos_sans_sc';
+		return preset?.labelKey ?? FONT_PRESETS[0]?.labelKey ?? 'settings.font_inter';
 	});
 
 	function setThemeMode(val: 'light' | 'dark' | 'system') {
