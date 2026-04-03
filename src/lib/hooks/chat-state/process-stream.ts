@@ -86,6 +86,15 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 		options.updateAssistantParts(options.assistantMessageId, [...currentParts]);
 	};
 
+	const ensureReasoningPart = () => {
+		let lastPart = currentParts[currentParts.length - 1];
+		if (lastPart?.type !== 'reasoning') {
+			lastPart = { type: 'reasoning', text: '' };
+			currentParts.push(lastPart);
+		}
+		return lastPart;
+	};
+
 	const scheduleFlush = (force = false) => {
 		const now = Date.now();
 		if (force || now - lastFlushTime >= FLUSH_INTERVAL_MS) {
@@ -169,39 +178,32 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			}
 		}
 
-		if (record.providerMetadata?.openrouter?.reasoning_details) {
-			const details = record.providerMetadata.openrouter.reasoning_details;
-			if (Array.isArray(details)) {
-				const reasoningText = details.map((detail) => detail.text || '').join('');
-				if (reasoningText && reasoningText.length > currentReasoning.length) {
-					let lastPart = currentParts[currentParts.length - 1];
-					if (lastPart?.type !== 'reasoning') {
-						lastPart = { type: 'reasoning', text: '' };
-						currentParts.push(lastPart);
-					}
-					const delta = reasoningText.slice(currentReasoning.length);
-					currentReasoning = reasoningText;
-					lastPart.text += delta;
-					scheduleFlush();
-				}
-			}
-		}
-
 		if (type === 'reasoning-start') {
 			currentReasoning = '';
-			const lastPart = currentParts[currentParts.length - 1];
-			if (lastPart?.type !== 'reasoning') {
-				currentParts.push({ type: 'reasoning', text: '' });
+			ensureReasoningPart();
+		}
+
+		const reasoningDetails = record.providerMetadata?.openrouter?.reasoning_details;
+		const reasoningSnapshot = Array.isArray(reasoningDetails)
+			? reasoningDetails.map((detail) => detail.text || '').join('')
+			: '';
+
+		if (reasoningSnapshot) {
+			const lastPart = ensureReasoningPart();
+			if (reasoningSnapshot !== currentReasoning) {
+				if (reasoningSnapshot.startsWith(currentReasoning)) {
+					lastPart.text += reasoningSnapshot.slice(currentReasoning.length);
+				} else {
+					lastPart.text = reasoningSnapshot;
+				}
+				currentReasoning = reasoningSnapshot;
+				scheduleFlush();
 			}
 		} else if (type === 'reasoning-delta') {
 			const delta = record.delta || record.reasoningDelta || record.reasoning || '';
 			if (delta) {
 				currentReasoning += delta;
-				let lastPart = currentParts[currentParts.length - 1];
-				if (lastPart?.type !== 'reasoning') {
-					lastPart = { type: 'reasoning', text: '' };
-					currentParts.push(lastPart);
-				}
+				const lastPart = ensureReasoningPart();
 				lastPart.text += delta;
 				scheduleFlush();
 			}

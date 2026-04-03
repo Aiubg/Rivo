@@ -61,4 +61,27 @@ describe('processChatStream', () => {
 
 		expect(onFinish).not.toHaveBeenCalled();
 	});
+
+	it('does not duplicate reasoning when a frame contains both snapshot metadata and delta', async () => {
+		const updateAssistantParts = vi.fn();
+
+		await processChatStream({
+			body: createStreamBody(
+				'id: 1\ndata: {"type":"reasoning-start"}\n\n',
+				'id: 2\ndata: {"type":"reasoning-delta","delta":"用户","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"用户"}]}}}\n\n',
+				'id: 3\ndata: {"type":"reasoning-delta","delta":"中文问","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"用户中文问"}]}}}\n\n',
+				'id: 4\ndata: {"type":"finish"}'
+			),
+			assistantMessageId: 'assistant-3',
+			activeRunId: 'run-3',
+			getMessages: () => [{ id: 'assistant-3', role: 'assistant', parts: [] }],
+			updateAssistantParts,
+			clearRunRecoveryState: vi.fn()
+		});
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(updateAssistantParts).toHaveBeenLastCalledWith('assistant-3', [
+			{ type: 'reasoning', text: '用户中文问' }
+		]);
+	});
 });

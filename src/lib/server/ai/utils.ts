@@ -350,6 +350,15 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 	let currentReasoning = '';
 	let currentText = '';
 
+	const ensureReasoningPart = () => {
+		let lastPart = parts[parts.length - 1];
+		if (!lastPart || lastPart.type !== 'reasoning') {
+			lastPart = { type: 'reasoning', text: '' };
+			parts.push(lastPart);
+		}
+		return lastPart;
+	};
+
 	for (const event of events) {
 		let rec: Record<string, unknown> | null;
 		try {
@@ -360,38 +369,35 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 		if (!rec) continue;
 
 		const type = readString(rec, 'type');
+		if (type === 'reasoning-start') {
+			currentReasoning = '';
+			ensureReasoningPart();
+		}
+
 		const reasoningDetailsText = readReasoningDetailsText(rec);
-		if (reasoningDetailsText && reasoningDetailsText.length > currentReasoning.length) {
-			let lastPart = parts[parts.length - 1];
-			if (!lastPart || lastPart.type !== 'reasoning') {
-				lastPart = { type: 'reasoning', text: '' };
-				parts.push(lastPart);
+		if (reasoningDetailsText) {
+			const lastPart = ensureReasoningPart();
+			if (reasoningDetailsText !== currentReasoning) {
+				if (reasoningDetailsText.startsWith(currentReasoning)) {
+					lastPart.text = `${lastPart.text ?? ''}${reasoningDetailsText.slice(currentReasoning.length)}`;
+				} else {
+					lastPart.text = reasoningDetailsText;
+				}
+				currentReasoning = reasoningDetailsText;
 			}
-			const delta = reasoningDetailsText.slice(currentReasoning.length);
-			currentReasoning = reasoningDetailsText;
-			lastPart.text = `${lastPart.text ?? ''}${delta}`;
 		}
 
 		if (!type) continue;
 
-		if (type === 'reasoning-start') {
-			currentReasoning = '';
-			const last = parts.at(-1);
-			if (!last || last.type !== 'reasoning') {
-				parts.push({ type: 'reasoning', text: '' });
-			}
-		} else if (type === 'reasoning-delta') {
+		if (!reasoningDetailsText && type === 'reasoning-delta') {
 			const delta =
 				readString(rec, 'delta') ??
 				readString(rec, 'reasoningDelta') ??
 				readString(rec, 'reasoning') ??
 				'';
 			if (delta) {
-				let lastPart = parts[parts.length - 1];
-				if (!lastPart || lastPart.type !== 'reasoning') {
-					lastPart = { type: 'reasoning', text: '' };
-					parts.push(lastPart);
-				}
+				currentReasoning += delta;
+				const lastPart = ensureReasoningPart();
 				lastPart.text = `${lastPart.text ?? ''}${delta}`;
 			}
 		} else if (type === 'text-start') {
