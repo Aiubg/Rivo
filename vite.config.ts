@@ -4,6 +4,17 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [tailwindcss(), sveltekit()],
+	server: {
+		watch: {
+			ignored: [
+				'**/data/**',
+				'**/static/uploads/**',
+				'**/*.db',
+				'**/*.db-shm',
+				'**/*.db-wal'
+			]
+		}
+	},
 	build: {
 		rollupOptions: {
 			output: {

@@ -14,6 +14,7 @@ import { toAiTools } from '$lib/server/ai/tools/ai-adapter';
 import { env as privateEnv } from '$env/dynamic/private';
 import {
 	appendRunEvent,
+	appendRunEvents,
 	getGenerationRunById,
 	updateChatUnreadById,
 	updateGenerationRunStatus,
@@ -155,6 +156,8 @@ class RunExecutor {
 
 		const abortController = new AbortController();
 		this.abortControllersByRunId.set(runId, abortController);
+		let runEventFlushTimer: ReturnType<typeof setTimeout> | null = null;
+		let runEventFlushChain: Promise<void> = Promise.resolve();
 
 		await updateGenerationRunStatus({ runId, status: 'running' });
 
@@ -240,6 +243,51 @@ class RunExecutor {
 
 			const decoder = new TextDecoder();
 			let buffer = '';
+			let pendingRunEventChunks: string[] = [];
+
+			const emitPersistedRunEvents = (events: Array<{ seq: number; chunk: string }>) => {
+				for (const event of events) {
+					runEventBus.emit({ runId, seq: event.seq, chunk: event.chunk });
+				}
+			};
+
+			const flushPendingRunEvents = async () => {
+				if (pendingRunEventChunks.length === 0) {
+					return;
+				}
+
+				const chunksJson = pendingRunEventChunks;
+				pendingRunEventChunks = [];
+
+				const persisted = await appendRunEvents({ runId, chunksJson });
+				if (persisted.isErr()) {
+					logger.error('Failed to append run events', persisted.error);
+					return;
+				}
+
+				emitPersistedRunEvents(persisted.value);
+			};
+
+			const scheduleRunEventFlush = (force = false) => {
+				if (force || pendingRunEventChunks.length >= RUN_EVENT_BATCH_SIZE) {
+					if (runEventFlushTimer) {
+						clearTimeout(runEventFlushTimer);
+						runEventFlushTimer = null;
+					}
+					runEventFlushChain = runEventFlushChain.then(() => flushPendingRunEvents());
+					return runEventFlushChain;
+				}
+
+				if (!runEventFlushTimer) {
+					runEventFlushTimer = setTimeout(() => {
+						runEventFlushTimer = null;
+						runEventFlushChain = runEventFlushChain.then(() => flushPendingRunEvents());
+					}, RUN_EVENT_BATCH_DELAY_MS);
+				}
+
+				return Promise.resolve();
+			};
+
 			const appendFrameEvent = async (frame: string) => {
 				const parsedFrame = parseSseFrame(frame);
 				if (!parsedFrame?.data) {
@@ -254,12 +302,13 @@ class RunExecutor {
 				}
 
 				const safeChunk = truncateEventChunk(parsed, parsedFrame.data);
-				const ev = await appendRunEvent({ runId, chunkJson: safeChunk });
-				if (ev.isErr()) {
-					logger.error('Failed to append run event', ev.error);
-					return;
-				}
-				runEventBus.emit({ runId, seq: ev.value.seq, chunk: ev.value.chunk });
+				const type =
+					parsed && typeof parsed === 'object' && 'type' in parsed && typeof parsed.type === 'string'
+						? parsed.type
+						: '';
+
+				pendingRunEventChunks.push(safeChunk);
+				await scheduleRunEventFlush(type === 'finish' || type === 'error');
 			};
 
 			for await (const value of iterateReadableStream(uiResponse.body)) {
@@ -281,6 +330,8 @@ class RunExecutor {
 			if (buffer.trim().length > 0) {
 				await appendFrameEvent(buffer);
 			}
+			await scheduleRunEventFlush(true);
+			await runEventFlushChain;
 
 			if (!abortController.signal.aborted) {
 				await updateGenerationRunStatus({ runId, status: 'succeeded' });
@@ -304,6 +355,10 @@ class RunExecutor {
 				await this.emitRunFailureEvents(runId, errorKey);
 			}
 		} finally {
+			if (runEventFlushTimer) {
+				clearTimeout(runEventFlushTimer);
+			}
+			await runEventFlushChain;
 			this.abortControllersByRunId.delete(runId);
 		}
 	}
@@ -343,6 +398,13 @@ const MAX_EVENT_STRING_CHARS = parseBoundedInt(
 );
 const MAX_EVENT_ARRAY_LENGTH = parseBoundedInt(privateEnv.RUN_EVENT_MAX_ARRAY_LENGTH, 30, 5, 200);
 const MAX_EVENT_DEPTH = parseBoundedInt(privateEnv.RUN_EVENT_MAX_DEPTH, 6, 2, 12);
+const RUN_EVENT_BATCH_SIZE = parseBoundedInt(privateEnv.RUN_EVENT_BATCH_SIZE, 8, 2, 64);
+const RUN_EVENT_BATCH_DELAY_MS = parseBoundedInt(
+	privateEnv.RUN_EVENT_BATCH_DELAY_MS,
+	75,
+	10,
+	1000
+);
 
 function truncateJsonValue(value: JsonValue, depth: number): JsonValue {
 	if (typeof value === 'string') {

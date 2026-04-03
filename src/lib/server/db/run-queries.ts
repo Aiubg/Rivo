@@ -111,6 +111,28 @@ export function appendRunEvent({
 	chunkJson: string;
 }): ResultAsync<RunEvent, DbError> {
 	return safeTry(async function* () {
+		const events = yield* appendRunEvents({ runId, chunksJson: [chunkJson] });
+		const event = events[0];
+		if (!event) {
+			return err(new DbInternalError({ cause: new Error('Failed to append run event') }));
+		}
+
+		return ok(event);
+	});
+}
+
+export function appendRunEvents({
+	runId,
+	chunksJson
+}: {
+	runId: string;
+	chunksJson: string[];
+}): ResultAsync<RunEvent[], DbError> {
+	return safeTry(async function* () {
+		if (chunksJson.length === 0) {
+			return ok([]);
+		}
+
 		const event = yield* fromPromise(
 			runSerializedWrite(() =>
 				db.transaction(async (tx) => {
@@ -121,29 +143,29 @@ export function appendRunEvent({
 						.limit(1);
 					const currentCursor = runRows[0]?.cursor ?? 0;
 					const nextSeq = currentCursor + 1;
+					const nextCursor = currentCursor + chunksJson.length;
+					const now = new Date();
 
 					await tx
 						.update(generationRun)
-						.set({ cursor: nextSeq })
+						.set({ cursor: nextCursor })
 						.where(eq(generationRun.id, runId));
-					const inserted = await tx
+
+					return await tx
 						.insert(runEvent)
-						.values({
-							runId,
-							seq: nextSeq,
-							createdAt: new Date(),
-							chunk: chunkJson
-						})
+						.values(
+							chunksJson.map((chunk, index) => ({
+								runId,
+								seq: nextSeq + index,
+								createdAt: now,
+								chunk
+							}))
+						)
 						.returning();
-					return inserted[0] ?? null;
 				})
 			),
 			(error) => new DbInternalError({ cause: error })
 		);
-
-		if (!event) {
-			return err(new DbInternalError({ cause: new Error('Failed to append run event') }));
-		}
 
 		return ok(event);
 	});
