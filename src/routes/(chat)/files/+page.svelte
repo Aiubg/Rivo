@@ -84,10 +84,12 @@
 
 <input
 	type="file"
-	class="sr-only"
+	class="hidden"
 	bind:this={fileLibraryState.uploadInputRef}
 	multiple
 	onchange={fileLibraryState.handleUploadChange}
+	tabindex={-1}
+	aria-hidden="true"
 	accept="text/*,application/json,application/javascript,.py,.ts,.tsx,.jsx,.md,.yaml,.yml,.toml,.txt,.docx,.xlsx"
 />
 

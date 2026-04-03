@@ -45,6 +45,15 @@
 	const canSend = $derived(
 		(hasText || hasAttachments) && !uploadsInProgress && !hasUnsupportedImageAttachments
 	);
+	const inputHintId = 'chat-input-hint';
+	const inputStatusId = 'chat-input-status';
+	const inputDescribedBy = $derived.by(() => {
+		const ids = [inputHintId];
+		if (uploadsInProgress || hasUnsupportedImageAttachments) {
+			ids.push(inputStatusId);
+		}
+		return ids.join(' ');
+	});
 	const submitStatus = $derived(
 		chatState.status === 'submitted'
 			? 'submitting'
@@ -231,15 +240,28 @@
 				id="chat-input"
 				name="prompt"
 				aria-label={$t('chat.input_aria_label')}
+				aria-describedby={inputDescribedBy}
 				placeholder={$t('chat.placeholder')}
 				bind:value={() => chatState.input, setInput}
 				class={cn('text-base', c)}
 				minLines={chatInputMinLines}
 				maxHeight={400}
 				autofocus={!sidebar.isMobile}
+				enterkeyhint="send"
 				onkeydown={handleKeyDown}
 				onpaste={handlePaste}
 			/>
+
+			<p id={inputHintId} class="sr-only">
+				{$t('chat.input_shortcuts_hint')}
+			</p>
+			<div id={inputStatusId} class="sr-only" aria-live="polite">
+				{#if uploadsInProgress}
+					{$t('common.uploading')}
+				{:else if hasUnsupportedImageAttachments}
+					{$t('models.vision_not_supported')}
+				{/if}
+			</div>
 		</div>
 
 		<InputGroup.Addon align="block-end" class="w-full justify-between border-t-0 p-2">

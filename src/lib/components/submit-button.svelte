@@ -8,7 +8,12 @@
 		$props();
 </script>
 
-<Button type={pending ? 'button' : 'submit'} disabled={pending || success} class="relative">
+<Button
+	type={pending ? 'button' : 'submit'}
+	disabled={pending || success}
+	class="relative"
+	aria-busy={pending ? 'true' : 'false'}
+>
 	<span class={pending || success ? 'text-transparent' : ''}>
 		{@render children()}
 	</span>

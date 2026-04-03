@@ -14,10 +14,11 @@
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
-	import type { Component, Snippet } from 'svelte';
+	import { onDestroy, type Component, type Snippet } from 'svelte';
 	import { observePreForHighlight } from '$lib/utils/code';
 	import { copyToClipboard } from '$lib/utils/misc';
 	import { t } from 'svelte-i18n';
+	import { get } from 'svelte/store';
 	import { getSearchSidebarContext } from '$lib/hooks/search-sidebar.svelte';
 
 	let {
@@ -46,8 +47,26 @@
 	let codeContent = $state<string>('');
 	let copied = $state(false);
 	let activeTab = $state<'chart' | 'code'>('chart');
+	let codeActionStatus = $state('');
+	let codeActionStatusTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	let isMermaid = $derived(lang.toLowerCase() === 'mermaid');
+	let hasCodeContent = $derived(codeContent.trim().length > 0);
+
+	function setCodeActionStatus(message: string) {
+		codeActionStatus = message;
+		if (codeActionStatusTimeout) {
+			clearTimeout(codeActionStatusTimeout);
+		}
+		if (!message) {
+			codeActionStatusTimeout = null;
+			return;
+		}
+		codeActionStatusTimeout = setTimeout(() => {
+			codeActionStatus = '';
+			codeActionStatusTimeout = null;
+		}, 1500);
+	}
 
 	$effect(() => {
 		if (!isMermaid || MermaidComponent) return;
@@ -68,12 +87,22 @@
 		};
 	});
 
+	onDestroy(() => {
+		if (codeActionStatusTimeout) {
+			clearTimeout(codeActionStatusTimeout);
+		}
+	});
+
 	async function handleCopy() {
 		const codeEl = preEl?.querySelector('code');
 		const text = codeEl?.textContent ?? '';
 		const ok = await copyToClipboard(text);
-		if (!ok) return;
+		if (!ok) {
+			setCodeActionStatus(get(t)('common.request_failed'));
+			return;
+		}
 		copied = true;
+		setCodeActionStatus(get(t)('common.copied_to_clipboard'));
 		setTimeout(() => (copied = false), 1500);
 	}
 
@@ -95,18 +124,22 @@
 </script>
 
 <div class="markdown-code-block relative my-6 w-full rounded-xl">
+	<output class="sr-only" aria-live="polite">{codeActionStatus}</output>
 	<div
 		class="markdown-code-header rounded-t-surface flex items-center justify-between px-4 py-2 text-xs"
 	>
 		<div class="flex items-center gap-2">
 			{#if isMermaid}
-				<div class="bg-accent flex items-center gap-1 rounded-xl p-1">
+				<div class="bg-accent flex items-center gap-1 rounded-xl p-1" role="tablist">
 					<button
 						type="button"
 						class={cn(
 							'tab-trigger rounded-xl p-2 text-xs leading-none',
 							activeTab === 'chart' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
+						role="tab"
+						aria-selected={activeTab === 'chart'}
+						title={$t('chat.chart')}
 						onclick={() => (activeTab = 'chart')}
 					>
 						{$t('chat.chart')}
@@ -117,6 +150,9 @@
 							'tab-trigger rounded-xl p-2 text-xs leading-none',
 							activeTab === 'code' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
+						role="tab"
+						aria-selected={activeTab === 'code'}
+						title={$t('chat.code')}
 						onclick={() => (activeTab = 'code')}
 					>
 						{$t('chat.code')}
@@ -135,7 +171,8 @@
 					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 					onclick={() => mermaidRef?.zoomIn()}
 					aria-label={$t('chat.zoom_in')}
-					disabled={streaming}
+					title={$t('chat.zoom_in')}
+					disabled={streaming || !mermaidRef}
 				>
 					<ZoomInIcon size={14} />
 				</Button>
@@ -145,7 +182,8 @@
 					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 					onclick={() => mermaidRef?.zoomOut()}
 					aria-label={$t('chat.zoom_out')}
-					disabled={streaming}
+					title={$t('chat.zoom_out')}
+					disabled={streaming || !mermaidRef}
 				>
 					<ZoomOutIcon size={14} />
 				</Button>
@@ -155,7 +193,8 @@
 					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 					onclick={() => mermaidRef?.resetZoom()}
 					aria-label={$t('chat.reset_zoom')}
-					disabled={streaming}
+					title={$t('chat.reset_zoom')}
+					disabled={streaming || !mermaidRef}
 				>
 					<RotateCcwIcon size={14} />
 				</Button>
@@ -168,7 +207,9 @@
 				size="sm"
 				class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 				onclick={handleCopy}
-				disabled={streaming}
+				aria-label={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
+				title={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
+				disabled={streaming || !hasCodeContent}
 			>
 				{#if copied}
 					<CheckIcon size={14} />
@@ -187,7 +228,9 @@
 								variant="ghost"
 								size="sm"
 								class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
-								disabled={streaming}
+								aria-label={$t('chat.download')}
+								title={$t('chat.download')}
+								disabled={streaming || !hasCodeContent}
 							>
 								<DownloadIcon size={14} />
 								<span class="text-xs">{$t('chat.download')}</span>
@@ -211,7 +254,7 @@
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							class="cursor-pointer"
-							disabled={streaming}
+							disabled={streaming || !hasCodeContent}
 							onSelect={() => handleDownload('mmd', 'mermaid')}
 						>
 							<span>{$t('chat.download_code')}</span>
@@ -224,7 +267,9 @@
 					size="sm"
 					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 					onclick={() => handleDownload()}
-					disabled={streaming}
+					aria-label={$t('chat.download')}
+					title={$t('chat.download')}
+					disabled={streaming || !hasCodeContent}
 				>
 					<DownloadIcon size={14} />
 					<span class="text-xs">{$t('chat.download')}</span>
@@ -238,7 +283,9 @@
 					size="sm"
 					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 					onclick={() => sidebar?.openHtml(codeContent)}
-					disabled={streaming}
+					aria-label={$t('chat.run')}
+					title={$t('chat.run')}
+					disabled={streaming || !hasCodeContent}
 				>
 					<PlayIcon size={14} />
 					<span class="text-xs">{$t('chat.run')}</span>
@@ -248,24 +295,31 @@
 	</div>
 	{#if isMermaid}
 		<div class="overflow-hidden">
-			<div class={cn(activeTab !== 'chart' && 'hidden')}>
+			<div
+				class={cn(activeTab !== 'chart' && 'hidden')}
+				role="tabpanel"
+				aria-hidden={activeTab !== 'chart'}
+			>
 				{#if MermaidComponent}
 					<MermaidComponent bind:this={mermaidRef} code={codeContent} />
 				{:else}
-					<div class="flex-center p-8">
+					<div class="flex-center flex-col gap-2 p-8" role="status" aria-live="polite">
 						<div
 							class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
 						></div>
+						<span class="text-muted-foreground text-sm">{$t('common.loading')}</span>
 					</div>
 				{/if}
 			</div>
-			<pre
-				bind:this={preEl}
-				class={cn(
-					'hljs rounded-b-surface w-full border-0 bg-transparent px-4 py-4 text-sm leading-relaxed',
-					activeTab !== 'code' && 'hidden',
-					className
-				)}>{@render children?.()}</pre>
+			<div role="tabpanel" aria-hidden={activeTab !== 'code'}>
+				<pre
+					bind:this={preEl}
+					class={cn(
+						'hljs rounded-b-surface w-full border-0 bg-transparent px-4 py-4 text-sm leading-relaxed',
+						activeTab !== 'code' && 'hidden',
+						className
+					)}>{@render children?.()}</pre>
+			</div>
 		</div>
 	{:else}
 		<pre

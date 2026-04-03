@@ -9,6 +9,7 @@
 	import PreviewMessage from '$lib/components/messages/preview-message.svelte';
 	import ThinkingMessage from '$lib/components/messages/thinking-message.svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { page } from '$app/state';
 	import type { UIMessageWithTree } from '$lib/types/message';
 	import { computeMessagesWithSiblings } from '$lib/utils/chat';
@@ -405,6 +406,11 @@
 		bind:this={containerRef}
 		class="scrollbar-stable flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto"
 		onscroll={handleScroll}
+		role="log"
+		aria-label={$t('chat.message_history')}
+		aria-live="polite"
+		aria-relevant="additions text"
+		aria-busy={loading ? 'true' : 'false'}
 	>
 		<div
 			bind:this={contentRef}
@@ -413,6 +419,7 @@
 			{#if readonly}
 				<div
 					class="text-muted-foreground flex items-center justify-center gap-2 py-2 text-sm whitespace-nowrap"
+					role="status"
 				>
 					<Info size={16} class="shrink-0" />
 					{$t('share.read_only_view')}
@@ -457,15 +464,23 @@
 			class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4"
 			transition:fade={{ duration: 200 }}
 		>
-			<Button
-				size="icon-sm"
-				variant="outline"
-				class="bg-background/80 focus:border-input! focus-visible:border-input! pointer-events-auto rounded-full shadow-lg backdrop-blur-sm"
-				onclick={handleScrollToBottom}
-				aria-label={$t('common.next_message')}
-			>
-				<ArrowDownIcon size={14} />
-			</Button>
+			<Tooltip>
+				<TooltipTrigger>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							size="icon-sm"
+							variant="outline"
+							class="bg-background/80 focus:border-input! focus-visible:border-input! pointer-events-auto rounded-full shadow-lg backdrop-blur-sm"
+							onclick={handleScrollToBottom}
+							aria-label={$t('chat.scroll_to_latest')}
+						>
+							<ArrowDownIcon size={14} />
+						</Button>
+					{/snippet}
+				</TooltipTrigger>
+				<TooltipContent>{$t('chat.scroll_to_latest')}</TooltipContent>
+			</Tooltip>
 		</div>
 	{/if}
 </div>

@@ -157,6 +157,7 @@
 							bind:ref={textareaRef}
 							bind:value={editText}
 							class="w-full min-w-0 flex-none px-4 pt-3 pb-3 text-base"
+							aria-label={$t('chat.edit_message')}
 							onkeydown={handleKeyDown}
 							minHeight={84}
 							maxHeight={400}

@@ -169,11 +169,12 @@
 
 <Input
 	type="file"
-	class="sr-only"
+	class="hidden"
 	bind:ref={fileInputRef}
 	multiple
 	onchange={handleFileChange}
 	tabindex={-1}
+	aria-hidden="true"
 	accept={fileInputAccept}
 />
 
@@ -220,9 +221,7 @@
 							<button
 								type="button"
 								class="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm transition-colors disabled:opacity-50"
-								disabled={disabled ||
-									selectingRecentUrl !== null ||
-									(!supportsVisionInput && file.contentType.startsWith('image/'))}
+								disabled={disabled || selectingRecentUrl !== null}
 								onclick={() => {
 									void handleSelectRecentFile(file);
 								}}
@@ -313,9 +312,7 @@
 					{:else}
 						{#each recentFiles as file (file.url)}
 							<DropdownMenuItem
-								disabled={disabled ||
-									selectingRecentUrl !== null ||
-									(!supportsVisionInput && file.contentType.startsWith('image/'))}
+								disabled={disabled || selectingRecentUrl !== null}
 								onclick={(event) => {
 									event.preventDefault();
 									void handleSelectRecentFile(file);

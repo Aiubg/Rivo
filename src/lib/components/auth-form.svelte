@@ -18,6 +18,7 @@
 
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { page } from '$app/state';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button } from '$lib/components/ui/button';
@@ -31,6 +32,12 @@
 
 	let pending = $state(false);
 	let showPassword = $state(false);
+	const formErrorId = 'auth-form-error';
+	const isSignUp = $derived(page.params.authType === 'signup');
+	const hasError = $derived(!form?.success && !!form?.message);
+	const describedBy = $derived(hasError ? formErrorId : undefined);
+	const formErrorMessage = $derived(form && !form.success && form.message ? $t(form.message) : '');
+
 	const enhanceCallback: SubmitFunction<FormSuccessData, FormFailureData> = () => {
 		pending = true;
 		return async ({ result, update }) => {
@@ -50,7 +57,12 @@
 	});
 </script>
 
-<form method="POST" class="flex flex-col gap-5" use:enhance={enhanceCallback}>
+<form
+	method="POST"
+	class="flex flex-col gap-5"
+	use:enhance={enhanceCallback}
+	aria-busy={pending ? 'true' : 'false'}
+>
 	<div class="flex flex-col gap-2">
 		<Label for="email" class="text-muted-foreground text-xs font-medium tracking-wide">
 			{$t('auth.email')}
@@ -63,8 +75,12 @@
 			type="email"
 			placeholder={$t('auth.email_placeholder')}
 			autocomplete="email"
+			autocapitalize="none"
+			spellcheck={false}
 			required
 			autofocus
+			aria-invalid={hasError ? 'true' : undefined}
+			aria-describedby={describedBy}
 			{defaultValue}
 		/>
 	</div>
@@ -80,7 +96,10 @@
 				name="password"
 				class="bg-background/70 h-11 rounded-xl px-4 pe-11 text-base shadow-md md:text-sm"
 				type={showPassword ? 'text' : 'password'}
+				autocomplete={isSignUp ? 'new-password' : 'current-password'}
 				required
+				aria-invalid={hasError ? 'true' : undefined}
+				aria-describedby={describedBy}
 			/>
 			<Button
 				type="button"
@@ -89,6 +108,7 @@
 				class="text-muted-foreground hover:text-foreground absolute end-0 top-0 h-full px-3 hover:bg-transparent"
 				onclick={() => (showPassword = !showPassword)}
 				aria-label={showPassword ? $t('auth.hide_password') : $t('auth.show_password')}
+				aria-pressed={showPassword}
 			>
 				{#if showPassword}
 					<EyeOff class="size-4" />
@@ -101,6 +121,12 @@
 			</Button>
 		</div>
 	</div>
+
+	{#if hasError}
+		<p id={formErrorId} role="alert" class="text-destructive text-sm leading-relaxed">
+			{formErrorMessage}
+		</p>
+	{/if}
 
 	{@render submitButton({ pending, success: !!form?.success })}
 	{@render children()}

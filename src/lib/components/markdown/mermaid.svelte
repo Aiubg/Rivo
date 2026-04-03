@@ -467,10 +467,21 @@
 	}
 </script>
 
-<div class="mermaid-container flex min-h-10 w-full justify-center overflow-hidden select-none">
+<div
+	class="mermaid-container flex min-h-10 w-full justify-center overflow-hidden select-none"
+	aria-busy={!svg && !error ? 'true' : 'false'}
+>
 	{#if error}
-		<Empty.State class="min-h-75" title={$t('chat.render_failed')} icon={ImageOffIcon} />
+		<div role="alert" class="w-full">
+			<Empty.State
+				class="min-h-75"
+				title={$t('chat.render_failed')}
+				description={error}
+				icon={ImageOffIcon}
+			/>
+		</div>
 	{:else if svg}
+		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 		<div
 			bind:this={viewerEl}
 			class="mermaid-viewer relative flex max-h-150 w-full touch-none items-center justify-center overflow-hidden"
@@ -480,7 +491,8 @@
 			onmousedown={handleMouseDown}
 			ontouchstart={handleMouseDown}
 			ondragstart={handleDragStart}
-			role="presentation"
+			role="img"
+			aria-label={$t('chat.diagram_preview')}
 		>
 			<div
 				bind:this={wrapperEl}
@@ -492,10 +504,11 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex-center p-8">
+		<div class="flex-center flex-col gap-2 p-8" role="status" aria-live="polite">
 			<div
 				class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
+			<span class="text-muted-foreground text-sm">{$t('common.loading')}</span>
 		</div>
 	{/if}
 </div>

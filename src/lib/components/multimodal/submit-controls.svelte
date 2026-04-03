@@ -29,13 +29,13 @@
 					{...props}
 					size="icon-sm"
 					variant="default"
-					class={`${submitButtonClass} disabled:opacity-100`}
+					class={submitButtonClass}
 					aria-label={$t('chat.stop_output')}
+					aria-busy="true"
 					onclick={(event) => {
 						event.preventDefault();
 						onstop();
 					}}
-					disabled={true}
 				>
 					<Spinner class="border-primary-foreground/35 border-t-primary-foreground size-4" />
 				</InputGroup.Button>
@@ -69,18 +69,28 @@
 		</TooltipContent>
 	</Tooltip>
 {:else if canSend}
-	<InputGroup.Button
-		size="icon-sm"
-		variant="default"
-		class={submitButtonClass}
-		aria-label={$t('chat.send_message')}
-		onclick={(event) => {
-			event.preventDefault();
-			onsend();
-		}}
-	>
-		<ArrowUpIcon size={14} class="rtl-mirror" />
-	</InputGroup.Button>
+	<Tooltip>
+		<TooltipTrigger>
+			{#snippet child({ props })}
+				<InputGroup.Button
+					{...props}
+					size="icon-sm"
+					variant="default"
+					class={submitButtonClass}
+					aria-label={$t('chat.send_message')}
+					onclick={(event) => {
+						event.preventDefault();
+						onsend();
+					}}
+				>
+					<ArrowUpIcon size={14} class="rtl-mirror" />
+				</InputGroup.Button>
+			{/snippet}
+		</TooltipTrigger>
+		<TooltipContent>
+			{$t('chat.send_message')}
+		</TooltipContent>
+	</Tooltip>
 {:else}
 	<Tooltip>
 		<TooltipTrigger>
