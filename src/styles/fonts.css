@@ -29,3 +29,30 @@
 	src: url('../lib/assets/fonts/Oppo_Sans/OppoSans-Regular.ttf') format('truetype');
 	font-display: swap;
 }
+
+@font-face {
+	font-family: 'HarmonyOS Sans SC';
+	font-style: normal;
+	font-weight: 400;
+	src: url('../lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Regular.ttf')
+		format('truetype');
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'HarmonyOS Sans SC';
+	font-style: normal;
+	font-weight: 500;
+	src: url('../lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Medium.ttf')
+		format('truetype');
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'HarmonyOS Sans SC';
+	font-style: normal;
+	font-weight: 700;
+	src: url('../lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Bold.ttf')
+		format('truetype');
+	font-display: swap;
+}

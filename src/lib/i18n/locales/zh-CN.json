@@ -233,6 +233,7 @@
 		"color_theme_neutral": "中性",
 		"font": "字体",
 		"font_inter": "Inter",
+		"font_harmonyos_sans_sc": "鸿蒙 Sans SC",
 		"font_oppo_sans": "OPPO Sans",
 		"font_system_default": "系统默认",
 		"data_management": "数据管理",

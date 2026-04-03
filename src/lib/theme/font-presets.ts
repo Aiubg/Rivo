@@ -17,6 +17,12 @@ export const FONT_PRESETS = [
 		labelKey: 'settings.font_oppo_sans',
 		stack:
 			"'Oppo Sans', 'Inter', 'Noto Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+	},
+	{
+		id: 'harmonyos-sans-sc',
+		labelKey: 'settings.font_harmonyos_sans_sc',
+		stack:
+			"'HarmonyOS Sans SC', 'Noto Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
 	}
 ] as const;
 
