@@ -11,18 +11,18 @@ import {
 	type StoredUploadFile
 } from '$lib/services/files-api';
 import {
+	createManagedFileFromUploadResponse,
 	getVisibleManagedFiles,
 	mergeManagedFiles,
 	normalizeManagedFiles,
 	patchManagedFile,
 	removeManagedFile,
 	renameManagedFile,
-	toManagedFile,
 	type FileTypeFilter,
 	type ManagedFile,
 	type SortMode
 } from '$lib/services/file-library';
-import { getStoredUploadName, splitFileName, supportsTextPreview } from '$lib/utils/files';
+import { splitFileName, supportsTextPreview } from '$lib/utils/files';
 
 export class FileLibraryState {
 	files = $state<ManagedFile[]>([]);
@@ -79,18 +79,7 @@ export class FileLibraryState {
 			return null;
 		}
 
-		const managed = toManagedFile({
-			url: data.url,
-			storedName: getStoredUploadName(data.url),
-			originalName: data.pathname,
-			contentType: data.contentType,
-			size: typeof data.size === 'number' ? data.size : file.size,
-			lastModified: typeof data.lastModified === 'number' ? data.lastModified : file.lastModified,
-			uploadedAt: Date.now(),
-			hash: typeof data.hash === 'string' ? data.hash : undefined
-		});
-		managed.previewContent = typeof data.content === 'string' ? data.content : undefined;
-		return managed;
+		return createManagedFileFromUploadResponse(data, file);
 	};
 
 	openUploadPicker = () => {

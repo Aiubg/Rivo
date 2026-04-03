@@ -16,7 +16,6 @@ import { fetchWithTimeout } from '$lib/utils/network';
 import { logger } from '$lib/utils/logger';
 import { t } from 'svelte-i18n';
 import { toast } from 'svelte-sonner';
-import type { SearchResult } from '$lib/hooks/search-sidebar.svelte';
 import {
 	ChatStateActions,
 	type ChatStateActionContext,
@@ -24,23 +23,10 @@ import {
 	type ResumeActiveRunOptions
 } from '$lib/hooks/chat-state/actions';
 import { processChatStream } from '$lib/hooks/chat-state/process-stream';
-import {
-	canResumeRun,
-	clearStoredRunCursor,
-	getNextRunResumeState,
-	type RunResumeState
-} from '$lib/hooks/chat-state/run-stream';
-
-type UploadResponse = {
-	url?: unknown;
-	pathname?: unknown;
-	contentType?: unknown;
-	content?: unknown;
-	size?: unknown;
-	message?: unknown;
-	hash?: unknown;
-	lastModified?: unknown;
-};
+import { clearStoredRunCursor } from '$lib/hooks/chat-state/run-stream';
+import { getChatSearchResults } from '$lib/hooks/chat-state/search-results';
+import { RunResumeScheduler } from '$lib/hooks/chat-state/run-resume-scheduler';
+import { getFileUploadKey, uploadAttachmentFile } from '$lib/hooks/chat-state/upload';
 
 /**
  * ChatState class manages the state and logic for a single chat conversation.
@@ -70,14 +56,32 @@ export class ChatState {
 	private _generatedChatId: string | null = null;
 	private activeRunId: string | null = null;
 	private uploadControllers = new SvelteMap<string, AbortController>();
-	private runResumeStates = new SvelteMap<string, RunResumeState>();
-	private runResumeTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+	private runResumeScheduler = new RunResumeScheduler({
+		onResume: (options) => {
+			void this.resumeActiveRun(options);
+		},
+		onLimitReached: ({ runId, cursor, state }) => {
+			logger.warn('[chat] resume limit reached', {
+				runId,
+				attempts: state.count,
+				startedAt: state.startedAt,
+				lastError: state.lastError,
+				cursor
+			});
+			toast.error(get(t)(state.lastError));
+		},
+		onSchedule: ({ runId, cursor, errorKey, delayMs, state }) => {
+			logger.warn('[chat] scheduling run resume', {
+				runId,
+				attempt: state.count,
+				cursor,
+				errorKey,
+				delayMs
+			});
+		}
+	});
 	private actions: ChatStateActions;
 	private messageTreeIndex = $derived.by(() => createMessageTreeIndex(this.allMessages));
-
-	private fileRequestKey(file: File): string {
-		return `${file.name}:${file.size}:${file.lastModified}`;
-	}
 
 	constructor(
 		user: User | undefined,
@@ -210,30 +214,7 @@ export class ChatState {
 	 * Extracts all unique search results from the entire message tree.
 	 */
 	get searchResults() {
-		const results: SearchResult[] = [];
-		const seenUrls = new SvelteSet<string>();
-
-		for (const message of this.allMessages) {
-			for (const part of message.parts ?? []) {
-				const resultObj = part.toolInvocation?.result ?? part.output;
-				if (
-					(part.toolInvocation?.toolName === 'tavily_search' ||
-						part.toolName === 'tavily_search') &&
-					resultObj &&
-					typeof resultObj === 'object' &&
-					'results' in resultObj &&
-					Array.isArray((resultObj as { results?: unknown[] }).results)
-				) {
-					for (const r of (resultObj as { results: SearchResult[] }).results) {
-						if (r?.url && !seenUrls.has(r.url)) {
-							results.push(r);
-							seenUrls.add(r.url);
-						}
-					}
-				}
-			}
-		}
-		return results;
+		return getChatSearchResults(this.allMessages);
 	}
 
 	/**
@@ -253,59 +234,20 @@ export class ChatState {
 	 * @returns The uploaded attachment details or undefined on failure.
 	 */
 	async uploadFile(file: File): Promise<Attachment | undefined> {
-		const uploadKey = this.fileRequestKey(file);
+		const uploadKey = getFileUploadKey(file);
 		this.uploadControllers.get(uploadKey)?.abort();
 		const controller = new AbortController();
 		this.uploadControllers.set(uploadKey, controller);
-
-		const formData = new FormData();
-		formData.append('file', file);
 		try {
-			const response = await fetchWithTimeout('/api/files/upload', {
-				method: 'POST',
-				body: formData,
-				timeout: 30000,
-				retries: 1,
-				signal: controller.signal
-			});
-			if (response.ok) {
-				const data: UploadResponse = await response.json();
-				if (
-					data &&
-					typeof data.url === 'string' &&
-					typeof data.pathname === 'string' &&
-					typeof data.contentType === 'string'
-				) {
-					return {
-						url: data.url,
-						name: data.pathname,
-						contentType: data.contentType,
-						content: typeof data.content === 'string' ? data.content : undefined,
-						size: typeof data.size === 'number' ? data.size : undefined,
-						hash: typeof data.hash === 'string' ? data.hash : undefined,
-						lastModified: typeof data.lastModified === 'number' ? data.lastModified : undefined
-					};
-				}
-				toast.error(get(t)('upload.invalid_response'));
-				return;
+			const result = await uploadAttachmentFile(file, controller);
+			if (result.ok) {
+				return result.attachment;
 			}
-			let errorKey = 'upload.failed';
-			const rawText = await response.text().catch(() => '');
-			if (rawText) {
-				try {
-					const parsed = JSON.parse(rawText) as { message?: unknown };
-					if (parsed && typeof parsed.message === 'string') {
-						errorKey = parsed.message;
-					} else {
-						errorKey = rawText;
-					}
-				} catch {
-					errorKey = rawText;
-				}
+
+			if (!result.aborted) {
+				toast.error(get(t)(result.errorKey));
 			}
-			toast.error(get(t)(errorKey));
 		} catch (error) {
-			if ((error as Error).name === 'AbortError') return;
 			logger.error('Error uploading file:', error);
 			toast.error(get(t)('upload.retry_failed'));
 		} finally {
@@ -404,8 +346,7 @@ export class ChatState {
 			this.abortController.abort();
 			this.abortController = null;
 		}
-		this.clearPendingRunResumeTimer();
-		this.runResumeStates.clear();
+		this.runResumeScheduler.reset();
 	}
 
 	/**
@@ -423,25 +364,12 @@ export class ChatState {
 
 	private clearRunRecoveryState(runId: string | null | undefined) {
 		if (!runId) return;
-		this.clearPendingRunResumeTimer(runId);
-		this.runResumeStates.delete(runId);
+		this.runResumeScheduler.clearRecoveryState(runId);
 		clearStoredRunCursor(runId);
 	}
 
 	private clearPendingRunResumeTimer(runId?: string | null) {
-		if (runId) {
-			const timeoutId = this.runResumeTimeouts.get(runId);
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-				this.runResumeTimeouts.delete(runId);
-			}
-			return;
-		}
-
-		for (const timeoutId of this.runResumeTimeouts.values()) {
-			clearTimeout(timeoutId);
-		}
-		this.runResumeTimeouts.clear();
+		this.runResumeScheduler.clearPending(runId);
 	}
 
 	private updateAssistantMessageParts(assistantMessageId: string, parts: MessagePart[]) {
@@ -470,46 +398,7 @@ export class ChatState {
 		errorKey: string;
 		delayMs: number;
 	}) {
-		const nextState = getNextRunResumeState(
-			this.runResumeStates.get(options.runId),
-			options.errorKey
-		);
-
-		if (!canResumeRun(nextState)) {
-			this.clearPendingRunResumeTimer(options.runId);
-			this.runResumeStates.delete(options.runId);
-			logger.warn('[chat] resume limit reached', {
-				runId: options.runId,
-				attempts: nextState.count,
-				startedAt: nextState.startedAt,
-				lastError: nextState.lastError,
-				cursor: options.cursor
-			});
-			toast.error(get(t)(nextState.lastError));
-			return false;
-		}
-
-		this.runResumeStates.set(options.runId, nextState);
-		logger.warn('[chat] scheduling run resume', {
-			runId: options.runId,
-			attempt: nextState.count,
-			cursor: options.cursor,
-			errorKey: options.errorKey,
-			delayMs: options.delayMs
-		});
-
-		this.clearPendingRunResumeTimer(options.runId);
-		const timeoutId = setTimeout(() => {
-			this.runResumeTimeouts.delete(options.runId);
-			void this.resumeActiveRun({
-				id: options.runId,
-				assistantMessageId: options.assistantMessageId,
-				cursor: options.cursor
-			});
-		}, options.delayMs);
-		this.runResumeTimeouts.set(options.runId, timeoutId);
-
-		return true;
+		return this.runResumeScheduler.schedule(options);
 	}
 
 	/**

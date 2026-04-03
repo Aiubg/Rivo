@@ -1,4 +1,3 @@
-import { logger } from '$lib/utils/logger';
 import type { drizzle } from 'drizzle-orm/libsql';
 import { sql, eq as rawEq } from 'drizzle-orm';
 import { DbInternalError } from '$lib/server/errors/db';

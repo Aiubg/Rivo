@@ -45,7 +45,7 @@
 
 {#snippet ShortcutHint(keys: string[])}
 	<Kbd.Group class={shortcutClass}>
-		{#each keys as key}
+		{#each keys as key (key)}
 			<Kbd.Root>{key}</Kbd.Root>
 		{/each}
 	</Kbd.Group>

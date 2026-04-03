@@ -6,9 +6,10 @@
 	import * as Empty from '$lib/components/ui/empty';
 	import { logger } from '$lib/utils/logger';
 	import { randomId } from '$lib/utils/misc';
-	import type { MermaidConfig } from 'mermaid';
 
 	let { code }: { code: string } = $props();
+
+	type MermaidConfig = Record<string, unknown>;
 
 	type MermaidApi = {
 		initialize: (config: MermaidConfig) => void;

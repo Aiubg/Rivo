@@ -14,14 +14,16 @@ export default defineConfig({
 			output: {
 				hashCharacters: 'hex',
 				manualChunks(id) {
-					if (!id.includes('node_modules')) return;
-					if (id.includes('mermaid')) return 'mermaid';
-					if (id.includes('katex')) return 'katex';
-					if (id.includes('rehype-highlight') || id.includes('highlight.js')) return 'highlight';
-					if (id.includes('zod')) return 'zod';
-					if (id.includes('date-fns')) return 'date-fns';
-					if (id.includes('lucide')) return 'icons';
-					if (id.includes('bits-ui') || id.includes('paneforge') || id.includes('svelte-sonner')) {
+					const normalizedId = id.replaceAll('\\', '/');
+					if (!normalizedId.includes('/node_modules/')) return;
+					if (normalizedId.includes('/node_modules/zod/')) return 'zod';
+					if (normalizedId.includes('/node_modules/date-fns/')) return 'date-fns';
+					if (normalizedId.includes('/node_modules/@lucide/')) return 'icons';
+					if (
+						normalizedId.includes('/node_modules/bits-ui/') ||
+						normalizedId.includes('/node_modules/paneforge/') ||
+						normalizedId.includes('/node_modules/svelte-sonner/')
+					) {
 						return 'ui';
 					}
 				}

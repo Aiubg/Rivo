@@ -8,6 +8,15 @@ export type ManagedFile = StoredUploadFile & {
 
 export type FileTypeFilter = 'text' | 'image' | 'office';
 export type SortMode = 'size' | 'name' | 'created';
+export type ManagedFileUploadResponse = {
+	url?: unknown;
+	pathname?: unknown;
+	contentType?: unknown;
+	content?: unknown;
+	size?: unknown;
+	hash?: unknown;
+	lastModified?: unknown;
+};
 
 export function toManagedFile(
 	file: StoredUploadFile,
@@ -18,6 +27,32 @@ export function toManagedFile(
 		previewContent: previous?.previewContent,
 		previewLoading: previous?.previewLoading ?? false
 	};
+}
+
+export function createManagedFileFromUploadResponse(
+	data: ManagedFileUploadResponse,
+	file: File
+): ManagedFile | null {
+	if (
+		typeof data.url !== 'string' ||
+		typeof data.pathname !== 'string' ||
+		typeof data.contentType !== 'string'
+	) {
+		return null;
+	}
+
+	const managed = toManagedFile({
+		url: data.url,
+		storedName: data.url.startsWith('/uploads/') ? data.url.slice('/uploads/'.length) : data.url,
+		originalName: data.pathname,
+		contentType: data.contentType,
+		size: typeof data.size === 'number' ? data.size : file.size,
+		lastModified: typeof data.lastModified === 'number' ? data.lastModified : file.lastModified,
+		uploadedAt: Date.now(),
+		hash: typeof data.hash === 'string' ? data.hash : undefined
+	});
+	managed.previewContent = typeof data.content === 'string' ? data.content : undefined;
+	return managed;
 }
 
 export function normalizeManagedFiles(

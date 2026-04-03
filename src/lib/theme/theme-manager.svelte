@@ -4,14 +4,34 @@
 	import {
 		DEFAULT_FONT_PRESET_ID,
 		fontPreference,
+		getFontFaceCss,
 		getFontPreset,
 		isFontPresetId
 	} from '$lib/theme/font-presets';
 
 	const isBrowser = typeof document !== 'undefined';
+	const FONT_FACE_STYLE_ID = 'rivo-active-font-face';
 	const setMetaThemeColor = (color: string) => {
 		const meta = document.querySelector('meta[name="theme-color"]');
 		if (meta) meta.setAttribute('content', color);
+	};
+	const syncFontFaceStyle = (fontId: string) => {
+		const css = getFontFaceCss(fontId);
+		const existing = document.getElementById(FONT_FACE_STYLE_ID);
+
+		if (!css) {
+			existing?.remove();
+			return;
+		}
+
+		const style =
+			existing instanceof HTMLStyleElement
+				? existing
+				: Object.assign(document.createElement('style'), { id: FONT_FACE_STYLE_ID });
+		style.textContent = css;
+		if (!style.parentNode) {
+			document.head.appendChild(style);
+		}
 	};
 
 	$effect(() => {
@@ -30,6 +50,7 @@
 		}
 		document.documentElement.setAttribute('data-theme', activeTheme);
 		if (fontPreset) {
+			syncFontFaceStyle(fontPreset.id);
 			document.documentElement.style.setProperty('--font-sans', fontPreset.stack);
 			document.documentElement.setAttribute('data-font', fontPreset.id);
 		}
