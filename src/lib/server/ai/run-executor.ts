@@ -303,7 +303,10 @@ class RunExecutor {
 
 				const safeChunk = truncateEventChunk(parsed, parsedFrame.data);
 				const type =
-					parsed && typeof parsed === 'object' && 'type' in parsed && typeof parsed.type === 'string'
+					parsed &&
+					typeof parsed === 'object' &&
+					'type' in parsed &&
+					typeof parsed.type === 'string'
 						? parsed.type
 						: '';
 
@@ -399,12 +402,7 @@ const MAX_EVENT_STRING_CHARS = parseBoundedInt(
 const MAX_EVENT_ARRAY_LENGTH = parseBoundedInt(privateEnv.RUN_EVENT_MAX_ARRAY_LENGTH, 30, 5, 200);
 const MAX_EVENT_DEPTH = parseBoundedInt(privateEnv.RUN_EVENT_MAX_DEPTH, 6, 2, 12);
 const RUN_EVENT_BATCH_SIZE = parseBoundedInt(privateEnv.RUN_EVENT_BATCH_SIZE, 8, 2, 64);
-const RUN_EVENT_BATCH_DELAY_MS = parseBoundedInt(
-	privateEnv.RUN_EVENT_BATCH_DELAY_MS,
-	75,
-	10,
-	1000
-);
+const RUN_EVENT_BATCH_DELAY_MS = parseBoundedInt(privateEnv.RUN_EVENT_BATCH_DELAY_MS, 75, 10, 1000);
 
 function truncateJsonValue(value: JsonValue, depth: number): JsonValue {
 	if (typeof value === 'string') {
