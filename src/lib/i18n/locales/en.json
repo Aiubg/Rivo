@@ -207,10 +207,6 @@
 		"no_model_selected": "No model selected",
 		"missing_api_key": "API key missing. Switch models.",
 		"vision_not_supported": "This model does not support image input. Switch to a multimodal model.",
-		"qwen-3-6-plus-preview-free": {
-			"name": "Qwen 3.6 Plus Preview",
-			"description": "Reasoning model (free tier)."
-		},
 		"deepseek-reasoner": {
 			"name": "DeepSeek Reasoner",
 			"description": "Suitable for complex reasoning tasks."

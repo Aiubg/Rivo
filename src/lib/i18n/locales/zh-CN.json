@@ -207,10 +207,6 @@
 		"no_model_selected": "未选择模型",
 		"missing_api_key": "未配置凭证，请切换模型",
 		"vision_not_supported": "当前模型不支持图片输入，请切换到多模态模型。",
-		"qwen-3-6-plus-preview-free": {
-			"name": "Qwen 3.6 Plus Preview",
-			"description": "具有推理能力（免费档）。"
-		},
 		"deepseek-reasoner": {
 			"name": "DeepSeek Reasoner",
 			"description": "适合复杂推理任务。"

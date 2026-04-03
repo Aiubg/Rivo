@@ -32,17 +32,6 @@ export type ModelRegistryItem = {
 
 export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 	{
-		id: 'qwen-3.6-plus-preview-free',
-		name: 'Qwen 3.6 Plus Preview',
-		description: 'Qwen 3.6 Plus Preview via OpenRouter, free tier',
-		provider: 'openrouter',
-		model: 'qwen/qwen3.6-plus-preview:free',
-		capabilities: {
-			toolUse: true,
-			reasoning: true
-		}
-	},
-	{
 		id: 'stepfun-step-3.5-flash-free',
 		name: 'STEP 3.5 Flash',
 		description: 'STEP 3.5 Flash via OpenRouter, free tier',
