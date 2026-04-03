@@ -345,6 +345,15 @@ function readReasoningDetailsText(rec: Record<string, unknown>): string {
 		.join('');
 }
 
+function readReasoningDeltaText(rec: Record<string, unknown>): string {
+	return (
+		readString(rec, 'delta') ??
+		readString(rec, 'reasoningDelta') ??
+		readString(rec, 'reasoning') ??
+		''
+	);
+}
+
 export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['parts'] {
 	const parts: MessagePart[] = [];
 	let currentReasoning = '';
@@ -374,33 +383,31 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 			ensureReasoningPart();
 		}
 
+		const reasoningDeltaText = readReasoningDeltaText(rec);
 		const reasoningDetailsText = readReasoningDetailsText(rec);
-		if (reasoningDetailsText) {
+		if (type === 'reasoning-delta' && reasoningDeltaText) {
+			currentReasoning += reasoningDeltaText;
+			const lastPart = ensureReasoningPart();
+			lastPart.text = `${lastPart.text ?? ''}${reasoningDeltaText}`;
+		} else if (reasoningDetailsText && type !== 'reasoning-start') {
 			const lastPart = ensureReasoningPart();
 			if (reasoningDetailsText !== currentReasoning) {
-				if (reasoningDetailsText.startsWith(currentReasoning)) {
+				if (currentReasoning.length > 0 && reasoningDetailsText.startsWith(currentReasoning)) {
 					lastPart.text = `${lastPart.text ?? ''}${reasoningDetailsText.slice(currentReasoning.length)}`;
+					currentReasoning = reasoningDetailsText;
+				} else if (type === 'reasoning-delta') {
+					lastPart.text = `${lastPart.text ?? ''}${reasoningDetailsText}`;
+					currentReasoning += reasoningDetailsText;
 				} else {
 					lastPart.text = reasoningDetailsText;
+					currentReasoning = reasoningDetailsText;
 				}
-				currentReasoning = reasoningDetailsText;
 			}
 		}
 
 		if (!type) continue;
 
-		if (!reasoningDetailsText && type === 'reasoning-delta') {
-			const delta =
-				readString(rec, 'delta') ??
-				readString(rec, 'reasoningDelta') ??
-				readString(rec, 'reasoning') ??
-				'';
-			if (delta) {
-				currentReasoning += delta;
-				const lastPart = ensureReasoningPart();
-				lastPart.text = `${lastPart.text ?? ''}${delta}`;
-			}
-		} else if (type === 'text-start') {
+		if (type === 'text-start') {
 			currentText = '';
 			const last = parts.at(-1);
 			if (!last || last.type !== 'text') {

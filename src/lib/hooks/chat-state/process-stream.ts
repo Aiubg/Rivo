@@ -25,6 +25,19 @@ type ChatStreamRecord = {
 	errorText?: string;
 };
 
+function getReasoningDelta(record: ChatStreamRecord): string {
+	if (typeof record.delta === 'string' && record.delta.length > 0) {
+		return record.delta;
+	}
+	if (typeof record.reasoningDelta === 'string' && record.reasoningDelta.length > 0) {
+		return record.reasoningDelta;
+	}
+	if (typeof record.reasoning === 'string' && record.reasoning.length > 0) {
+		return record.reasoning;
+	}
+	return '';
+}
+
 type ProcessChatStreamOptions = {
 	body: ReadableStream<Uint8Array>;
 	assistantMessageId: string;
@@ -183,28 +196,30 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			ensureReasoningPart();
 		}
 
+		const reasoningDelta = getReasoningDelta(record);
 		const reasoningDetails = record.providerMetadata?.openrouter?.reasoning_details;
 		const reasoningSnapshot = Array.isArray(reasoningDetails)
 			? reasoningDetails.map((detail) => detail.text || '').join('')
 			: '';
 
-		if (reasoningSnapshot) {
+		if (type === 'reasoning-delta' && reasoningDelta) {
+			currentReasoning += reasoningDelta;
+			const lastPart = ensureReasoningPart();
+			lastPart.text = `${lastPart.text ?? ''}${reasoningDelta}`;
+			scheduleFlush();
+		} else if (reasoningSnapshot && type !== 'reasoning-start') {
 			const lastPart = ensureReasoningPart();
 			if (reasoningSnapshot !== currentReasoning) {
-				if (reasoningSnapshot.startsWith(currentReasoning)) {
-					lastPart.text += reasoningSnapshot.slice(currentReasoning.length);
+				if (currentReasoning.length > 0 && reasoningSnapshot.startsWith(currentReasoning)) {
+					lastPart.text = `${lastPart.text ?? ''}${reasoningSnapshot.slice(currentReasoning.length)}`;
+					currentReasoning = reasoningSnapshot;
+				} else if (type === 'reasoning-delta') {
+					lastPart.text = `${lastPart.text ?? ''}${reasoningSnapshot}`;
+					currentReasoning += reasoningSnapshot;
 				} else {
 					lastPart.text = reasoningSnapshot;
+					currentReasoning = reasoningSnapshot;
 				}
-				currentReasoning = reasoningSnapshot;
-				scheduleFlush();
-			}
-		} else if (type === 'reasoning-delta') {
-			const delta = record.delta || record.reasoningDelta || record.reasoning || '';
-			if (delta) {
-				currentReasoning += delta;
-				const lastPart = ensureReasoningPart();
-				lastPart.text += delta;
 				scheduleFlush();
 			}
 		} else if (type === 'text-start') {

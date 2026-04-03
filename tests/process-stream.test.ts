@@ -68,8 +68,8 @@ describe('processChatStream', () => {
 		await processChatStream({
 			body: createStreamBody(
 				'id: 1\ndata: {"type":"reasoning-start"}\n\n',
-				'id: 2\ndata: {"type":"reasoning-delta","delta":"用户","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"用户"}]}}}\n\n',
-				'id: 3\ndata: {"type":"reasoning-delta","delta":"中文问","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"用户中文问"}]}}}\n\n',
+				'id: 2\ndata: {"type":"reasoning-delta","delta":"User","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User"}]}}}\n\n',
+				'id: 3\ndata: {"type":"reasoning-delta","delta":" asks why","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User asks why"}]}}}\n\n',
 				'id: 4\ndata: {"type":"finish"}'
 			),
 			assistantMessageId: 'assistant-3',
@@ -81,7 +81,31 @@ describe('processChatStream', () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(updateAssistantParts).toHaveBeenLastCalledWith('assistant-3', [
-			{ type: 'reasoning', text: '用户中文问' }
+			{ type: 'reasoning', text: 'User asks why' }
+		]);
+	});
+
+	it('keeps full reasoning when OpenRouter metadata contains only the current fragment', async () => {
+		const updateAssistantParts = vi.fn();
+
+		await processChatStream({
+			body: createStreamBody(
+				'id: 1\ndata: {"type":"reasoning-start","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User"}]}}}\n\n',
+				'id: 2\ndata: {"type":"reasoning-delta","delta":"User","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User"}]}}}\n\n',
+				'id: 3\ndata: {"type":"reasoning-delta","delta":" asks","providerMetadata":{"openrouter":{"reasoning_details":[{"text":" asks"}]}}}\n\n',
+				'id: 4\ndata: {"type":"reasoning-delta","delta":" politely","providerMetadata":{"openrouter":{"reasoning_details":[{"text":" politely"}]}}}\n\n',
+				'id: 5\ndata: {"type":"finish"}'
+			),
+			assistantMessageId: 'assistant-4',
+			activeRunId: 'run-4',
+			getMessages: () => [{ id: 'assistant-4', role: 'assistant', parts: [] }],
+			updateAssistantParts,
+			clearRunRecoveryState: vi.fn()
+		});
+		await new Promise((resolve) => setTimeout(resolve, 0));
+
+		expect(updateAssistantParts).toHaveBeenLastCalledWith('assistant-4', [
+			{ type: 'reasoning', text: 'User asks politely' }
 		]);
 	});
 });
