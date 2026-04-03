@@ -72,7 +72,7 @@ Rivo 采用现代全栈架构：
 1. **克隆仓库**
 
    ```bash
-   git clone https://github.com/your-username/rivo.git
+   git clone https://github.com/Aiubg/rivo.git
    cd rivo
    ```
 
@@ -209,8 +209,8 @@ pnpm preview
 ## 📞 支持
 
 - 📖 [文档](./docs/)
-- 🐛 [问题](https://github.com/your-username/rivo/issues)
-- 💬 [讨论](https://github.com/your-username/rivo/discussions)
+- 🐛 [问题](https://github.com/Aiubg/rivo/issues)
+- 💬 [讨论](https://github.com/Aiubg/rivo/discussions)
 
 ## 🙏 致谢
 

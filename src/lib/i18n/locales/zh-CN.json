@@ -237,6 +237,7 @@
 		"color_theme_neutral": "中性",
 		"font": "字体",
 		"font_inter": "Inter",
+		"font_oppo_sans": "OPPO Sans",
 		"font_system_default": "系统默认",
 		"data_management": "数据管理",
 		"data_management_description": "管理分享链接与对话数据。",

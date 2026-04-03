@@ -413,6 +413,7 @@ export class ChatStateActions {
 
 				const confirmedRunId = runId;
 				this.context.state.activeRunId = confirmedRunId;
+				commitSubmission();
 
 				const initialCursor = readStoredRunCursor(confirmedRunId, 0);
 				initialStreamCursor = initialCursor;

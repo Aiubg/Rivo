@@ -21,6 +21,7 @@ import {
 } from '$lib/server/db/queries';
 import { runEventBus } from '$lib/server/ai/run-event-bus';
 import { getCitationMetrics } from '$lib/utils/citations';
+import { drainSseFrames, parseSseFrame } from '$lib/utils/sse';
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
@@ -239,35 +240,46 @@ class RunExecutor {
 
 			const decoder = new TextDecoder();
 			let buffer = '';
+			const appendFrameEvent = async (frame: string) => {
+				const parsedFrame = parseSseFrame(frame);
+				if (!parsedFrame?.data) {
+					return;
+				}
+
+				let parsed: JsonValue | null = null;
+				try {
+					parsed = JSON.parse(parsedFrame.data) as JsonValue;
+				} catch {
+					return;
+				}
+
+				const safeChunk = truncateEventChunk(parsed, parsedFrame.data);
+				const ev = await appendRunEvent({ runId, chunkJson: safeChunk });
+				if (ev.isErr()) {
+					logger.error('Failed to append run event', ev.error);
+					return;
+				}
+				runEventBus.emit({ runId, seq: ev.value.seq, chunk: ev.value.chunk });
+			};
 
 			for await (const value of iterateReadableStream(uiResponse.body)) {
 				buffer += decoder.decode(value, { stream: true });
-				const parts = buffer.split('\n\n');
-				buffer = parts.pop() ?? '';
+				const drained = drainSseFrames(buffer);
+				buffer = drained.remaining;
 
-				for (const part of parts) {
-					const lines = part.split('\n').map((l) => l.trim());
-					for (const line of lines) {
-						if (line === '') continue;
-						if (!line.startsWith('data:')) continue;
-						const dataStr = line.slice(5).trim();
-						if (dataStr === '') continue;
-						let parsed: JsonValue | null = null;
-						try {
-							parsed = JSON.parse(dataStr) as JsonValue;
-						} catch {
-							continue;
-						}
-
-						const safeChunk = truncateEventChunk(parsed, dataStr);
-						const ev = await appendRunEvent({ runId, chunkJson: safeChunk });
-						if (ev.isErr()) {
-							logger.error('Failed to append run event', ev.error);
-							continue;
-						}
-						runEventBus.emit({ runId, seq: ev.value.seq, chunk: ev.value.chunk });
-					}
+				for (const frame of drained.frames) {
+					await appendFrameEvent(frame);
 				}
+			}
+
+			buffer += decoder.decode();
+			const drained = drainSseFrames(buffer);
+			buffer = drained.remaining;
+			for (const frame of drained.frames) {
+				await appendFrameEvent(frame);
+			}
+			if (buffer.trim().length > 0) {
+				await appendFrameEvent(buffer);
 			}
 
 			if (!abortController.signal.aborted) {

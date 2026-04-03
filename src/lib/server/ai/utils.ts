@@ -329,8 +329,26 @@ function readString(rec: Record<string, unknown>, key: string): string | undefin
 	return typeof v === 'string' ? v : undefined;
 }
 
+function readReasoningDetailsText(rec: Record<string, unknown>): string {
+	const providerMetadata = asRecord(rec['providerMetadata']);
+	const openrouter = providerMetadata ? asRecord(providerMetadata['openrouter']) : null;
+	const details = openrouter?.['reasoning_details'];
+	if (!Array.isArray(details)) {
+		return '';
+	}
+
+	return details
+		.map((detail) => {
+			const detailRecord = asRecord(detail);
+			return detailRecord ? (readString(detailRecord, 'text') ?? '') : '';
+		})
+		.join('');
+}
+
 export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['parts'] {
 	const parts: MessagePart[] = [];
+	let currentReasoning = '';
+	let currentText = '';
 
 	for (const event of events) {
 		let rec: Record<string, unknown> | null;
@@ -342,9 +360,22 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 		if (!rec) continue;
 
 		const type = readString(rec, 'type');
+		const reasoningDetailsText = readReasoningDetailsText(rec);
+		if (reasoningDetailsText && reasoningDetailsText.length > currentReasoning.length) {
+			let lastPart = parts[parts.length - 1];
+			if (!lastPart || lastPart.type !== 'reasoning') {
+				lastPart = { type: 'reasoning', text: '' };
+				parts.push(lastPart);
+			}
+			const delta = reasoningDetailsText.slice(currentReasoning.length);
+			currentReasoning = reasoningDetailsText;
+			lastPart.text = `${lastPart.text ?? ''}${delta}`;
+		}
+
 		if (!type) continue;
 
 		if (type === 'reasoning-start') {
+			currentReasoning = '';
 			const last = parts.at(-1);
 			if (!last || last.type !== 'reasoning') {
 				parts.push({ type: 'reasoning', text: '' });
@@ -364,6 +395,7 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 				lastPart.text = `${lastPart.text ?? ''}${delta}`;
 			}
 		} else if (type === 'text-start') {
+			currentText = '';
 			const last = parts.at(-1);
 			if (!last || last.type !== 'text') {
 				parts.push({ type: 'text', text: '' });
@@ -371,6 +403,7 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 		} else if (type === 'text-delta') {
 			const delta = readString(rec, 'delta') ?? '';
 			if (delta) {
+				currentText += delta;
 				let lastPart = parts[parts.length - 1];
 				if (!lastPart || lastPart.type !== 'text') {
 					lastPart = { type: 'text', text: '' };
@@ -381,9 +414,10 @@ export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['p
 		} else if (type === 'text-end') {
 			const finalText = readString(rec, 'text') ?? readString(rec, 'delta') ?? '';
 			if (finalText) {
+				currentText = finalText;
 				const lastPart = parts[parts.length - 1];
 				if (lastPart?.type === 'text') {
-					lastPart.text = finalText;
+					lastPart.text = currentText;
 				}
 			}
 		} else if (type === 'tool-input-start') {

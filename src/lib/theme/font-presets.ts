@@ -2,15 +2,21 @@ import { LocalStorage } from '$lib/hooks/local-storage.svelte';
 
 export const FONT_PRESETS = [
 	{
+		id: 'system',
+		labelKey: 'settings.font_system_default',
+		stack: "'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+	},
+	{
 		id: 'inter',
 		labelKey: 'settings.font_inter',
 		stack:
 			"'Inter', 'Noto Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
 	},
 	{
-		id: 'system',
-		labelKey: 'settings.font_system_default',
-		stack: "'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+		id: 'oppo-sans',
+		labelKey: 'settings.font_oppo_sans',
+		stack:
+			"'Oppo Sans', 'Inter', 'Noto Sans', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
 	}
 ] as const;
 

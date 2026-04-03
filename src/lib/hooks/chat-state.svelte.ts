@@ -71,6 +71,7 @@ export class ChatState {
 	private activeRunId: string | null = null;
 	private uploadControllers = new SvelteMap<string, AbortController>();
 	private runResumeStates = new SvelteMap<string, RunResumeState>();
+	private runResumeTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 	private actions: ChatStateActions;
 	private messageTreeIndex = $derived.by(() => createMessageTreeIndex(this.allMessages));
 
@@ -403,6 +404,8 @@ export class ChatState {
 			this.abortController.abort();
 			this.abortController = null;
 		}
+		this.clearPendingRunResumeTimer();
+		this.runResumeStates.clear();
 	}
 
 	/**
@@ -420,8 +423,25 @@ export class ChatState {
 
 	private clearRunRecoveryState(runId: string | null | undefined) {
 		if (!runId) return;
+		this.clearPendingRunResumeTimer(runId);
 		this.runResumeStates.delete(runId);
 		clearStoredRunCursor(runId);
+	}
+
+	private clearPendingRunResumeTimer(runId?: string | null) {
+		if (runId) {
+			const timeoutId = this.runResumeTimeouts.get(runId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				this.runResumeTimeouts.delete(runId);
+			}
+			return;
+		}
+
+		for (const timeoutId of this.runResumeTimeouts.values()) {
+			clearTimeout(timeoutId);
+		}
+		this.runResumeTimeouts.clear();
 	}
 
 	private updateAssistantMessageParts(assistantMessageId: string, parts: MessagePart[]) {
@@ -456,6 +476,7 @@ export class ChatState {
 		);
 
 		if (!canResumeRun(nextState)) {
+			this.clearPendingRunResumeTimer(options.runId);
 			this.runResumeStates.delete(options.runId);
 			logger.warn('[chat] resume limit reached', {
 				runId: options.runId,
@@ -477,13 +498,16 @@ export class ChatState {
 			delayMs: options.delayMs
 		});
 
-		setTimeout(() => {
+		this.clearPendingRunResumeTimer(options.runId);
+		const timeoutId = setTimeout(() => {
+			this.runResumeTimeouts.delete(options.runId);
 			void this.resumeActiveRun({
 				id: options.runId,
 				assistantMessageId: options.assistantMessageId,
 				cursor: options.cursor
 			});
 		}, options.delayMs);
+		this.runResumeTimeouts.set(options.runId, timeoutId);
 
 		return true;
 	}
@@ -527,6 +551,7 @@ export class ChatState {
 	 * Resumes an active run that was interrupted.
 	 */
 	async resumeActiveRun(options: ResumeActiveRunOptions) {
+		this.clearPendingRunResumeTimer(options.id);
 		await this.actions.resumeActiveRun(options);
 	}
 

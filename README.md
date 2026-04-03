@@ -72,7 +72,7 @@ For detailed architecture notes, see [docs/multi-platform-architecture.md](./doc
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-username/rivo.git
+   git clone https://github.com/Aiubg/rivo.git
    cd rivo
    ```
 
@@ -209,8 +209,8 @@ A: `build:local` uses Node adapter for self-hosting, `build:vercel` optimizes fo
 ## 📞 Support
 
 - 📖 [Documentation](./docs/)
-- 🐛 [Issues](https://github.com/your-username/rivo/issues)
-- 💬 [Discussions](https://github.com/your-username/rivo/discussions)
+- 🐛 [Issues](https://github.com/Aiubg/rivo/issues)
+- 💬 [Discussions](https://github.com/Aiubg/rivo/discussions)
 
 ## 🙏 Acknowledgments
 

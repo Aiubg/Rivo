@@ -120,6 +120,8 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 					} else {
 						return parentCheck;
 					}
+				} else if (parentCheck.value.chatId !== id) {
+					effectiveParentId = null;
 				}
 			}
 
