@@ -216,19 +216,19 @@
 		"vision_not_supported": "当前模型不支持图片输入，请切换到多模态模型。",
 		"deepseek-reasoner": {
 			"name": "DeepSeek Reasoner",
-			"description": "适合复杂推理任务。"
+			"description": "适合更深度的推理、复杂问题和较长回答。"
 		},
 		"deepseek-chat": {
 			"name": "DeepSeek Chat",
-			"description": "日常对话。"
+			"description": "适合日常对话，也兼顾写作、编程和工具调用。"
 		},
 		"stepfun-step-3-5-flash-free": {
 			"name": "STEP 3.5 Flash",
-			"description": "免费档。"
+			"description": "OpenRouter 免费档，擅长快速推理和长上下文任务。"
 		},
-		"openrouter-free": {
-			"name": "OpenRouter 免费",
-			"description": "OpenRouter 免费路由模型。"
+		"qwen-qwen3-6-plus-free": {
+			"name": "Qwen 3.6 Plus",
+			"description": "OpenRouter 免费档，擅长 Agent 编码、前端开发和复杂推理。"
 		}
 	},
 	"settings": {

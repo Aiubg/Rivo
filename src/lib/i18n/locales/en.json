@@ -216,19 +216,19 @@
 		"vision_not_supported": "This model does not support image input. Switch to a multimodal model.",
 		"deepseek-reasoner": {
 			"name": "DeepSeek Reasoner",
-			"description": "Suitable for complex reasoning tasks."
+			"description": "For deeper reasoning, complex problems, and longer answers."
 		},
 		"deepseek-chat": {
 			"name": "DeepSeek Chat",
-			"description": "Everyday chat."
+			"description": "Balanced for everyday chat, writing, coding, and tool use."
 		},
 		"stepfun-step-3-5-flash-free": {
 			"name": "STEP 3.5 Flash",
-			"description": "Free tier."
+			"description": "Fast long-context reasoning on OpenRouter's free tier."
 		},
-		"openrouter-free": {
-			"name": "OpenRouter Free",
-			"description": "OpenRouter free route model."
+		"qwen-qwen3-6-plus-free": {
+			"name": "Qwen 3.6 Plus",
+			"description": "Strong for agentic coding, front-end work, and reasoning on OpenRouter's free tier."
 		}
 	},
 	"settings": {

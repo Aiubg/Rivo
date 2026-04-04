@@ -34,7 +34,7 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 	{
 		id: 'stepfun-step-3.5-flash-free',
 		name: 'STEP 3.5 Flash',
-		description: 'STEP 3.5 Flash via OpenRouter, free tier',
+		description: 'Fast long-context reasoning on OpenRouter free tier',
 		provider: 'openrouter',
 		model: 'stepfun/step-3.5-flash:free',
 		capabilities: {
@@ -43,30 +43,20 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 		}
 	},
 	{
-		id: 'openrouter-free',
-		name: 'OpenRouter Free',
-		description: 'OpenRouter free route model',
+		id: 'qwen-qwen3-6-plus-free',
+		name: 'Qwen 3.6 Plus',
+		description: 'Strong agentic coding and reasoning on OpenRouter free tier',
 		provider: 'openrouter',
-		model: 'openrouter/free',
+		model: 'qwen/qwen3.6-plus:free',
 		capabilities: {
 			toolUse: true,
-			reasoning: true,
-			vision: true
-		},
-		requestPreset: {
-			providerOptions: {
-				openrouter: {
-					reasoning: {
-						effort: 'none'
-					}
-				}
-			}
+			reasoning: true
 		}
 	},
 	{
 		id: 'deepseek-chat',
 		name: 'DeepSeek-Chat',
-		description: 'DeepSeek general chat model',
+		description: 'Balanced chat model for writing, coding, and tool use',
 		provider: 'deepseek',
 		model: 'deepseek-chat',
 		capabilities: {}
@@ -74,7 +64,7 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 	{
 		id: 'deepseek-reasoner',
 		name: 'DeepSeek-Reasoner',
-		description: 'DeepSeek reasoning model',
+		description: 'Deeper reasoning model for complex problems and longer answers',
 		provider: 'deepseek',
 		model: 'deepseek-reasoner',
 		capabilities: {

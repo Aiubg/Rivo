@@ -162,7 +162,7 @@
 			{:else}
 				<div class="flex flex-col gap-6">
 					<div class="flex flex-col items-center gap-4">
-						<div class="group relative">
+						<div class="group relative overflow-hidden rounded-full">
 							{#if avatarSrc && !avatarLoadFailed}
 								<img
 									src={avatarSrc}
@@ -184,13 +184,13 @@
 							{/if}
 							<label
 								for={avatarInputId}
-								class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/70 opacity-0 transition-all duration-200 group-hover:opacity-100"
 								aria-label={$t('profile.change_avatar')}
 							>
 								{#if uploading}
-									<Spinner class="size-5 border-2 text-white" />
+									<Spinner class="size-5 border-2 text-white drop-shadow-sm" />
 								{:else}
-									<Camera class="size-6 text-white" />
+									<Camera class="size-6 text-white drop-shadow-sm" />
 								{/if}
 							</label>
 							<input
