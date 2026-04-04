@@ -190,7 +190,7 @@
 						{onswitchversion}
 					/>
 				{/if}
-			{/if}
+			{/if}j
 		</div>
 	</div>
 </div>
