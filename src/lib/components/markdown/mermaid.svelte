@@ -21,7 +21,7 @@
 	let svg = $state('');
 	let dimensions = $state<{ width: number; height: number } | null>(null);
 	let containerHeight = $state<number | null>(null);
-	let error = $state<string | null>(null);
+	let error = $state(false);
 
 	let scale = $state(1);
 	let translateX = $state(0);
@@ -322,13 +322,13 @@
 		try {
 			const m = await import('mermaid');
 			mermaidInstance = m.default ?? m;
-			error = null;
+			error = false;
 			loadAttempt = 0;
 		} catch (e) {
 			loadAttempt += 1;
 			if (loadAttempt >= 6) {
 				logger.error('Failed to load mermaid', e);
-				error = e instanceof Error ? e.message : String(e);
+				error = true;
 			} else {
 				const delayMs = 200 * loadAttempt;
 				loadHandle = setTimeout(() => {
@@ -368,7 +368,7 @@
 		}
 		if (debounceHandle) clearTimeout(debounceHandle);
 		if (code?.trim()) {
-			error = null;
+			error = false;
 		}
 		debounceHandle = setTimeout(() => renderDiagram(code, theme), 150);
 	});
@@ -413,7 +413,7 @@
 			dimensions = getSvgDimensions(renderedSvg);
 			svg = sanitizeSvgViewBox(sanitizeMermaidSvg(renderedSvg));
 			await tick();
-			error = null;
+			error = false;
 			lastContent = content;
 			lastRenderKey = renderKey;
 
@@ -447,10 +447,11 @@
 		} catch (e) {
 			attemptCount += 1;
 			if (attemptCount <= 3) {
-				error = null;
+				error = false;
 				retryAfterMs = attemptCount === 1 ? 120 : attemptCount === 2 ? 300 : 700;
 			} else if (!svg) {
-				error = e instanceof Error ? e.message : String(e);
+				logger.error('Failed to render mermaid diagram', e);
+				error = true;
 			}
 		} finally {
 			isRendering = false;
@@ -476,7 +477,6 @@
 			<Empty.State
 				class="min-h-75"
 				title={$t('chat.render_failed')}
-				description={error}
 				icon={ImageOffIcon}
 			/>
 		</div>

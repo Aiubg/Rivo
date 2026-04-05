@@ -44,7 +44,7 @@
 	{/if}
 </svelte:head>
 
-<ModeWatcher defaultTheme="aurora" themeStorageKey="app-color-theme" />
+<ModeWatcher defaultTheme="neutral" themeStorageKey="app-color-theme" />
 <ThemeManager />
 
 {#await waitLocale()}
