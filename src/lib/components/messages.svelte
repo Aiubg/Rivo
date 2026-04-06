@@ -12,7 +12,11 @@
 	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { page } from '$app/state';
 	import type { UIMessageWithTree } from '$lib/types/message';
-	import { computeMessagesWithSiblings } from '$lib/utils/chat';
+	import {
+		computeMessagesWithSiblings,
+		getUserMessages,
+		resolveActiveUserMessageId
+	} from '$lib/utils/chat';
 
 	let containerRef = $state<HTMLDivElement | null>(null);
 	let contentRef = $state<HTMLDivElement | null>(null);
@@ -48,6 +52,7 @@
 		if (messagesWithSiblingsProp) return messagesWithSiblingsProp;
 		return computeMessagesWithSiblings(allMessages, messages);
 	});
+	const outlineMessages = $derived(getUserMessages(messages));
 
 	let isAtBottom = $state(true);
 	let messagesInitialized = false;
@@ -66,6 +71,7 @@
 	let isLoadingMessageOutline = false;
 
 	let lastUserMessageId = $state<string | null>(null);
+	const activeOutlineMessageId = $derived(resolveActiveUserMessageId(messages, activeMessageId));
 
 	const lastMessage = $derived(messages.at(-1));
 	const lastUserMessage = $derived.by(() => {
@@ -112,7 +118,7 @@
 	}
 
 	onMount(() => {
-		if (window.matchMedia('(min-width: 768px)').matches && messages.length > 0) {
+		if (window.matchMedia('(min-width: 768px)').matches && outlineMessages.length > 0) {
 			void loadMessageOutline();
 		}
 	});
@@ -381,7 +387,7 @@
 	});
 
 	$effect(() => {
-		if (!browser || messages.length === 0) return;
+		if (!browser || outlineMessages.length === 0) return;
 		if (!window.matchMedia('(min-width: 768px)').matches) return;
 		void loadMessageOutline();
 	});
@@ -453,9 +459,13 @@
 		</div>
 	</div>
 
-	{#if messages.length > 0 && MessageOutlineComponent}
+	{#if outlineMessages.length > 0 && MessageOutlineComponent}
 		<div class="absolute end-2 bottom-1/2 z-20 hidden translate-y-1/2 md:block">
-			<MessageOutlineComponent {messages} {activeMessageId} onnavigate={handleNavigate} />
+			<MessageOutlineComponent
+				messages={outlineMessages}
+				activeMessageId={activeOutlineMessageId}
+				onnavigate={handleNavigate}
+			/>
 		</div>
 	{/if}
 

@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
 	computeMessagesWithSiblingsFromIndex,
 	createMessageTreeIndex,
+	getUserMessages,
 	getMessagePath,
 	getMessagePathFromIndex,
+	resolveActiveUserMessageId,
 	type MessageTreeIndex
 } from '$lib/utils/chat';
 import type { UIMessageWithTree } from '$lib/types/message';
@@ -92,5 +94,24 @@ describe('chat message tree helpers', () => {
 			{ id: 'user-2b', siblings: ['user-2a', 'user-2b'], currentIndex: 1 },
 			{ id: 'assistant-2b', siblings: ['assistant-2b'], currentIndex: 0 }
 		]);
+	});
+
+	it('filters outline messages down to user messages only', () => {
+		const { messages } = createFixture();
+
+		expect(getUserMessages(messages).map((message) => message.id)).toEqual([
+			'user-1',
+			'user-2a',
+			'user-2b'
+		]);
+	});
+
+	it('maps outline highlight to the nearest user message at or above the active message', () => {
+		const { messages } = createFixture();
+
+		expect(resolveActiveUserMessageId(messages, 'user-2b')).toBe('user-2b');
+		expect(resolveActiveUserMessageId(messages, 'assistant-2b')).toBe('user-2b');
+		expect(resolveActiveUserMessageId(messages, 'missing')).toBeNull();
+		expect(resolveActiveUserMessageId(messages, null)).toBeNull();
 	});
 });

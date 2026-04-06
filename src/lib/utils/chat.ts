@@ -230,6 +230,31 @@ function isUserMessage<T extends { role: string }>(message: T): message is T & {
 	return message.role === 'user';
 }
 
+export function getUserMessages<T extends { role: string }>(
+	messages: ReadonlyArray<T>
+): Array<T & { role: 'user' }> {
+	return messages.filter(isUserMessage);
+}
+
+export function resolveActiveUserMessageId<T extends { id: string; role: string }>(
+	messages: ReadonlyArray<T>,
+	activeMessageId: string | null
+): string | null {
+	if (!activeMessageId) return null;
+
+	const activeIndex = messages.findIndex((message) => message.id === activeMessageId);
+	if (activeIndex === -1) return null;
+
+	for (let i = activeIndex; i >= 0; i -= 1) {
+		const message = messages[i];
+		if (message && isUserMessage(message)) {
+			return message.id;
+		}
+	}
+
+	return null;
+}
+
 /**
  * Finds the most recent message with 'user' role.
  */
