@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { tavilySearchTool } from '$lib/server/ai/tools/builtin/tavily-search';
+import { toAiTools } from '$lib/server/ai/tools/ai-adapter';
 import type { ToolContext } from '$lib/server/ai/tools/types';
 
 type TavilySearchOutput = {
@@ -55,5 +56,29 @@ describe('tavily_search citation ids', () => {
 		expect(first.results?.map((r) => r.id)).toEqual([1, 2]);
 		expect(second.results?.map((r) => r.id)).toEqual([3, 4]);
 		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it('normalizes null Tavily optional fields so runtime output validation still passes', async () => {
+		process.env.TAVILY_API_KEY = 'test-key';
+
+		const fetchMock = vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({
+				answer: null,
+				images: null,
+				results: [{ title: 'Doc A', url: 'https://example.com/a', content: 'A', score: 0.9 }]
+			})
+		});
+		vi.stubGlobal('fetch', fetchMock);
+
+		const aiTools = toAiTools([tavilySearchTool], () => ({ env: 'dev' }));
+		const result = await aiTools.tavily_search!.execute!(
+			{ query: 'latest news', maxResults: 1 },
+			{ toolCallId: 'tool-1', messages: [] }
+		);
+
+		expect(result).toEqual({
+			results: [{ id: 1, title: 'Doc A', url: 'https://example.com/a', snippet: 'A', score: 0.9 }]
+		});
 	});
 });

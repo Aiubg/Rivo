@@ -12,6 +12,15 @@ type TavilyResult = {
 	score?: number;
 };
 
+function toOptionalString(value: unknown): string | undefined {
+	return typeof value === 'string' ? value : undefined;
+}
+
+function toOptionalStringArray(value: unknown): string[] | undefined {
+	if (!Array.isArray(value)) return undefined;
+	return value.filter((item): item is string => typeof item === 'string');
+}
+
 const tavilySearchInputSchema = z.object({
 	query: z.string().trim().min(1),
 	searchDepth: z.enum(['basic', 'advanced']).optional(),
@@ -159,8 +168,8 @@ export const tavilySearchTool: ToolRecord = {
 			}
 
 			const json = (await response.json()) as {
-				answer?: string;
-				images?: string[];
+				answer?: string | null;
+				images?: string[] | null;
 				results?: Array<{
 					title: string;
 					url: string;
@@ -184,14 +193,16 @@ export const tavilySearchTool: ToolRecord = {
 						title: r.title,
 						url: r.url,
 						snippet,
-						publishedAt: r.published_date,
-						score: r.score
+						...(typeof r.published_date === 'string' ? { publishedAt: r.published_date } : {}),
+						...(typeof r.score === 'number' ? { score: r.score } : {})
 					};
 				}) ?? [];
 
 			return {
-				answer: json.answer,
-				images: json.images,
+				...(toOptionalString(json.answer) ? { answer: toOptionalString(json.answer) } : {}),
+				...(toOptionalStringArray(json.images)
+					? { images: toOptionalStringArray(json.images) }
+					: {}),
 				results
 			};
 		} catch (error) {
