@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { Input } from '$lib/components/ui/input';
 	import * as InputGroup from '$lib/components/ui/input-group';
+	import * as Kbd from '$lib/components/ui/kbd';
 	import {
 		DropdownMenu,
 		DropdownMenuContent,
 		DropdownMenuItem,
+		DropdownMenuSeparator,
 		DropdownMenuSub,
 		DropdownMenuSubContent,
 		DropdownMenuSubTrigger,
@@ -12,10 +14,12 @@
 	} from '$lib/components/ui/dropdown-menu';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 	import Spinner from '$lib/components/ui/spinner.svelte';
+	import LibraryFilePickerModal from '$lib/components/multimodal/library-file-picker-modal.svelte';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import FileClockIcon from '@lucide/svelte/icons/file-clock';
+	import LibraryBigIcon from '@lucide/svelte/icons/library-big';
 	import UploadIcon from '@lucide/svelte/icons/upload';
 	import { t } from '$lib/i18n';
 	import { modelSupportsVision } from '$lib/ai/model-registry';
@@ -25,26 +29,27 @@
 	import type { Attachment } from '$lib/types/attachment';
 	import { SvelteMap } from 'svelte/reactivity';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte';
+	import { fetchStoredFiles, type StoredUploadFile } from '$lib/services/files-api';
 	import {
-		fetchFilePreview,
-		fetchStoredFiles,
-		type StoredUploadFile
-	} from '$lib/services/files-api';
+		isStoredImageFile,
+		resolveStoredFileAttachment
+	} from '$lib/services/stored-file-attachment';
 
 	let {
 		disabled = false,
 		onchange,
-		onselectrecent
+		onselectattachments
 	}: {
 		disabled?: boolean;
 		onchange: (files: File[]) => void;
-		onselectrecent: (attachment: Attachment) => void;
+		onselectattachments: (attachments: Attachment[]) => void;
 	} = $props();
 
 	let fileInputRef = $state<HTMLInputElement | null>(null);
 	let menuOpen = $state(false);
 	let recentMenuOpen = $state(false);
 	let mobileRecentView = $state(false);
+	let libraryPickerOpen = $state(false);
 	let loadingRecent = $state(false);
 	let selectingRecentUrl = $state<string | null>(null);
 	let recentFiles = $state<StoredUploadFile[]>([]);
@@ -62,12 +67,24 @@
 	);
 	const RECENT_FILES_LIMIT = 8;
 	const RECENT_FILES_TTL_MS = 15_000;
+	const isMac =
+		typeof navigator !== 'undefined' &&
+		((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform
+			?.toUpperCase()
+			.includes('MAC') ??
+			navigator.userAgent.toUpperCase().includes('MAC'));
+	const modifier = $derived(isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win'));
 
 	function isImageFile(file: File): boolean {
 		return (
 			file.type.toLowerCase().startsWith('image/') ||
 			/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)
 		);
+	}
+
+	function openUploadPicker() {
+		fileInputRef?.click();
+		menuOpen = false;
 	}
 
 	async function handleFileChange(event: Event & { currentTarget: HTMLInputElement }) {
@@ -104,53 +121,30 @@
 		}
 	}
 
-	async function resolveAttachmentContent(file: StoredUploadFile): Promise<string | null> {
-		if (recentPreviewCache.has(file.url)) {
-			return recentPreviewCache.get(file.url) ?? null;
-		}
-
-		try {
-			const payload = await fetchFilePreview(file.url);
-			recentPreviewCache.set(file.url, payload.content);
-			return payload.content;
-		} catch (e) {
-			const message = e instanceof Error ? e.message : 'upload.failed';
-			toast.error(get(t)(message.includes('.') ? message : 'upload.failed'));
-			return null;
-		}
-	}
-
 	async function handleSelectRecentFile(file: StoredUploadFile) {
 		if (disabled || selectingRecentUrl) return;
-		if (!supportsVisionInput && file.contentType.startsWith('image/')) {
+		if (!supportsVisionInput && isStoredImageFile(file)) {
 			toast.error(get(t)('models.vision_not_supported'));
 			return;
 		}
 
 		selectingRecentUrl = file.url;
 		try {
-			const attachment: Attachment = {
-				url: file.url,
-				name: file.originalName,
-				contentType: file.contentType,
-				size: file.size,
-				hash: file.hash,
-				lastModified: file.lastModified
-			};
-
-			if (!file.contentType.startsWith('image/')) {
-				const content = await resolveAttachmentContent(file);
-				if (content === null) return;
-				attachment.content = content;
-			}
-
-			onselectrecent(attachment);
+			const attachment = await resolveStoredFileAttachment(file, recentPreviewCache);
+			onselectattachments([attachment]);
 			menuOpen = false;
 		} catch {
 			toast.error(get(t)('upload.failed'));
 		} finally {
 			selectingRecentUrl = null;
 		}
+	}
+
+	function openLibraryPicker() {
+		libraryPickerOpen = true;
+		menuOpen = false;
+		recentMenuOpen = false;
+		mobileRecentView = false;
 	}
 
 	$effect(() => {
@@ -165,7 +159,27 @@
 			mobileRecentView = false;
 		}
 	});
+
+	function handleShortcutKeydown(event: KeyboardEvent) {
+		if (isMobile || disabled) return;
+
+		const usesModifier = isMac ? event.metaKey : event.ctrlKey;
+		if (usesModifier && !event.shiftKey && !event.altKey && event.key.toLowerCase() === 'u') {
+			event.preventDefault();
+			openUploadPicker();
+		}
+	}
 </script>
+
+<LibraryFilePickerModal
+	bind:open={libraryPickerOpen}
+	{disabled}
+	mobile={isMobile}
+	{supportsVisionInput}
+	onselect={onselectattachments}
+/>
+
+<svelte:window onkeydown={handleShortcutKeydown} />
 
 <Input
 	type="file"
@@ -209,6 +223,17 @@
 				</button>
 
 				<div class="mt-1 max-h-60 overflow-y-auto">
+					<button
+						type="button"
+						class="hover:bg-accent hover:text-accent-foreground mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm transition-colors"
+						onclick={openLibraryPicker}
+					>
+						<LibraryBigIcon class="size-4 shrink-0" />
+						<span class="min-w-0 flex-1 truncate">{$t('files.add_from_library')}</span>
+					</button>
+
+					<DropdownMenuSeparator class="my-1" />
+
 					{#if loadingRecent}
 						<div class="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
 							<Spinner class="size-4" />
@@ -238,11 +263,10 @@
 			{:else}
 				<DropdownMenuItem
 					{disabled}
-					class="items-center"
+					class="group/upload-shortcut items-center"
 					onclick={(event) => {
 						event.preventDefault();
-						fileInputRef?.click();
-						menuOpen = false;
+						openUploadPicker();
 					}}
 				>
 					<UploadIcon class="size-4 shrink-0" />
@@ -252,6 +276,12 @@
 							{$t('chat.upload_attachment_hint')}
 						</div>
 					</div>
+					<Kbd.Group
+						class="ms-2 hidden opacity-0 transition-opacity group-focus-within/upload-shortcut:opacity-100 group-hover/upload-shortcut:opacity-100 md:flex"
+					>
+						<Kbd.Root>{modifier}</Kbd.Root>
+						<Kbd.Root>U</Kbd.Root>
+					</Kbd.Group>
 				</DropdownMenuItem>
 
 				<DropdownMenuItem
@@ -275,11 +305,10 @@
 		{:else}
 			<DropdownMenuItem
 				{disabled}
-				class="items-center"
+				class="group/upload-shortcut items-center"
 				onclick={(event) => {
 					event.preventDefault();
-					fileInputRef?.click();
-					menuOpen = false;
+					openUploadPicker();
 				}}
 			>
 				<UploadIcon class="size-4 shrink-0" />
@@ -289,6 +318,12 @@
 						{$t('chat.upload_attachment_hint')}
 					</div>
 				</div>
+				<Kbd.Group
+					class="ms-2 hidden opacity-0 transition-opacity group-focus-within/upload-shortcut:opacity-100 group-hover/upload-shortcut:opacity-100 md:flex"
+				>
+					<Kbd.Root>{modifier}</Kbd.Root>
+					<Kbd.Root>U</Kbd.Root>
+				</Kbd.Group>
 			</DropdownMenuItem>
 
 			<DropdownMenuSub bind:open={recentMenuOpen}>
@@ -302,6 +337,19 @@
 				</DropdownMenuSubTrigger>
 
 				<DropdownMenuSubContent class="w-72 p-2">
+					<DropdownMenuItem
+						{disabled}
+						onclick={(event) => {
+							event.preventDefault();
+							openLibraryPicker();
+						}}
+					>
+						<LibraryBigIcon class="size-4 shrink-0" />
+						<span class="min-w-0 flex-1 truncate">{$t('files.add_from_library')}</span>
+					</DropdownMenuItem>
+
+					<DropdownMenuSeparator />
+
 					{#if loadingRecent}
 						<div class="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
 							<Spinner class="size-4" />

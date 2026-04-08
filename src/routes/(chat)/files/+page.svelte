@@ -30,7 +30,7 @@
 	import { useSidebar } from '$lib/components/ui/sidebar';
 	import { FileLibraryState } from '$lib/hooks/file-library-state.svelte';
 	import { formatFileSize } from '$lib/utils/files';
-	import FileIcon from '@lucide/svelte/icons/file';
+	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
@@ -252,7 +252,7 @@
 			</DropdownMenu>
 		</div>
 		{#if files.length === 0}
-			<Empty.State class="flex-1" title={$t('files.no_files')} icon={FileIcon} />
+			<Empty.State class="flex-1" title={$t('files.no_files')} icon={FileTextIcon} />
 		{:else if visibleFiles.length === 0}
 			<Empty.State class="flex-1" title={$t('files.no_filtered_files')} icon={ListFilterIcon} />
 		{:else}
@@ -361,7 +361,7 @@
 		<div class="flex h-full min-h-0 flex-col">
 			<div class="flex items-center justify-between gap-3 px-4 py-3">
 				<div class="flex min-w-0 items-center gap-2">
-					<FileIcon size={16} class="shrink-0" />
+					<FileTextIcon size={16} class="shrink-0" />
 					<div class="min-w-0">
 						<div class="truncate text-sm font-medium">{selectedFile.originalName}</div>
 					</div>
@@ -430,7 +430,11 @@
 			<Resizable.Pane defaultSize={72} minSize={40}>
 				<div class="bg-background h-full min-h-0 overflow-hidden">
 					{#if !selectedFile}
-						<Empty.State class="h-full" title={$t('files.preview_placeholder')} icon={FileIcon} />
+						<Empty.State
+							class="h-full"
+							title={$t('files.preview_placeholder')}
+							icon={FileTextIcon}
+						/>
 					{:else}
 						{@render filePreviewPanel()}
 					{/if}

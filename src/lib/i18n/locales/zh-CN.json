@@ -179,7 +179,13 @@
 		"delete_confirm": "确认删除该文件？此操作不可撤销",
 		"delete_success": "文件已删除",
 		"upload_success": "文件上传成功",
-		"copy_content_success": "文件内容已复制到剪贴板"
+		"copy_content_success": "文件内容已复制到剪贴板",
+		"add_from_library": "从库中添加",
+		"add_selected": "添加所选文件",
+		"search_library_placeholder": "搜索库",
+		"selected_count": "已选择 {count} 个文件",
+		"last_modified": "上次修改日期：",
+		"no_matching_files": "没有匹配的文件"
 	},
 	"run": {
 		"invalid_response": "运行响应无效",

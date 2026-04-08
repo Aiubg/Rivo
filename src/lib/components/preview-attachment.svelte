@@ -3,7 +3,6 @@
 	import Spinner from '$lib/components/ui/spinner.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
-	import FileIcon from '@lucide/svelte/icons/file';
 	import XIcon from '@lucide/svelte/icons/x';
 	import { getSearchSidebarContext } from '$lib/hooks/search-sidebar.svelte';
 	import { cn } from '$lib/utils/shadcn';
@@ -90,10 +89,8 @@
 					alt={name ?? $t('common.image_attachment')}
 					class="size-full rounded-md object-cover"
 				/>
-			{:else if contentType === 'text/plain'}
-				<FileTextIcon class="text-primary size-5" />
 			{:else}
-				<FileIcon class="text-primary size-5" />
+				<FileTextIcon class="text-primary size-5" />
 			{/if}
 		</div>
 

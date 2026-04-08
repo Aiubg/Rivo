@@ -105,8 +105,8 @@
 		chatState.handleFileChange(files);
 	}
 
-	function handleSelectRecentAttachment(attachment: Attachment) {
-		chatState.addAttachments([attachment]);
+	function handleSelectAttachments(attachments: Attachment[]) {
+		chatState.addAttachments(attachments);
 	}
 
 	function handlePaste(event: ClipboardEvent) {
@@ -268,7 +268,7 @@
 			<AttachmentUploader
 				disabled={loading}
 				onchange={handleFileChange}
-				onselectrecent={handleSelectRecentAttachment}
+				onselectattachments={handleSelectAttachments}
 			/>
 			<div class="flex w-fit flex-row items-center justify-end gap-2">
 				<SubmitControls status={submitStatus} {canSend} onsend={handleSend} onstop={handleStop} />

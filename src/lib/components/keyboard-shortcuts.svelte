@@ -19,6 +19,7 @@
 		{ label: $t('common.new_chat'), keys: [modifier, $t('shortcuts.shift'), 'O'] },
 		{ label: $t('common.search'), keys: [modifier, 'K'] },
 		{ label: $t('common.files'), keys: [modifier, $t('shortcuts.shift'), 'F'] },
+		{ label: $t('chat.upload_attachment'), keys: [modifier, 'U'] },
 		{ label: $t('common.toggle_sidebar'), keys: [modifier, 'B'] },
 		{ label: $t('common.settings'), keys: [modifier, ','] },
 		{ label: $t('common.keyboard_shortcuts'), keys: [modifier, '/'] },
