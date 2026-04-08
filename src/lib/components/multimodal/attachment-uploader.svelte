@@ -65,7 +65,7 @@
 	const fileInputAccept = $derived(
 		supportsVisionInput ? `${BASE_FILE_ACCEPT},${IMAGE_FILE_ACCEPT}` : BASE_FILE_ACCEPT
 	);
-	const RECENT_FILES_LIMIT = 8;
+	const RECENT_FILES_LIMIT = 5;
 	const RECENT_FILES_TTL_MS = 15_000;
 	const isMac =
 		typeof navigator !== 'undefined' &&

@@ -17,6 +17,7 @@
 	import { isOfficeDocument } from '$lib/utils/files';
 	import SearchIcon from '@lucide/svelte/icons/search';
 	import XIcon from '@lucide/svelte/icons/x';
+	import CheckIcon from '@lucide/svelte/icons/check';
 	import FileImageIcon from '@lucide/svelte/icons/file-image';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import FileSpreadsheetIcon from '@lucide/svelte/icons/file-spreadsheet';
@@ -208,12 +209,13 @@
 								</div>
 							</div>
 							<div
-								class="border-muted-foreground/30 flex size-5 shrink-0 items-center justify-center rounded-full border"
+								class="border-muted-foreground/30 bg-background flex size-5 shrink-0 items-center justify-center rounded-md border transition-colors data-[selected=true]:border-transparent data-[selected=true]:bg-(--color-foreground)"
+								data-selected={selectedUrls.includes(file.url)}
 							>
-								<div
-									class="bg-foreground size-2.5 rounded-full opacity-0 transition-opacity data-[selected=true]:opacity-100"
+								<CheckIcon
+									class="text-background size-3.5 opacity-0 transition-opacity data-[selected=true]:opacity-100"
 									data-selected={selectedUrls.includes(file.url)}
-								></div>
+								/>
 							</div>
 						</button>
 					{/each}
