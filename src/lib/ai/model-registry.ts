@@ -32,23 +32,13 @@ export type ModelRegistryItem = {
 
 export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 	{
-		id: 'stepfun-step-3.5-flash-free',
-		name: 'STEP 3.5 Flash',
-		description: 'Fast long-context reasoning on OpenRouter free tier',
+		id: 'google-gemma-4-31b-it-free',
+		name: 'Gemma 4 31B Instruct',
+		description: 'OpenRouter free-tier Gemma model for chat, coding, and vision reasoning',
 		provider: 'openrouter',
-		model: 'stepfun/step-3.5-flash:free',
+		model: 'google/gemma-4-31b-it:free',
 		capabilities: {
-			toolUse: true,
-			reasoning: true
-		}
-	},
-	{
-		id: 'qwen-qwen3-6-plus-free',
-		name: 'Qwen 3.6 Plus',
-		description: 'Strong agentic coding and reasoning on OpenRouter free tier',
-		provider: 'openrouter',
-		model: 'qwen/qwen3.6-plus:free',
-		capabilities: {
+			vision: true,
 			toolUse: true,
 			reasoning: true
 		}

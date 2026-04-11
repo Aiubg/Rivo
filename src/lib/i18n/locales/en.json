@@ -228,13 +228,9 @@
 			"name": "DeepSeek Chat",
 			"description": "Balanced for everyday chat, writing, coding, and tool use."
 		},
-		"stepfun-step-3-5-flash-free": {
-			"name": "STEP 3.5 Flash",
-			"description": "Fast long-context reasoning on OpenRouter's free tier."
-		},
-		"qwen-qwen3-6-plus-free": {
-			"name": "Qwen 3.6 Plus",
-			"description": "Strong for agentic coding, front-end work, and reasoning on OpenRouter's free tier."
+		"google-gemma-4-31b-it-free": {
+			"name": "Gemma 4 31B Instruct",
+			"description": "Google Gemma via OpenRouter's free tier for chat, coding, and vision input."
 		}
 	},
 	"settings": {

@@ -39,8 +39,8 @@ importers:
         specifier: ^0.15.15
         version: 0.15.15
       '@openrouter/ai-sdk-provider':
-        specifier: ^2.0.0
-        version: 2.1.1(ai@6.0.67(zod@4.3.6))(zod@4.3.6)
+        specifier: ^2.5.1
+        version: 2.5.1(ai@6.0.67(zod@4.3.6))(zod@4.3.6)
       '@oslojs/crypto':
         specifier: ^1.0.1
         version: 1.0.1
@@ -1624,8 +1624,8 @@ packages:
   '@neon-rs/load@0.0.4':
     resolution: {integrity: sha512-kTPhdZyTQxB+2wpiRcFWrDcejc4JI6tkPuS7UZCG4l6Zvc5kU/gGQ/ozvHTh1XR5tS+UlfAfGuPajjzQjCiHCw==}
 
-  '@openrouter/ai-sdk-provider@2.1.1':
-    resolution: {integrity: sha512-UypPbVnSExxmG/4Zg0usRiit3auvQVrjUXSyEhm0sZ9GQnW/d8p/bKgCk2neh1W5YyRSo7PNQvCrAEBHZnqQkQ==}
+  '@openrouter/ai-sdk-provider@2.5.1':
+    resolution: {integrity: sha512-r1fJL1Cb3gQDa2MpWH/sfx1BsEW0uzlRriJM6eihaKqbtKDmZoBisF32VcVaQYassighX7NGCkF68EsrZA43uQ==}
     engines: {node: '>=18'}
     peerDependencies:
       ai: ^6.0.0
@@ -6059,7 +6059,7 @@ snapshots:
 
   '@neon-rs/load@0.0.4': {}
 
-  '@openrouter/ai-sdk-provider@2.1.1(ai@6.0.67(zod@4.3.6))(zod@4.3.6)':
+  '@openrouter/ai-sdk-provider@2.5.1(ai@6.0.67(zod@4.3.6))(zod@4.3.6)':
     dependencies:
       ai: 6.0.67(zod@4.3.6)
       zod: 4.3.6
