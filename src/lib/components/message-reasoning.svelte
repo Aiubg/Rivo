@@ -62,7 +62,7 @@
 
 	{#if expanded}
 		<div
-			class="text-muted-foreground bidi-plaintext [&_.markdown-body]:text-muted-foreground ms-2 mt-2 flex flex-col gap-4 border-s ps-4 text-start [&_.markdown-body]:text-sm"
+			class="reasoning-content text-muted-foreground bidi-plaintext [&_.markdown-body]:text-muted-foreground ms-2 mt-2 flex flex-col gap-4 border-s ps-4 text-start [&_.markdown-body]:text-sm"
 		>
 			{#each displayParts as p, i (`${p.type}-${p.toolCallId ?? p.toolInvocation?.toolCallId ?? i}`)}
 				{#if p.type === 'reasoning'}
@@ -92,3 +92,13 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	:global(.reasoning-content .markdown-code-header),
+	:global(.reasoning-content .sticky) {
+		position: static;
+		top: auto;
+		inset-block-start: auto;
+		z-index: auto;
+	}
+</style>
