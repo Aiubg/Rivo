@@ -1,6 +1,7 @@
 import { replaceState } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { getChatDraftStorageKey } from '$lib/components/multimodal/draft-storage';
+import { hasVisibleMessageParts } from '$lib/ai/ui-message-stream-supervisor';
 import { connectRunStreamWithRetry } from '$lib/hooks/chat-state/connect-run-stream';
 import { personalization } from '$lib/hooks/personalization.svelte';
 import { randomId } from '$lib/utils/misc';
@@ -144,6 +145,21 @@ export class ChatStateActions {
 		};
 	}
 
+	private assistantHasVisibleOutput(messageId: string): boolean {
+		const assistantMessage = this.context.state.allMessages.find((message) => message.id === messageId);
+		return hasVisibleMessageParts(assistantMessage?.parts);
+	}
+
+	private discardAssistantPlaceholder(messageId: string): void {
+		this.context.state.allMessages = this.context.state.allMessages.filter(
+			(message) => message.id !== messageId
+		);
+		this.context.state.selectedMessageIds = Object.fromEntries(
+			Object.entries(this.context.state.selectedMessageIds).filter(([, value]) => value !== messageId)
+		);
+		this.context.callbacks.saveSelectedMessageIds();
+	}
+
 	private async streamAnonymousChat(options: {
 		assistantMessageId: string;
 		parentId: string | null;
@@ -179,11 +195,18 @@ export class ChatStateActions {
 			throw new Error('run.invalid_response');
 		}
 
+		let streamErrorKey: string | null = null;
 		await this.context.callbacks.processStream(
 			response.body,
 			options.assistantMessageId,
-			options.commitSubmission
+			options.commitSubmission,
+			(errorKey) => {
+				streamErrorKey = errorKey;
+			}
 		);
+		if (streamErrorKey) {
+			throw new Error(streamErrorKey);
+		}
 	}
 
 	async handleSubmit(event?: Event, options?: ChatSubmitOptions) {
@@ -482,6 +505,15 @@ export class ChatStateActions {
 				}
 
 				const willAttemptResume = !!runId && committed && errorKey === 'run.stream_failed';
+				const shouldDiscardAssistantPlaceholder =
+					committed &&
+					!willAttemptResume &&
+					!this.assistantHasVisibleOutput(assistantMessageId);
+
+				if (shouldDiscardAssistantPlaceholder) {
+					this.discardAssistantPlaceholder(assistantMessageId);
+				}
+
 				if (!willAttemptResume || !committed) {
 					this.context.callbacks.clearRunRecoveryState(runId);
 					toast.error(get(t)(errorKey));
@@ -523,15 +555,28 @@ export class ChatStateActions {
 		const streamCursor = options.cursor;
 
 		try {
+			let streamErrorKey: string | null = null;
 			await connectRunStreamWithRetry({
 				initialCursor: streamCursor,
 				outerAbortSignal,
 				fetchStream: (cursor, signal) =>
 					fetch(`/api/runs/${options.id}/stream?cursor=${cursor}`, { signal }),
-				processStream: (body) =>
-					this.context.callbacks.processStream(body, options.assistantMessageId),
+				processStream: async (body) => {
+					streamErrorKey = null;
+					await this.context.callbacks.processStream(
+						body,
+						options.assistantMessageId,
+						undefined,
+						(errorKey) => {
+							streamErrorKey = errorKey;
+						}
+					);
+					if (streamErrorKey) {
+						throw new Error(streamErrorKey);
+					}
+				},
 				readCursor: (fallback) => readStoredRunCursor(options.id, fallback),
-				shouldRetry: () => true
+				shouldRetry: (error) => error instanceof Error && error.message === 'run.stream_failed'
 			});
 		} catch (error) {
 			const externalAborted =
@@ -544,13 +589,21 @@ export class ChatStateActions {
 			} else {
 				const errorKey =
 					error instanceof Error && error.message ? error.message : 'run.stream_failed';
-				this.context.callbacks.scheduleRunResume({
-					runId: options.id,
-					assistantMessageId: options.assistantMessageId,
-					cursor: readStoredRunCursor(options.id, streamCursor),
-					errorKey,
-					delayMs: 1500
-				});
+				if (errorKey === 'run.stream_failed') {
+					this.context.callbacks.scheduleRunResume({
+						runId: options.id,
+						assistantMessageId: options.assistantMessageId,
+						cursor: readStoredRunCursor(options.id, streamCursor),
+						errorKey,
+						delayMs: 1500
+					});
+				} else {
+					if (!this.assistantHasVisibleOutput(options.assistantMessageId)) {
+						this.discardAssistantPlaceholder(options.assistantMessageId);
+					}
+					this.context.callbacks.clearRunRecoveryState(options.id);
+					toast.error(get(t)(errorKey));
+				}
 			}
 			this.context.state.status = 'ready';
 		} finally {

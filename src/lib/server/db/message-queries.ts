@@ -172,6 +172,61 @@ export function updateMessagePartsById({
 	});
 }
 
+export function upsertMessage({
+	entry
+}: {
+	entry: NewMessage;
+}): ResultAsync<Message, DbError> {
+	return safeTry(async function* () {
+		yield* fromPromise(
+			ensureMessageSearchTextColumn(),
+			(error) => new DbInternalError({ cause: error })
+		);
+
+		const value = {
+			...entry,
+			searchText:
+				typeof entry.searchText === 'string'
+					? entry.searchText
+					: extractSearchTextFromParts(entry.parts)
+		};
+
+		const rows = yield* fromPromise(
+			runSerializedWrite(() =>
+				db
+					.insert(message)
+					.values(value)
+					.onConflictDoUpdate({
+						target: [message.id],
+						set: {
+							chatId: value.chatId,
+							role: value.role,
+							parentId: value.parentId,
+							parts: value.parts,
+							searchText: value.searchText,
+							attachments: value.attachments,
+							createdAt: value.createdAt
+						}
+					})
+					.returning()
+			),
+			(error) => new DbInternalError({ cause: error })
+		);
+
+		return unwrapSingleQueryResult(rows, entry.id, 'Message');
+	});
+}
+
+export function deleteMessageById({ id }: { id: string }): ResultAsync<undefined, DbError> {
+	return safeTry(async function* () {
+		yield* fromPromise(
+			runSerializedWrite(() => db.delete(message).where(eq(message.id, id))),
+			(error) => new DbInternalError({ cause: error })
+		);
+		return ok(undefined);
+	});
+}
+
 export function deleteMessagesByChatIdAfterTimestamp({
 	chatId,
 	timestamp

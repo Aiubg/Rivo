@@ -2,6 +2,7 @@ import { logger } from '$lib/utils/logger';
 import { myProvider } from '$lib/server/ai/models';
 import { systemPrompt } from '$lib/server/ai/prompts';
 import { getModelRequestPreset } from '$lib/ai/model-registry';
+import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import {
 	convertToCoreMessagesWithResolvedImages,
 	generateTitleFromUserMessage,
@@ -14,7 +15,8 @@ import {
 	getChatById,
 	getMessageById,
 	saveChat,
-	saveMessages
+	saveMessages,
+	upsertMessage
 } from '$lib/server/db/queries';
 import type { Chat } from '$lib/server/db/schema';
 import { extractTextFromMessage, getMostRecentUserMessage } from '$lib/utils/chat';
@@ -194,50 +196,55 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 				: {})
 		});
 
-		return result.toUIMessageStreamResponse({
+		const uiResponse = result.toUIMessageStreamResponse({
 			originalMessages: messages as unknown as UIMessage[],
-			sendReasoning,
-			onFinish: async ({ responseMessage }) => {
-				if (!responseMessage || responseMessage.role !== 'assistant') return;
-				const mappedParts = (
-					Array.isArray(responseMessage.parts) ? responseMessage.parts : []
-				) as UIMessagePart<UIDataTypes, UITools>[];
-				const metrics = getCitationMetrics(mappedParts as unknown[]);
-				logger.debug('[citation] response metrics', {
+			sendReasoning
+		});
+
+		if (!uiResponse.body) {
+			throw new Error('run.invalid_response');
+		}
+
+		const [clientBody, observerBody] = uiResponse.body.tee();
+		void (async () => {
+			const outcome = await consumeUIMessageStream({ body: observerBody });
+			const mappedParts = outcome.parts as UIMessagePart<UIDataTypes, UITools>[];
+			const metrics = getCitationMetrics(mappedParts as unknown[]);
+			logger.debug('[citation] response metrics', {
+				chatId: id,
+				modelId: selectedChatModel,
+				sourceCount: metrics.sourceCount,
+				markerCount: metrics.markerCount,
+				fallbackLikely: metrics.fallbackLikely,
+				outcome: outcome.state
+			});
+
+			if (!user || !outcome.hasVisibleOutput) return;
+
+			const assistantId =
+				assistantMessageId && assistantMessageId.length > 0 ? assistantMessageId : crypto.randomUUID();
+			const persisted = await upsertMessage({
+				entry: {
+					id: assistantId,
 					chatId: id,
-					modelId: selectedChatModel,
-					sourceCount: metrics.sourceCount,
-					markerCount: metrics.markerCount,
-					fallbackLikely: metrics.fallbackLikely
-				});
-				if (!user) return;
-				const assistantId =
-					assistantMessageId && assistantMessageId.length > 0
-						? assistantMessageId
-						: responseMessage.id && responseMessage.id.length > 0
-							? responseMessage.id
-							: crypto.randomUUID();
-				try {
-					const result = await saveMessages({
-						messages: [
-							{
-								id: assistantId,
-								chatId: id,
-								role: 'assistant',
-								parts: mappedParts,
-								attachments: [],
-								createdAt: new Date(),
-								parentId: userMessage.id
-							}
-						]
-					});
-					if (result.isErr()) {
-						logger.error('Failed to save assistant message', result.error);
-					}
-				} catch (e) {
-					logger.error('Unexpected error saving assistant message', e);
+					role: 'assistant',
+					parts: mappedParts,
+					attachments: [],
+					createdAt: new Date(),
+					parentId: userMessage.id
 				}
+			});
+			if (persisted.isErr()) {
+				logger.error('Failed to save supervised assistant message', persisted.error);
 			}
+		})().catch((e) => {
+			logger.error('Unexpected error supervising chat response stream', e);
+		});
+
+		return new Response(clientBody, {
+			status: uiResponse.status,
+			statusText: uiResponse.statusText,
+			headers: new Headers(uiResponse.headers)
 		});
 	} catch (e) {
 		const mappedErrorKey = mapModelProviderErrorToErrorKey(e);

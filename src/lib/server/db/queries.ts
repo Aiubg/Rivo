@@ -35,6 +35,7 @@ export {
 } from '$lib/server/db/chat-queries';
 
 export {
+	deleteMessageById,
 	deleteMessagesByChatIdAfterTimestamp,
 	deleteTrailingMessages,
 	getMessageById,
@@ -42,6 +43,7 @@ export {
 	getMessagesByChatIds,
 	getVotesByChatId,
 	saveMessages,
+	upsertMessage,
 	updateMessagePartsById,
 	voteMessage
 } from '$lib/server/db/message-queries';

@@ -1,4 +1,5 @@
 import { streamText, stepCountIs, type UIMessage } from 'ai';
+import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import { logger } from '$lib/utils/logger';
 import { myProvider } from '$lib/server/ai/models';
 import { systemPrompt } from '$lib/server/ai/prompts';
@@ -15,29 +16,17 @@ import { env as privateEnv } from '$env/dynamic/private';
 import {
 	appendRunEvent,
 	appendRunEvents,
+	deleteMessageById,
 	getGenerationRunById,
+	upsertMessage,
 	updateChatUnreadById,
-	updateGenerationRunStatus,
-	updateMessagePartsById
+	updateGenerationRunStatus
 } from '$lib/server/db/queries';
 import { runEventBus } from '$lib/server/ai/run-event-bus';
 import { getCitationMetrics } from '$lib/utils/citations';
-import { drainSseFrames, parseSseFrame } from '$lib/utils/sse';
+import { parseSseFrame } from '$lib/utils/sse';
 
 type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
-
-async function* iterateReadableStream<T>(stream: ReadableStream<T>): AsyncGenerator<T> {
-	const reader = stream.getReader();
-	try {
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			yield value;
-		}
-	} finally {
-		await reader.cancel().catch(() => {});
-	}
-}
 
 type QueueItem = { runId: string; chatId: string };
 
@@ -208,41 +197,17 @@ class RunExecutor {
 					toUIMessageStreamResponse: (options: {
 						originalMessages: UIMessage[];
 						sendReasoning?: boolean;
-						onFinish?: (args: { responseMessage?: UIMessage; isAborted?: boolean }) => void;
 					}) => Response;
 				}
 			).toUIMessageStreamResponse({
 				originalMessages: run.messages as unknown as UIMessage[],
-				sendReasoning: true,
-				onFinish: async ({ responseMessage, isAborted }) => {
-					if (isAborted) return;
-					if (!responseMessage || responseMessage.role !== 'assistant') return;
-					const parts = Array.isArray(responseMessage.parts) ? responseMessage.parts : [];
-					const metrics = getCitationMetrics(parts as unknown[]);
-					logger.debug('[citation] run completion metrics', {
-						runId,
-						chatId: run.chatId,
-						modelId: run.modelId,
-						sourceCount: metrics.sourceCount,
-						markerCount: metrics.markerCount,
-						fallbackLikely: metrics.fallbackLikely
-					});
-					const upd = await updateMessagePartsById({
-						messageId: run.assistantMessageId,
-						parts: parts as never
-					});
-					if (upd.isErr()) {
-						logger.error('Failed to persist final assistant parts', upd.error);
-					}
-				}
+				sendReasoning: true
 			});
 
 			if (!uiResponse.body) {
 				throw new Error('Empty UI stream response body');
 			}
 
-			const decoder = new TextDecoder();
-			let buffer = '';
 			let pendingRunEventChunks: string[] = [];
 
 			const emitPersistedRunEvents = (events: Array<{ seq: number; chunk: string }>) => {
@@ -314,29 +279,49 @@ class RunExecutor {
 				await scheduleRunEventFlush(type === 'finish' || type === 'error');
 			};
 
-			for await (const value of iterateReadableStream(uiResponse.body)) {
-				buffer += decoder.decode(value, { stream: true });
-				const drained = drainSseFrames(buffer);
-				buffer = drained.remaining;
-
-				for (const frame of drained.frames) {
-					await appendFrameEvent(frame);
-				}
-			}
-
-			buffer += decoder.decode();
-			const drained = drainSseFrames(buffer);
-			buffer = drained.remaining;
-			for (const frame of drained.frames) {
-				await appendFrameEvent(frame);
-			}
-			if (buffer.trim().length > 0) {
-				await appendFrameEvent(buffer);
-			}
+			const outcome = await consumeUIMessageStream({
+				body: uiResponse.body,
+				onFrame: appendFrameEvent
+			});
 			await scheduleRunEventFlush(true);
 			await runEventFlushChain;
 
-			if (!abortController.signal.aborted) {
+			const metrics = getCitationMetrics(outcome.parts as unknown[]);
+			logger.debug('[citation] run completion metrics', {
+				runId,
+				chatId: run.chatId,
+				modelId: run.modelId,
+				sourceCount: metrics.sourceCount,
+				markerCount: metrics.markerCount,
+				fallbackLikely: metrics.fallbackLikely,
+				outcome: outcome.state
+			});
+
+			if (outcome.hasVisibleOutput) {
+				const upsertResult = await upsertMessage({
+					entry: {
+						id: run.assistantMessageId,
+						chatId: run.chatId,
+						role: 'assistant',
+						parts: outcome.parts as never,
+						attachments: [],
+						createdAt: new Date(),
+						parentId: run.userMessageId
+					}
+				});
+				if (upsertResult.isErr()) {
+					logger.error('Failed to persist supervised assistant message', upsertResult.error);
+				}
+			} else {
+				const deleteResult = await deleteMessageById({ id: run.assistantMessageId });
+				if (deleteResult.isErr()) {
+					logger.error('Failed to delete empty assistant placeholder', deleteResult.error);
+				}
+			}
+
+			if (abortController.signal.aborted || outcome.state === 'canceled') {
+				await updateGenerationRunStatus({ runId, status: 'canceled' });
+			} else if (outcome.state === 'success') {
 				await updateGenerationRunStatus({ runId, status: 'succeeded' });
 				const unreadRes = await updateChatUnreadById({
 					chatId: run.chatId,
@@ -346,6 +331,12 @@ class RunExecutor {
 				if (unreadRes.isErr()) {
 					logger.error('Failed to update chat unread status', unreadRes.error);
 				}
+			} else {
+				await updateGenerationRunStatus({
+					runId,
+					status: 'failed',
+					error: outcome.errorKey ?? 'run.failed'
+				});
 			}
 		} catch (e) {
 			const isAborted = abortController.signal.aborted;

@@ -190,7 +190,8 @@
 	"run": {
 		"invalid_response": "Run response is invalid",
 		"stream_failed": "Failed to connect to stream",
-		"failed": "Run failed"
+		"failed": "Run failed",
+		"empty_output_invalid": "The model finished without producing any visible output."
 	},
 	"history": {
 		"pinned": "Pinned",

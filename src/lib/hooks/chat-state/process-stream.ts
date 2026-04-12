@@ -1,42 +1,14 @@
 import type { MessagePart, UIMessageWithTree } from '$lib/types/message';
 import {
+	UIMessageStreamSupervisor,
+	type UIMessageStreamRecord
+} from '$lib/ai/ui-message-stream-supervisor';
+import {
 	readStoredRunCursor,
 	persistStoredRunCursor,
 	shouldTriggerCommitFromRecordType
 } from '$lib/hooks/chat-state/run-stream';
 import { drainSseFrames, parseSseFrame } from '$lib/utils/sse';
-
-type ChatStreamRecord = {
-	type?: string;
-	providerMetadata?: {
-		openrouter?: {
-			reasoning_details?: Array<{ text?: string }>;
-		};
-	};
-	delta?: string;
-	reasoningDelta?: string;
-	reasoning?: string;
-	text?: string;
-	toolCallId?: string;
-	toolName?: string;
-	inputTextDelta?: string;
-	input?: unknown;
-	output?: unknown;
-	errorText?: string;
-};
-
-function getReasoningDelta(record: ChatStreamRecord): string {
-	if (typeof record.delta === 'string' && record.delta.length > 0) {
-		return record.delta;
-	}
-	if (typeof record.reasoningDelta === 'string' && record.reasoningDelta.length > 0) {
-		return record.reasoningDelta;
-	}
-	if (typeof record.reasoning === 'string' && record.reasoning.length > 0) {
-		return record.reasoning;
-	}
-	return '';
-}
 
 type ProcessChatStreamOptions = {
 	body: ReadableStream<Uint8Array>;
@@ -71,7 +43,7 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 	const reader = options.body.getReader();
 	const decoder = new TextDecoder();
 	let buffer = '';
-	let sawFinish = false;
+	let shouldCallOnFinish = false;
 	let lastCursorPersistAt = 0;
 	let lastPersistedCursor = 0;
 	let firstRecordSeen = false;
@@ -84,28 +56,12 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 		highestProcessedCursor = readStoredRunCursor(options.activeRunId, 0);
 	}
 
-	const currentParts = getLatestParts(options.getMessages(), options.assistantMessageId);
-	const lastTextPart = [...currentParts].reverse().find((part) => part.type === 'text') as
-		| { type: 'text'; text?: string }
-		| undefined;
-	const lastReasoningPart = [...currentParts]
-		.reverse()
-		.find((part) => part.type === 'reasoning') as { type: 'reasoning'; text?: string } | undefined;
-
-	let currentText = typeof lastTextPart?.text === 'string' ? lastTextPart.text : '';
-	let currentReasoning = typeof lastReasoningPart?.text === 'string' ? lastReasoningPart.text : '';
+	const supervisor = new UIMessageStreamSupervisor(
+		getLatestParts(options.getMessages(), options.assistantMessageId)
+	);
 
 	const flushAssistantUpdate = () => {
-		options.updateAssistantParts(options.assistantMessageId, [...currentParts]);
-	};
-
-	const ensureReasoningPart = () => {
-		let lastPart = currentParts[currentParts.length - 1];
-		if (lastPart?.type !== 'reasoning') {
-			lastPart = { type: 'reasoning', text: '' };
-			currentParts.push(lastPart);
-		}
-		return lastPart;
+		options.updateAssistantParts(options.assistantMessageId, supervisor.getParts());
 	};
 
 	const scheduleFlush = (force = false) => {
@@ -148,9 +104,9 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 					: null
 				: null;
 
-		let record: ChatStreamRecord;
+		let record: UIMessageStreamRecord;
 		try {
-			record = JSON.parse(parsedFrame.data) as ChatStreamRecord;
+			record = JSON.parse(parsedFrame.data) as UIMessageStreamRecord;
 		} catch {
 			return;
 		}
@@ -191,127 +147,17 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			}
 		}
 
-		if (type === 'reasoning-start') {
-			currentReasoning = '';
-			ensureReasoningPart();
+		const { partsChanged } = supervisor.ingestRecord(record);
+		if (partsChanged) {
+			if (type === 'text-start' || type === 'text-end') {
+				flushAssistantUpdate();
+			} else {
+				scheduleFlush();
+			}
 		}
 
-		const reasoningDelta = getReasoningDelta(record);
-		const reasoningDetails = record.providerMetadata?.openrouter?.reasoning_details;
-		const reasoningSnapshot = Array.isArray(reasoningDetails)
-			? reasoningDetails.map((detail) => detail.text || '').join('')
-			: '';
-
-		if (type === 'reasoning-delta' && reasoningDelta) {
-			currentReasoning += reasoningDelta;
-			const lastPart = ensureReasoningPart();
-			lastPart.text = `${lastPart.text ?? ''}${reasoningDelta}`;
-			scheduleFlush();
-		} else if (reasoningSnapshot && type !== 'reasoning-start') {
-			const lastPart = ensureReasoningPart();
-			if (reasoningSnapshot !== currentReasoning) {
-				if (currentReasoning.length > 0 && reasoningSnapshot.startsWith(currentReasoning)) {
-					lastPart.text = `${lastPart.text ?? ''}${reasoningSnapshot.slice(currentReasoning.length)}`;
-					currentReasoning = reasoningSnapshot;
-				} else if (type === 'reasoning-delta') {
-					lastPart.text = `${lastPart.text ?? ''}${reasoningSnapshot}`;
-					currentReasoning += reasoningSnapshot;
-				} else {
-					lastPart.text = reasoningSnapshot;
-					currentReasoning = reasoningSnapshot;
-				}
-				scheduleFlush();
-			}
-		} else if (type === 'text-start') {
-			currentText = '';
-			currentParts.push({ type: 'text', text: '' });
-			flushAssistantUpdate();
-		} else if (type === 'text-delta') {
-			const delta = record.delta || '';
-			if (delta) {
-				currentText += delta;
-				let lastPart = currentParts[currentParts.length - 1];
-				if (lastPart?.type !== 'text') {
-					lastPart = { type: 'text', text: '' };
-					currentParts.push(lastPart);
-				}
-				lastPart.text += delta;
-				scheduleFlush();
-			}
-		} else if (type === 'text-end') {
-			const finalText = record.text || record.delta || '';
-			if (finalText) {
-				currentText = finalText;
-				const lastPart = currentParts[currentParts.length - 1];
-				if (lastPart?.type === 'text') {
-					lastPart.text = currentText;
-				}
-				flushAssistantUpdate();
-			}
-		} else if (type === 'tool-input-start') {
-			if (record.toolCallId) {
-				currentParts.push({
-					type: 'tool-invocation',
-					toolInvocation: {
-						toolCallId: record.toolCallId,
-						toolName: record.toolName ?? '',
-						args: {},
-						state: 'call'
-					}
-				});
-				scheduleFlush();
-			}
-		} else if (type === 'tool-input-delta') {
-			const invocationPart = currentParts.find(
-				(part) =>
-					part.type === 'tool-invocation' && part.toolInvocation?.toolCallId === record.toolCallId
-			);
-			if (invocationPart?.toolInvocation) {
-				const delta = typeof record.inputTextDelta === 'string' ? record.inputTextDelta : '';
-				if (!delta) return;
-				if (typeof invocationPart.toolInvocation.args !== 'string') {
-					invocationPart.toolInvocation.args = delta;
-				} else {
-					invocationPart.toolInvocation.args += delta;
-				}
-				scheduleFlush();
-			}
-		} else if (type === 'tool-input-available') {
-			const invocationPart = currentParts.find(
-				(part) =>
-					part.type === 'tool-invocation' && part.toolInvocation?.toolCallId === record.toolCallId
-			);
-			if (invocationPart?.toolInvocation) {
-				invocationPart.toolInvocation.args = record.input;
-				scheduleFlush();
-			}
-		} else if (type === 'tool-output-available') {
-			const invocationPart = currentParts.find(
-				(part) =>
-					part.type === 'tool-invocation' && part.toolInvocation?.toolCallId === record.toolCallId
-			);
-			if (invocationPart?.toolInvocation) {
-				invocationPart.toolInvocation.state = 'result';
-				invocationPart.toolInvocation.result = record.output;
-				scheduleFlush();
-			}
-		} else if (type === 'error') {
-			const errorKey =
-				typeof record.errorText === 'string' && record.errorText.length > 0
-					? record.errorText
-					: 'run.failed';
-			options.onError?.(errorKey);
-			sawFinish = true;
+		if (type === 'error' || type === 'finish' || type === 'abort') {
 			shouldStopReading = true;
-			if (options.activeRunId) {
-				options.clearRunRecoveryState(options.activeRunId);
-			}
-		} else if (type === 'finish') {
-			sawFinish = true;
-			shouldStopReading = true;
-			if (options.activeRunId) {
-				options.clearRunRecoveryState(options.activeRunId);
-			}
 		}
 	};
 
@@ -351,8 +197,30 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			buffer = '';
 		}
 
-		if (!sawFinish && !options.abortSignal?.aborted) {
+		if (!shouldStopReading && !options.abortSignal?.aborted) {
 			throw new Error(options.activeRunId ? 'run.stream_failed' : 'common.request_failed');
+		}
+
+		if (!options.abortSignal?.aborted) {
+			const outcome = supervisor.getOutcome();
+			if (options.activeRunId) {
+				options.clearRunRecoveryState(options.activeRunId);
+			}
+
+			if (
+				outcome.state === 'partial_success' ||
+				outcome.state === 'failed_retryable' ||
+				outcome.state === 'failed_permanent' ||
+				outcome.state === 'empty_invalid'
+			) {
+				const errorKey = outcome.errorKey ?? 'run.failed';
+				options.onError?.(errorKey);
+				throw new Error(errorKey);
+			}
+
+			if (outcome.state === 'success') {
+				shouldCallOnFinish = true;
+			}
 		}
 	} finally {
 		reader.releaseLock();
@@ -364,7 +232,7 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 		) {
 			persistStoredRunCursor(options.activeRunId, highestProcessedCursor);
 		}
-		if (sawFinish) {
+		if (shouldCallOnFinish) {
 			await options.onFinish?.();
 		}
 	}

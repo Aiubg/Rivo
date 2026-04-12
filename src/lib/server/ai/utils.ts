@@ -4,6 +4,7 @@ import { AIInternalError, type AIError } from '$lib/server/errors/ai';
 import { fromPromise, ok, safeTry, type ResultAsync } from 'neverthrow';
 import { env as privateEnv } from '$env/dynamic/private';
 import { MODEL_REGISTRY, modelSupportsVision } from '$lib/ai/model-registry';
+import { UIMessageStreamSupervisor } from '$lib/ai/ui-message-stream-supervisor';
 import type { Attachment } from '$lib/types/attachment';
 import type { MessagePart } from '$lib/types/message';
 import { getServerContainer } from '$lib/server/composition/server-container';
@@ -319,169 +320,11 @@ export function convertToCoreMessages(messages: Array<IncomingMessage>): ModelMe
 
 type RunEventInput = { chunk: string };
 
-function asRecord(value: unknown): Record<string, unknown> | null {
-	if (!value || typeof value !== 'object') return null;
-	return value as Record<string, unknown>;
-}
-
-function readString(rec: Record<string, unknown>, key: string): string | undefined {
-	const v = rec[key];
-	return typeof v === 'string' ? v : undefined;
-}
-
-function readReasoningDetailsText(rec: Record<string, unknown>): string {
-	const providerMetadata = asRecord(rec['providerMetadata']);
-	const openrouter = providerMetadata ? asRecord(providerMetadata['openrouter']) : null;
-	const details = openrouter?.['reasoning_details'];
-	if (!Array.isArray(details)) {
-		return '';
-	}
-
-	return details
-		.map((detail) => {
-			const detailRecord = asRecord(detail);
-			return detailRecord ? (readString(detailRecord, 'text') ?? '') : '';
-		})
-		.join('');
-}
-
-function readReasoningDeltaText(rec: Record<string, unknown>): string {
-	return (
-		readString(rec, 'delta') ??
-		readString(rec, 'reasoningDelta') ??
-		readString(rec, 'reasoning') ??
-		''
-	);
-}
-
 export function aggregateRunEventsToParts(events: RunEventInput[]): UIMessage['parts'] {
-	const parts: MessagePart[] = [];
-	let currentReasoning = '';
-	let currentText = '';
-
-	const ensureReasoningPart = () => {
-		let lastPart = parts[parts.length - 1];
-		if (!lastPart || lastPart.type !== 'reasoning') {
-			lastPart = { type: 'reasoning', text: '' };
-			parts.push(lastPart);
-		}
-		return lastPart;
-	};
-
+	const supervisor = new UIMessageStreamSupervisor();
 	for (const event of events) {
-		let rec: Record<string, unknown> | null;
-		try {
-			rec = asRecord(JSON.parse(event.chunk));
-		} catch {
-			continue;
-		}
-		if (!rec) continue;
-
-		const type = readString(rec, 'type');
-		if (type === 'reasoning-start') {
-			currentReasoning = '';
-			ensureReasoningPart();
-		}
-
-		const reasoningDeltaText = readReasoningDeltaText(rec);
-		const reasoningDetailsText = readReasoningDetailsText(rec);
-		if (type === 'reasoning-delta' && reasoningDeltaText) {
-			currentReasoning += reasoningDeltaText;
-			const lastPart = ensureReasoningPart();
-			lastPart.text = `${lastPart.text ?? ''}${reasoningDeltaText}`;
-		} else if (reasoningDetailsText && type !== 'reasoning-start') {
-			const lastPart = ensureReasoningPart();
-			if (reasoningDetailsText !== currentReasoning) {
-				if (currentReasoning.length > 0 && reasoningDetailsText.startsWith(currentReasoning)) {
-					lastPart.text = `${lastPart.text ?? ''}${reasoningDetailsText.slice(currentReasoning.length)}`;
-					currentReasoning = reasoningDetailsText;
-				} else if (type === 'reasoning-delta') {
-					lastPart.text = `${lastPart.text ?? ''}${reasoningDetailsText}`;
-					currentReasoning += reasoningDetailsText;
-				} else {
-					lastPart.text = reasoningDetailsText;
-					currentReasoning = reasoningDetailsText;
-				}
-			}
-		}
-
-		if (!type) continue;
-
-		if (type === 'text-start') {
-			currentText = '';
-			const last = parts.at(-1);
-			if (!last || last.type !== 'text') {
-				parts.push({ type: 'text', text: '' });
-			}
-		} else if (type === 'text-delta') {
-			const delta = readString(rec, 'delta') ?? '';
-			if (delta) {
-				currentText += delta;
-				let lastPart = parts[parts.length - 1];
-				if (!lastPart || lastPart.type !== 'text') {
-					lastPart = { type: 'text', text: '' };
-					parts.push(lastPart);
-				}
-				lastPart.text = `${lastPart.text ?? ''}${delta}`;
-			}
-		} else if (type === 'text-end') {
-			const finalText = readString(rec, 'text') ?? readString(rec, 'delta') ?? '';
-			if (finalText) {
-				currentText = finalText;
-				const lastPart = parts[parts.length - 1];
-				if (lastPart?.type === 'text') {
-					lastPart.text = currentText;
-				}
-			}
-		} else if (type === 'tool-input-start') {
-			const toolCallId = readString(rec, 'toolCallId');
-			const toolName = readString(rec, 'toolName') ?? '';
-			if (toolCallId) {
-				parts.push({
-					type: 'tool-invocation',
-					toolInvocation: {
-						toolCallId,
-						toolName,
-						args: {},
-						state: 'call'
-					}
-				});
-			}
-		} else if (type === 'tool-input-delta') {
-			const toolCallId = readString(rec, 'toolCallId');
-			const inputTextDelta = readString(rec, 'inputTextDelta');
-			if (!toolCallId || !inputTextDelta) continue;
-			const part = parts.find(
-				(p) => p.type === 'tool-invocation' && p.toolInvocation?.toolCallId === toolCallId
-			);
-			if (part?.toolInvocation) {
-				if (typeof part.toolInvocation.args !== 'string') {
-					part.toolInvocation.args = inputTextDelta;
-				} else {
-					part.toolInvocation.args += inputTextDelta;
-				}
-			}
-		} else if (type === 'tool-input-available') {
-			const toolCallId = readString(rec, 'toolCallId');
-			if (!toolCallId) continue;
-			const part = parts.find(
-				(p) => p.type === 'tool-invocation' && p.toolInvocation?.toolCallId === toolCallId
-			);
-			if (part?.toolInvocation) {
-				part.toolInvocation.args = rec['input'];
-			}
-		} else if (type === 'tool-output-available') {
-			const toolCallId = readString(rec, 'toolCallId');
-			if (!toolCallId) continue;
-			const part = parts.find(
-				(p) => p.type === 'tool-invocation' && p.toolInvocation?.toolCallId === toolCallId
-			);
-			if (part?.toolInvocation) {
-				part.toolInvocation.state = 'result';
-				part.toolInvocation.result = rec['output'];
-			}
-		}
+		supervisor.ingestChunkJson(event.chunk);
 	}
 
-	return parts as unknown as UIMessage['parts'];
+	return supervisor.getParts() as unknown as UIMessage['parts'];
 }

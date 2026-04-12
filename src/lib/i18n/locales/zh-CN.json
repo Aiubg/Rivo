@@ -190,7 +190,8 @@
 	"run": {
 		"invalid_response": "运行响应无效",
 		"stream_failed": "连接流失败",
-		"failed": "运行失败"
+		"failed": "运行失败",
+		"empty_output_invalid": "\u6a21\u578b\u5df2\u7ed3\u675f\uff0c\u4f46\u6ca1\u6709\u751f\u6210\u4efb\u4f55\u53ef\u89c1\u5185\u5bb9\u3002"
 	},
 	"history": {
 		"pinned": "置顶",
