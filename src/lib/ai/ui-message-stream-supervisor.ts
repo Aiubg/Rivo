@@ -59,7 +59,9 @@ export function cloneMessageParts(parts: ReadonlyArray<MessagePart>): MessagePar
 	return parts.map((part) => cloneToolInvocation(part));
 }
 
-export function hasVisibleMessageParts(parts: ReadonlyArray<MessagePart> | undefined | null): boolean {
+export function hasVisibleMessageParts(
+	parts: ReadonlyArray<MessagePart> | undefined | null
+): boolean {
 	if (!Array.isArray(parts)) {
 		return false;
 	}
@@ -81,7 +83,9 @@ export function hasVisibleMessageParts(parts: ReadonlyArray<MessagePart> | undef
 	});
 }
 
-export function classifyGenerationFailureKind(errorText: string | null | undefined): GenerationFailureKind {
+export function classifyGenerationFailureKind(
+	errorText: string | null | undefined
+): GenerationFailureKind {
 	if (!errorText) {
 		return 'unknown';
 	}

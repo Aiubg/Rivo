@@ -119,7 +119,7 @@
 		color: var(--md-code-fg);
 		/* Keep rounded corners stable while sticky header/content is composited during scroll. */
 		-webkit-mask-image: -webkit-radial-gradient(white, black);
-		mask-image: linear-gradient(#fff, #fff);
+		mask-image: linear-gradient(black, black);
 	}
 
 	@supports not (overflow: clip) {

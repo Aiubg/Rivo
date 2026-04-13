@@ -222,7 +222,9 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 			if (!user || !outcome.hasVisibleOutput) return;
 
 			const assistantId =
-				assistantMessageId && assistantMessageId.length > 0 ? assistantMessageId : crypto.randomUUID();
+				assistantMessageId && assistantMessageId.length > 0
+					? assistantMessageId
+					: crypto.randomUUID();
 			const persisted = await upsertMessage({
 				entry: {
 					id: assistantId,

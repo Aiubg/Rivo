@@ -6,6 +6,12 @@ export type ManagedFile = StoredUploadFile & {
 	previewLoading?: boolean;
 };
 
+export type RenameDialogState = {
+	fileToRename: ManagedFile | null;
+	renameExtension: string;
+	openFileMenuUrl: string | null;
+};
+
 export type FileTypeFilter = 'text' | 'image' | 'office';
 export type SortMode = 'size' | 'name' | 'created';
 export type ManagedFileUploadResponse = {
@@ -140,4 +146,41 @@ export function getVisibleManagedFiles(
 	return files
 		.filter((file) => matchesManagedFileFilter(file, filter))
 		.sort(compareManagedFiles(sortMode));
+}
+
+export function getNextSelectedFileUrl(
+	visibleFiles: ReadonlyArray<ManagedFile>,
+	selectedUrl: string | null
+): string | null {
+	if (visibleFiles.length === 0) {
+		return null;
+	}
+
+	if (!selectedUrl) {
+		return null;
+	}
+
+	return visibleFiles.some((file) => file.url === selectedUrl) ? selectedUrl : null;
+}
+
+export function getNextDeleteDialogFile(
+	deleteDialogOpen: boolean,
+	fileToDelete: ManagedFile | null
+): ManagedFile | null {
+	return deleteDialogOpen ? fileToDelete : null;
+}
+
+export function getNextRenameDialogState(
+	renameDialogOpen: boolean,
+	state: RenameDialogState
+): RenameDialogState {
+	if (renameDialogOpen) {
+		return state;
+	}
+
+	return {
+		fileToRename: null,
+		renameExtension: '',
+		openFileMenuUrl: null
+	};
 }

@@ -12,6 +12,9 @@ import {
 } from '$lib/services/files-api';
 import {
 	createManagedFileFromUploadResponse,
+	getNextDeleteDialogFile,
+	getNextRenameDialogState,
+	getNextSelectedFileUrl,
 	getVisibleManagedFiles,
 	mergeManagedFiles,
 	normalizeManagedFiles,
@@ -245,13 +248,7 @@ export class FileLibraryState {
 	};
 
 	syncSelectionWithVisibleFiles = () => {
-		if (this.visibleFiles.length === 0) {
-			this.selectedUrl = null;
-			return;
-		}
-		if (this.selectedUrl && !this.visibleFiles.some((file) => file.url === this.selectedUrl)) {
-			this.selectedUrl = null;
-		}
+		this.selectedUrl = getNextSelectedFileUrl(this.visibleFiles, this.selectedUrl);
 	};
 
 	ensureSelectedPreviewLoaded = async () => {
@@ -262,16 +259,19 @@ export class FileLibraryState {
 	};
 
 	syncDeleteDialogState = () => {
-		if (!this.deleteDialogOpen) {
-			this.fileToDelete = null;
-		}
+		this.fileToDelete = getNextDeleteDialogFile(this.deleteDialogOpen, this.fileToDelete);
 	};
 
 	syncRenameDialogState = async () => {
 		if (!this.renameDialogOpen) {
-			this.fileToRename = null;
-			this.renameExtension = '';
-			this.openFileMenuUrl = null;
+			const nextState = getNextRenameDialogState(this.renameDialogOpen, {
+				fileToRename: this.fileToRename,
+				renameExtension: this.renameExtension,
+				openFileMenuUrl: this.openFileMenuUrl
+			});
+			this.fileToRename = nextState.fileToRename;
+			this.renameExtension = nextState.renameExtension;
+			this.openFileMenuUrl = nextState.openFileMenuUrl;
 			return;
 		}
 

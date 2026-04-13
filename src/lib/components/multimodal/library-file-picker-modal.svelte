@@ -213,7 +213,7 @@
 								data-selected={selectedUrls.includes(file.url)}
 							>
 								<CheckIcon
-									class="text-background size-3.5 opacity-0 transition-opacity data-[selected=true]:opacity-100"
+									class="text-background size-4 opacity-0 transition-opacity data-[selected=true]:opacity-100"
 									data-selected={selectedUrls.includes(file.url)}
 								/>
 							</div>

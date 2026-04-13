@@ -2,7 +2,6 @@ import { replaceState } from '$app/navigation';
 import { resolve } from '$app/paths';
 import { getChatDraftStorageKey } from '$lib/components/multimodal/draft-storage';
 import { hasVisibleMessageParts } from '$lib/ai/ui-message-stream-supervisor';
-import { connectRunStreamWithRetry } from '$lib/hooks/chat-state/connect-run-stream';
 import { personalization } from '$lib/hooks/personalization.svelte';
 import { randomId } from '$lib/utils/misc';
 import { fetchWithTimeout } from '$lib/utils/network';
@@ -13,6 +12,7 @@ import type { Chat as DbChat, User } from '$lib/types/db';
 import type { MessagePart, UIMessageWithTree } from '$lib/types/message';
 import type { ChatHistory } from '$lib/hooks/chat-history.svelte';
 import { readStoredRunCursor, readStreamErrorMessage } from './run-stream';
+import { streamRunWithRetry } from './stream-run';
 import { get } from 'svelte/store';
 import { t } from 'svelte-i18n';
 import { toast } from 'svelte-sonner';
@@ -146,7 +146,9 @@ export class ChatStateActions {
 	}
 
 	private assistantHasVisibleOutput(messageId: string): boolean {
-		const assistantMessage = this.context.state.allMessages.find((message) => message.id === messageId);
+		const assistantMessage = this.context.state.allMessages.find(
+			(message) => message.id === messageId
+		);
 		return hasVisibleMessageParts(assistantMessage?.parts);
 	}
 
@@ -155,7 +157,9 @@ export class ChatStateActions {
 			(message) => message.id !== messageId
 		);
 		this.context.state.selectedMessageIds = Object.fromEntries(
-			Object.entries(this.context.state.selectedMessageIds).filter(([, value]) => value !== messageId)
+			Object.entries(this.context.state.selectedMessageIds).filter(
+				([, value]) => value !== messageId
+			)
 		);
 		this.context.callbacks.saveSelectedMessageIds();
 	}
@@ -440,29 +444,13 @@ export class ChatStateActions {
 
 				const initialCursor = readStoredRunCursor(confirmedRunId, 0);
 				initialStreamCursor = initialCursor;
-				let streamErrorKey: string | null = null;
-
-				await connectRunStreamWithRetry({
+				await streamRunWithRetry({
+					runId: confirmedRunId,
+					assistantMessageId,
 					initialCursor,
 					outerAbortSignal,
-					fetchStream: (cursor, signal) =>
-						fetch(`/api/runs/${confirmedRunId}/stream?cursor=${cursor}`, { signal }),
-					processStream: async (body) => {
-						streamErrorKey = null;
-						await this.context.callbacks.processStream(
-							body,
-							assistantMessageId,
-							commitSubmission,
-							(errorKey) => {
-								streamErrorKey = errorKey;
-							}
-						);
-						if (streamErrorKey) {
-							throw new Error(streamErrorKey);
-						}
-					},
-					readCursor: (fallback) => readStoredRunCursor(confirmedRunId, fallback),
-					shouldRetry: (error) => error instanceof Error && error.message === 'run.stream_failed'
+					onFirstRecord: commitSubmission,
+					processStream: this.context.callbacks.processStream
 				});
 			}
 		} catch (error: unknown) {
@@ -506,9 +494,7 @@ export class ChatStateActions {
 
 				const willAttemptResume = !!runId && committed && errorKey === 'run.stream_failed';
 				const shouldDiscardAssistantPlaceholder =
-					committed &&
-					!willAttemptResume &&
-					!this.assistantHasVisibleOutput(assistantMessageId);
+					committed && !willAttemptResume && !this.assistantHasVisibleOutput(assistantMessageId);
 
 				if (shouldDiscardAssistantPlaceholder) {
 					this.discardAssistantPlaceholder(assistantMessageId);
@@ -555,28 +541,12 @@ export class ChatStateActions {
 		const streamCursor = options.cursor;
 
 		try {
-			let streamErrorKey: string | null = null;
-			await connectRunStreamWithRetry({
+			await streamRunWithRetry({
+				runId: options.id,
+				assistantMessageId: options.assistantMessageId,
 				initialCursor: streamCursor,
 				outerAbortSignal,
-				fetchStream: (cursor, signal) =>
-					fetch(`/api/runs/${options.id}/stream?cursor=${cursor}`, { signal }),
-				processStream: async (body) => {
-					streamErrorKey = null;
-					await this.context.callbacks.processStream(
-						body,
-						options.assistantMessageId,
-						undefined,
-						(errorKey) => {
-							streamErrorKey = errorKey;
-						}
-					);
-					if (streamErrorKey) {
-						throw new Error(streamErrorKey);
-					}
-				},
-				readCursor: (fallback) => readStoredRunCursor(options.id, fallback),
-				shouldRetry: (error) => error instanceof Error && error.message === 'run.stream_failed'
+				processStream: this.context.callbacks.processStream
 			});
 		} catch (error) {
 			const externalAborted =

@@ -19,9 +19,9 @@
 	--destructive: oklch(59.675% 0.24384 29.365);
 	--destructive-foreground: oklch(from var(--destructive) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 	--success: oklch(0.65 0.15 145);
-	--success-foreground: #ffffff;
+	--success-foreground: oklch(from var(--success) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 	--warning: oklch(0.78 0.16 85);
-	--warning-foreground: #000000;
+	--warning-foreground: oklch(from var(--warning) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 
 	/* Structural colors */
 	--border: oklch(0.92 0.005 240);
@@ -72,9 +72,9 @@
 	--destructive: oklch(0.6 0.18 25);
 	--destructive-foreground: oklch(from var(--destructive) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 	--success: oklch(0.7 0.15 145);
-	--success-foreground: #000000;
+	--success-foreground: oklch(from var(--success) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 	--warning: oklch(0.8 0.15 85);
-	--warning-foreground: #000000;
+	--warning-foreground: oklch(from var(--warning) clamp(0, calc((0.62 - l) * 1000), 1) 0 0);
 
 	/* Structural colors */
 	--border: oklch(0.22 0.01 240);

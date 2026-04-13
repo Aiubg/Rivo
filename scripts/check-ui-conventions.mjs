@@ -13,6 +13,7 @@ const spacingUtilityGroup =
 
 const forbiddenTextMdRegex = /(?:^|[^\w-])(text-md)(?=$|[^\w-])/g;
 const arbitraryTextRegex = /text-\[[^\]]+\]/g;
+const arbitraryShadowRegex = /\bshadow-\[[^\]]+\]/g;
 const decimalSpacingRegex = new RegExp(
 	'(?:^|[\\s"\'`({\\[])(?:[a-z-]+:)*(-?' +
 		spacingUtilityGroup +
@@ -39,6 +40,7 @@ const forbiddenLegacyVarRegexes = [
 ];
 const forbiddenThemeDestructiveOverrideRegex = /--destructive(?:-foreground)?\s*:/gi;
 const nestedVarFallbackRegex = /var\(\s*--[a-z0-9-]+\s*,\s*var\(\s*--[a-z0-9-]+\s*\)\s*\)/gi;
+const forbiddenHexColorRegex = /#[0-9a-f]{3,8}\b/gi;
 
 /** @type {{file: string; line: number; column: number; token: string; rule: string}[]} */
 const violations = [];
@@ -92,6 +94,12 @@ function inspectFile(filePath) {
 			recordViolation(filePath, lineIndex, match.index, token, 'forbidden-arbitrary-text-size');
 		}
 
+		for (const match of line.matchAll(arbitraryShadowRegex)) {
+			if (match.index === undefined) continue;
+			const token = match[0];
+			recordViolation(filePath, lineIndex, match.index, token, 'forbidden-arbitrary-shadow');
+		}
+
 		for (const match of line.matchAll(decimalSpacingRegex)) {
 			if (match.index === undefined) continue;
 			const token = match[1] ?? '';
@@ -115,6 +123,13 @@ function inspectFile(filePath) {
 			const token = match[0] ?? '';
 			if (!token) continue;
 			recordViolation(filePath, lineIndex, match.index, token, 'forbidden-nested-var-fallback');
+		}
+
+		for (const match of line.matchAll(forbiddenHexColorRegex)) {
+			if (match.index === undefined) continue;
+			const token = match[0] ?? '';
+			if (!token) continue;
+			recordViolation(filePath, lineIndex, match.index, token, 'forbidden-hex-color');
 		}
 
 		if (isThemeFile) {

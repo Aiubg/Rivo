@@ -351,7 +351,7 @@
 				aria-label={$t('common.close')}
 				onclick={() => (open = false)}
 			>
-				<XIcon size=14/>
+				<XIcon size="14" />
 			</Button>
 
 			<div

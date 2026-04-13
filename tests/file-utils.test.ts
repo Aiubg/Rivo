@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+	getNextDeleteDialogFile,
+	getNextRenameDialogState,
+	getNextSelectedFileUrl,
 	getVisibleManagedFiles,
 	mergeManagedFiles,
 	normalizeManagedFiles,
@@ -171,5 +174,38 @@ describe('managed file helpers', () => {
 		expect(patched[0]?.previewContent).toBe('cached preview');
 		expect(renamed[1]?.originalName).toBe('renamed-b.txt');
 		expect(removed.map((file) => file.url)).toEqual(['/uploads/b.txt']);
+	});
+
+	it('normalizes file-library selection and dialog cleanup state', () => {
+		const files = [
+			createManagedFile({
+				url: '/uploads/a.txt',
+				storedName: 'a.txt',
+				originalName: 'a.txt'
+			}),
+			createManagedFile({
+				url: '/uploads/b.txt',
+				storedName: 'b.txt',
+				originalName: 'b.txt'
+			})
+		];
+
+		expect(getNextSelectedFileUrl(files, '/uploads/a.txt')).toBe('/uploads/a.txt');
+		expect(getNextSelectedFileUrl(files, '/uploads/missing.txt')).toBeNull();
+		expect(getNextSelectedFileUrl([], '/uploads/a.txt')).toBeNull();
+		expect(getNextDeleteDialogFile(true, files[0] ?? null)?.url).toBe('/uploads/a.txt');
+		expect(getNextDeleteDialogFile(false, files[0] ?? null)).toBeNull();
+
+		expect(
+			getNextRenameDialogState(false, {
+				fileToRename: files[1] ?? null,
+				renameExtension: '.txt',
+				openFileMenuUrl: '/uploads/b.txt'
+			})
+		).toEqual({
+			fileToRename: null,
+			renameExtension: '',
+			openFileMenuUrl: null
+		});
 	});
 });

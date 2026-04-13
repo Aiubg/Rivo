@@ -65,17 +65,17 @@ describe('processChatStream', () => {
 	it('does not duplicate reasoning when a frame contains both snapshot metadata and delta', async () => {
 		const updateAssistantParts = vi.fn();
 
-	await processChatStream({
-		body: createStreamBody(
-			'id: 1\ndata: {"type":"reasoning-start"}\n\n',
-			'id: 2\ndata: {"type":"reasoning-delta","delta":"User","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User"}]}}}\n\n',
-			'id: 3\ndata: {"type":"reasoning-delta","delta":" asks why","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User asks why"}]}}}\n\n',
-			'id: 4\ndata: {"type":"text-start"}\n\n',
-			'id: 5\ndata: {"type":"text-delta","delta":"Done"}\n\n',
-			'id: 6\ndata: {"type":"finish"}'
-		),
-		assistantMessageId: 'assistant-3',
-		activeRunId: 'run-3',
+		await processChatStream({
+			body: createStreamBody(
+				'id: 1\ndata: {"type":"reasoning-start"}\n\n',
+				'id: 2\ndata: {"type":"reasoning-delta","delta":"User","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User"}]}}}\n\n',
+				'id: 3\ndata: {"type":"reasoning-delta","delta":" asks why","providerMetadata":{"openrouter":{"reasoning_details":[{"text":"User asks why"}]}}}\n\n',
+				'id: 4\ndata: {"type":"text-start"}\n\n',
+				'id: 5\ndata: {"type":"text-delta","delta":"Done"}\n\n',
+				'id: 6\ndata: {"type":"finish"}'
+			),
+			assistantMessageId: 'assistant-3',
+			activeRunId: 'run-3',
 			getMessages: () => [{ id: 'assistant-3', role: 'assistant', parts: [] }],
 			updateAssistantParts,
 			clearRunRecoveryState: vi.fn()

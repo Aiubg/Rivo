@@ -92,7 +92,7 @@
 							onclick={() => handleNavigate(message.id)}
 						>
 							<div
-								class="h-0.5 rounded-full transition-all duration-150
+								class="h-px rounded-full transition-all duration-150
                                     {isActive
 									? 'bg-primary w-5 opacity-100'
 									: 'bg-muted-foreground/30 group-hover/timeline-tick:bg-primary w-2 opacity-100 group-hover/timeline-tick:w-5 group-hover/timeline-tick:opacity-100'}

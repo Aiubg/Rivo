@@ -172,11 +172,7 @@ export function updateMessagePartsById({
 	});
 }
 
-export function upsertMessage({
-	entry
-}: {
-	entry: NewMessage;
-}): ResultAsync<Message, DbError> {
+export function upsertMessage({ entry }: { entry: NewMessage }): ResultAsync<Message, DbError> {
 	return safeTry(async function* () {
 		yield* fromPromise(
 			ensureMessageSearchTextColumn(),
