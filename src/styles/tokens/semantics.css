@@ -4,6 +4,8 @@
 	--foreground: oklch(0.18 0.01 240);
 	--card: oklch(1 0 0);
 	--card-foreground: var(--foreground);
+	--dialog: var(--background);
+	--dialog-foreground: var(--foreground);
 	--popover: oklch(1 0 0);
 	--popover-foreground: var(--foreground);
 
@@ -57,6 +59,8 @@
 	--foreground: oklch(0.92 0.005 240);
 	--card: oklch(0.18 0.01 240);
 	--card-foreground: var(--foreground);
+	--dialog: var(--background);
+	--dialog-foreground: var(--foreground);
 	--popover: oklch(0.18 0.01 240);
 	--popover-foreground: var(--foreground);
 

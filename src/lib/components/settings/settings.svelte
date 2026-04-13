@@ -188,7 +188,7 @@
 				<ShareManagement bind:showDataSubpage bind:open />
 			{:else}
 				<div class="flex min-h-0 flex-1">
-					<div class="bg-sidebar flex w-52 shrink-0 flex-col gap-1 p-6 select-none">
+					<div class="bg-dialog flex w-52 shrink-0 flex-col gap-1 p-6 select-none">
 						<div class="mb-4 flex h-8 items-center gap-2 px-2 text-base font-semibold">
 							{$t('common.settings')}
 						</div>

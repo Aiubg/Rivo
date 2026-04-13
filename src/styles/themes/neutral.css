@@ -38,6 +38,8 @@
 	--foreground: oklch(0.98 0 0);
 	--card: oklch(0.17 0 0);
 	--card-foreground: oklch(0.98 0 0);
+	--dialog:oklch(0.22 0 0);
+	--dialog-foreground: oklch(0.98 0 0);
 	--popover: oklch(0.18 0 0);
 	--popover-foreground: oklch(0.98 0 0);
 
