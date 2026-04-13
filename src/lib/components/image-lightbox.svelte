@@ -45,6 +45,8 @@
 	let fitFrame: number | null = null;
 	let dragState = $state<DragState | null>(null);
 	let pinchState = $state<PinchState | null>(null);
+	const themeSurfaceStyle =
+		'background-color: color-mix(in oklab, var(--background) 95%, var(--foreground));';
 
 	function clamp(value: number, min: number, max: number) {
 		return Math.min(Math.max(value, min), max);
@@ -338,17 +340,18 @@
 
 <AlertDialog bind:open>
 	<AlertDialogContent
-		class="fixed! inset-0! w-screen! max-w-none! translate-x-0! translate-y-0! gap-0! border-0! bg-black! p-0! shadow-none!"
+		class="fixed! inset-0! w-screen! max-w-none! translate-x-0! translate-y-0! gap-0! rounded-none! border-0! p-0! shadow-none!"
+		style={themeSurfaceStyle}
 	>
-		<div class="relative h-dvh w-full bg-black">
+		<div class="relative h-dvh w-full" style={themeSurfaceStyle}>
 			<Button
 				variant="ghost"
-				size="icon"
-				class="bg-background/85 text-foreground hover:bg-background absolute top-4 right-4 z-20 rounded-full shadow-lg backdrop-blur"
+				size="icon-sm"
+				class="bg-background/50 text-foreground hover:bg-background absolute top-4 right-4 z-20 rounded-full shadow-lg backdrop-blur"
 				aria-label={$t('common.close')}
 				onclick={() => (open = false)}
 			>
-				<XIcon class="size-5 stroke-2" />
+				<XIcon size=14/>
 			</Button>
 
 			<div
