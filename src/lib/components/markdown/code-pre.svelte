@@ -14,6 +14,7 @@
 		DropdownMenuItem,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
+	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { onDestroy, type Component, type Snippet } from 'svelte';
 	import { observePreForHighlight } from '$lib/utils/code';
 	import { copyToClipboard } from '$lib/utils/misc';
@@ -139,7 +140,6 @@
 						)}
 						role="tab"
 						aria-selected={activeTab === 'chart'}
-						title={$t('chat.chart')}
 						onclick={() => (activeTab = 'chart')}
 					>
 						{$t('chat.chart')}
@@ -152,7 +152,6 @@
 						)}
 						role="tab"
 						aria-selected={activeTab === 'code'}
-						title={$t('chat.code')}
 						onclick={() => (activeTab = 'code')}
 					>
 						{$t('chat.code')}
@@ -165,39 +164,60 @@
 		</div>
 		<div class="flex items-center">
 			{#if isMermaid && activeTab === 'chart'}
-				<Button
-					variant="ghost"
-					size="sm"
-					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
-					onclick={() => mermaidRef?.zoomIn()}
-					aria-label={$t('chat.zoom_in')}
-					title={$t('chat.zoom_in')}
-					disabled={streaming || !mermaidRef}
-				>
-					<ZoomInIcon size={14} />
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
-					onclick={() => mermaidRef?.zoomOut()}
-					aria-label={$t('chat.zoom_out')}
-					title={$t('chat.zoom_out')}
-					disabled={streaming || !mermaidRef}
-				>
-					<ZoomOutIcon size={14} />
-				</Button>
-				<Button
-					variant="ghost"
-					size="sm"
-					class="text-muted-foreground hover:text-foreground px-2 transition-colors"
-					onclick={() => mermaidRef?.resetZoom()}
-					aria-label={$t('chat.reset_zoom')}
-					title={$t('chat.reset_zoom')}
-					disabled={streaming || !mermaidRef}
-				>
-					<RotateCcwIcon size={14} />
-				</Button>
+				<Tooltip>
+					<TooltipTrigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								size="sm"
+								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
+								onclick={() => mermaidRef?.zoomIn()}
+								aria-label={$t('chat.zoom_in')}
+								disabled={streaming || !mermaidRef}
+							>
+								<ZoomInIcon size={14} />
+							</Button>
+						{/snippet}
+					</TooltipTrigger>
+					<TooltipContent>{$t('chat.zoom_in')}</TooltipContent>
+				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								size="sm"
+								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
+								onclick={() => mermaidRef?.zoomOut()}
+								aria-label={$t('chat.zoom_out')}
+								disabled={streaming || !mermaidRef}
+							>
+								<ZoomOutIcon size={14} />
+							</Button>
+						{/snippet}
+					</TooltipTrigger>
+					<TooltipContent>{$t('chat.zoom_out')}</TooltipContent>
+				</Tooltip>
+				<Tooltip>
+					<TooltipTrigger>
+						{#snippet child({ props })}
+							<Button
+								{...props}
+								variant="ghost"
+								size="sm"
+								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
+								onclick={() => mermaidRef?.resetZoom()}
+								aria-label={$t('chat.reset_zoom')}
+								disabled={streaming || !mermaidRef}
+							>
+								<RotateCcwIcon size={14} />
+							</Button>
+						{/snippet}
+					</TooltipTrigger>
+					<TooltipContent>{$t('chat.reset_zoom')}</TooltipContent>
+				</Tooltip>
 
 				<div class="bg-muted-foreground/30 mx-2 h-3 w-px"></div>
 			{/if}
@@ -208,7 +228,6 @@
 				class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 				onclick={handleCopy}
 				aria-label={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
-				title={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
 				disabled={streaming || !hasCodeContent}
 			>
 				{#if copied}
@@ -229,7 +248,6 @@
 								size="sm"
 								class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 								aria-label={$t('chat.download')}
-								title={$t('chat.download')}
 								disabled={streaming || !hasCodeContent}
 							>
 								<DownloadIcon size={14} />
@@ -268,7 +286,6 @@
 					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 					onclick={() => handleDownload()}
 					aria-label={$t('chat.download')}
-					title={$t('chat.download')}
 					disabled={streaming || !hasCodeContent}
 				>
 					<DownloadIcon size={14} />
@@ -284,7 +301,6 @@
 					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
 					onclick={() => sidebar?.openHtml(codeContent)}
 					aria-label={$t('chat.run')}
-					title={$t('chat.run')}
 					disabled={streaming || !hasCodeContent}
 				>
 					<PlayIcon size={14} />
