@@ -1,13 +1,27 @@
 <script lang="ts">
 	import { mode } from 'mode-watcher';
 	import ImageOffIcon from '@lucide/svelte/icons/image-off';
-	import { onDestroy, tick } from 'svelte';
+	import { onDestroy, tick, untrack } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import ImageLightbox from '$lib/components/image-lightbox.svelte';
 	import * as Empty from '$lib/components/ui/empty';
 	import { logger } from '$lib/utils/logger';
 	import { randomId } from '$lib/utils/misc';
 
-	let { code }: { code: string } = $props();
+	type MermaidStatus = {
+		canInteract: boolean;
+		canDownloadPng: boolean;
+		canDownloadSvg: boolean;
+		hasError: boolean;
+	};
+
+	let {
+		code,
+		onstatuschange
+	}: {
+		code: string;
+		onstatuschange?: (status: MermaidStatus) => void;
+	} = $props();
 
 	type MermaidConfig = Record<string, unknown>;
 
@@ -32,6 +46,8 @@
 
 	let viewerEl = $state<HTMLDivElement | null>(null);
 	let wrapperEl = $state<HTMLDivElement | null>(null);
+	let fullscreenOpen = $state(false);
+	let fullscreenSrc = $state<string | null>(null);
 
 	const id = `mermaid-${randomId().slice(0, 9)}`;
 
@@ -110,6 +126,14 @@
 		setTimeout(() => URL.revokeObjectURL(url), 1000);
 	}
 
+	function setFullscreenSrc(nextSrc: string | null) {
+		const previousSrc = untrack(() => fullscreenSrc);
+		if (previousSrc && previousSrc !== nextSrc) {
+			URL.revokeObjectURL(previousSrc);
+		}
+		fullscreenSrc = nextSrc;
+	}
+
 	function getExportSvg() {
 		if (!svg || typeof DOMParser === 'undefined') return null;
 		const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
@@ -137,6 +161,71 @@
 		return { svg: svgEl.outerHTML, width, height };
 	}
 
+	function ensureFullscreenSrc(force = false) {
+		const existingSrc = untrack(() => fullscreenSrc);
+		if (!force && existingSrc) return existingSrc;
+		const payload = getExportSvg();
+		if (!payload) {
+			setFullscreenSrc(null);
+			return null;
+		}
+
+		const nextSrc = URL.createObjectURL(
+			new Blob([payload.svg], { type: 'image/svg+xml;charset=utf-8' })
+		);
+		setFullscreenSrc(nextSrc);
+
+		return nextSrc;
+	}
+
+	function toSvgDataUrl(svgString: string) {
+		return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+	}
+
+	async function renderSvgToCanvas(
+		svgString: string,
+		width: number,
+		height: number,
+		ratio: number
+	): Promise<HTMLCanvasElement | null> {
+		if (typeof document === 'undefined' || typeof window === 'undefined') return null;
+
+		const canvas = document.createElement('canvas');
+		canvas.width = Math.max(1, Math.round(width * ratio));
+		canvas.height = Math.max(1, Math.round(height * ratio));
+
+		const ctx = canvas.getContext('2d');
+		if (!ctx) return null;
+		ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+		try {
+			if (typeof createImageBitmap === 'function') {
+				const bitmap = await createImageBitmap(
+					new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' })
+				);
+				ctx.drawImage(bitmap, 0, 0, width, height);
+				bitmap.close();
+				return canvas;
+			}
+		} catch (e) {
+			logger.warn?.('Falling back from createImageBitmap for mermaid PNG export', e);
+		}
+
+		const img = new Image();
+		img.decoding = 'async';
+
+		const loaded = new Promise<void>((resolve, reject) => {
+			img.onload = () => resolve();
+			img.onerror = () => reject(new Error('Failed to load SVG'));
+		});
+
+		img.src = toSvgDataUrl(svgString);
+		await loaded;
+		ctx.drawImage(img, 0, 0, width, height);
+
+		return canvas;
+	}
+
 	export function downloadSvg(filename = 'diagram.svg') {
 		const payload = getExportSvg();
 		if (!payload) return;
@@ -150,38 +239,18 @@
 		if (!payload) return;
 
 		const { svg: svgString, width, height } = payload;
-		const svgBlob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-		const url = URL.createObjectURL(svgBlob);
-		const img = new Image();
-		img.decoding = 'async';
-
-		const loaded = new Promise<void>((resolve, reject) => {
-			img.onload = () => resolve();
-			img.onerror = () => reject(new Error('Failed to load SVG'));
-		});
-
-		img.src = url;
-		try {
-			await loaded;
-		} catch {
-			URL.revokeObjectURL(url);
-			return;
-		}
-
 		const ratio = Math.max(window.devicePixelRatio || 1, minScale);
-		const canvas = document.createElement('canvas');
-		canvas.width = Math.max(1, Math.round(width * ratio));
-		canvas.height = Math.max(1, Math.round(height * ratio));
-
-		const ctx = canvas.getContext('2d');
-		if (!ctx) {
-			URL.revokeObjectURL(url);
+		let canvas: HTMLCanvasElement | null = null;
+		try {
+			canvas = await renderSvgToCanvas(svgString, width, height, ratio);
+		} catch (e) {
+			logger.error('Failed to rasterize mermaid SVG for PNG export', e);
 			return;
 		}
 
-		ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-		ctx.drawImage(img, 0, 0, width, height);
-		URL.revokeObjectURL(url);
+		if (!canvas) {
+			return;
+		}
 
 		canvas.toBlob((pngBlob) => {
 			if (pngBlob) {
@@ -195,6 +264,12 @@
 			a.rel = 'noopener';
 			a.click();
 		}, 'image/png');
+	}
+
+	export function openFullscreen() {
+		const src = ensureFullscreenSrc();
+		if (!src) return;
+		fullscreenOpen = true;
 	}
 
 	export function zoomIn() {
@@ -307,6 +382,7 @@
 		if (retryHandle) clearTimeout(retryHandle);
 		if (loadHandle) clearTimeout(loadHandle);
 		handleMouseUp();
+		setFullscreenSrc(null);
 	});
 
 	let renderCount = 0;
@@ -341,6 +417,37 @@
 			isLoadingMermaid = false;
 		}
 	}
+
+	$effect(() => {
+		const currentSvg = svg;
+		const isFullscreenOpen = fullscreenOpen;
+
+		if (!currentSvg) {
+			setFullscreenSrc(null);
+			if (isFullscreenOpen) {
+				fullscreenOpen = false;
+			}
+			return;
+		}
+
+		if (isFullscreenOpen) {
+			ensureFullscreenSrc(true);
+		}
+	});
+
+	$effect(() => {
+		onstatuschange?.({
+			canInteract: Boolean(svg) && !error,
+			canDownloadPng: Boolean(svg) && !error,
+			canDownloadSvg: Boolean(svg) && !error,
+			hasError: error
+		});
+	});
+
+	$effect(() => {
+		if (fullscreenOpen) return;
+		setFullscreenSrc(null);
+	});
 
 	$effect(() => {
 		if (!mermaidInstance) {
@@ -474,11 +581,7 @@
 >
 	{#if error}
 		<div role="alert" class="w-full">
-			<Empty.State
-				class="min-h-75"
-				title={$t('chat.render_failed')}
-				icon={ImageOffIcon}
-			/>
+			<Empty.State class="min-h-75" title={$t('chat.render_failed')} icon={ImageOffIcon} />
 		</div>
 	{:else if svg}
 		<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -512,6 +615,8 @@
 		</div>
 	{/if}
 </div>
+
+<ImageLightbox bind:open={fullscreenOpen} src={fullscreenSrc} alt={$t('chat.diagram_preview')} />
 
 <style>
 	:global(.mermaid-container svg) {

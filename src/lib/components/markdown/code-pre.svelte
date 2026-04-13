@@ -2,6 +2,7 @@
 	import { cn } from '$lib/utils/shadcn';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import CheckIcon from '@lucide/svelte/icons/check';
+	import Maximize2Icon from '@lucide/svelte/icons/maximize-2';
 	import ZoomInIcon from '@lucide/svelte/icons/zoom-in';
 	import ZoomOutIcon from '@lucide/svelte/icons/zoom-out';
 	import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
@@ -17,6 +18,7 @@
 	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { onDestroy, type Component, type Snippet } from 'svelte';
 	import { observePreForHighlight } from '$lib/utils/code';
+	import { IsMobile } from '$lib/hooks/is-mobile.svelte';
 	import { copyToClipboard } from '$lib/utils/misc';
 	import { t } from 'svelte-i18n';
 	import { get } from 'svelte/store';
@@ -39,11 +41,28 @@
 		zoomIn: () => void;
 		zoomOut: () => void;
 		resetZoom: () => void;
+		openFullscreen: () => void;
 		downloadSvg: (filename?: string) => void;
 		downloadPng: (filename?: string, minScale?: number) => void;
 	};
-	let MermaidComponent = $state<Component<{ code: string }, MermaidExports> | null>(null);
+	type MermaidStatus = {
+		canInteract: boolean;
+		canDownloadPng: boolean;
+		canDownloadSvg: boolean;
+		hasError: boolean;
+	};
+	const isMobileViewport = new IsMobile();
+	let MermaidComponent = $state<Component<
+		{ code: string; onstatuschange?: (status: MermaidStatus) => void },
+		MermaidExports
+	> | null>(null);
 	let mermaidRef = $state<MermaidExports | null>(null);
+	let mermaidStatus = $state<MermaidStatus>({
+		canInteract: false,
+		canDownloadPng: false,
+		canDownloadSvg: false,
+		hasError: false
+	});
 	let lang = $state<string>('Text');
 	let codeContent = $state<string>('');
 	let copied = $state(false);
@@ -122,6 +141,10 @@
 		a.click();
 		setTimeout(() => URL.revokeObjectURL(url), 1000);
 	}
+
+	function handleMermaidStatusChange(status: MermaidStatus) {
+		mermaidStatus = status;
+	}
 </script>
 
 <div class="markdown-code-block relative my-6 w-full rounded-xl">
@@ -163,7 +186,7 @@
 			{/if}
 		</div>
 		<div class="flex items-center">
-			{#if isMermaid && activeTab === 'chart'}
+			{#if isMermaid && activeTab === 'chart' && !isMobileViewport.current}
 				<Tooltip>
 					<TooltipTrigger>
 						{#snippet child({ props })}
@@ -174,7 +197,7 @@
 								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 								onclick={() => mermaidRef?.zoomIn()}
 								aria-label={$t('chat.zoom_in')}
-								disabled={streaming || !mermaidRef}
+								disabled={streaming || !mermaidStatus.canInteract}
 							>
 								<ZoomInIcon size={14} />
 							</Button>
@@ -192,7 +215,7 @@
 								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 								onclick={() => mermaidRef?.zoomOut()}
 								aria-label={$t('chat.zoom_out')}
-								disabled={streaming || !mermaidRef}
+								disabled={streaming || !mermaidStatus.canInteract}
 							>
 								<ZoomOutIcon size={14} />
 							</Button>
@@ -210,7 +233,7 @@
 								class="text-muted-foreground hover:text-foreground px-2 transition-colors"
 								onclick={() => mermaidRef?.resetZoom()}
 								aria-label={$t('chat.reset_zoom')}
-								disabled={streaming || !mermaidRef}
+								disabled={streaming || !mermaidStatus.canInteract}
 							>
 								<RotateCcwIcon size={14} />
 							</Button>
@@ -222,21 +245,35 @@
 				<div class="bg-muted-foreground/30 mx-2 h-3 w-px"></div>
 			{/if}
 
-			<Button
-				variant="ghost"
-				size="sm"
-				class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
-				onclick={handleCopy}
-				aria-label={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
-				disabled={streaming || !hasCodeContent}
-			>
-				{#if copied}
-					<CheckIcon size={14} />
-				{:else}
-					<CopyIcon size={14} />
-				{/if}
-				<span class="text-xs">{$t('chat.copy')}</span>
-			</Button>
+			{#if isMermaid && activeTab === 'chart'}
+				<Button
+					variant="ghost"
+					size="sm"
+					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
+					onclick={() => mermaidRef?.openFullscreen()}
+					aria-label={$t('chat.fullscreen')}
+					disabled={streaming || !mermaidStatus.canInteract}
+				>
+					<Maximize2Icon size={14} />
+					<span class="text-xs">{$t('chat.fullscreen')}</span>
+				</Button>
+			{:else}
+				<Button
+					variant="ghost"
+					size="sm"
+					class="text-muted-foreground hover:text-foreground gap-1 px-2 transition-colors"
+					onclick={handleCopy}
+					aria-label={copied ? $t('common.copied_to_clipboard') : $t('chat.copy')}
+					disabled={streaming || !hasCodeContent}
+				>
+					{#if copied}
+						<CheckIcon size={14} />
+					{:else}
+						<CopyIcon size={14} />
+					{/if}
+					<span class="text-xs">{$t('chat.copy')}</span>
+				</Button>
+			{/if}
 
 			{#if isMermaid}
 				<DropdownMenu>
@@ -258,14 +295,14 @@
 					<DropdownMenuContent side="bottom" align="end" class="min-w-32">
 						<DropdownMenuItem
 							class="cursor-pointer"
-							disabled={!mermaidRef || streaming}
+							disabled={streaming || !mermaidStatus.canDownloadSvg}
 							onSelect={() => mermaidRef?.downloadSvg()}
 						>
 							<span>{$t('chat.download_svg')}</span>
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							class="cursor-pointer"
-							disabled={!mermaidRef || streaming}
+							disabled={streaming || !mermaidStatus.canDownloadPng}
 							onSelect={() => mermaidRef?.downloadPng()}
 						>
 							<span>{$t('chat.download_png')}</span>
@@ -317,7 +354,11 @@
 				aria-hidden={activeTab !== 'chart'}
 			>
 				{#if MermaidComponent}
-					<MermaidComponent bind:this={mermaidRef} code={codeContent} />
+					<MermaidComponent
+						bind:this={mermaidRef}
+						code={codeContent}
+						onstatuschange={handleMermaidStatusChange}
+					/>
 				{:else}
 					<div class="flex-center flex-col gap-2 p-8" role="status" aria-live="polite">
 						<div
