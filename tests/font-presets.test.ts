@@ -22,6 +22,7 @@ describe('font presets', () => {
 	it('emits @font-face rules only for opt-in custom presets', () => {
 		expect(getFontFaceCss('inter')).toContain("font-family: 'Inter'");
 		expect(getFontFaceCss('oppo-sans')).toContain("font-family: 'Oppo Sans'");
+		expect(getFontFaceCss('noto-sans-sc')).toContain("font-family: 'Noto Sans SC'");
 		expect(getFontFaceCss('harmonyos-sans-sc')).toContain("font-family: 'HarmonyOS Sans SC'");
 	});
 });

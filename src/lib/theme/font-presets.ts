@@ -1,6 +1,7 @@
 import { LocalStorage } from '$lib/hooks/local-storage.svelte';
 import interRegularUrl from '$lib/assets/fonts/Inter/Inter-VariableFont_opsz,wght.ttf?url';
 import interItalicUrl from '$lib/assets/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf?url';
+import notoSansScUrl from '$lib/assets/fonts/Noto_Sans_SC/NotoSansSC-wght.ttf?url';
 import oppoRegularUrl from '$lib/assets/fonts/Oppo_Sans/OppoSans-Regular.ttf?url';
 import harmonyRegularUrl from '$lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Regular.ttf?url';
 import harmonyMediumUrl from '$lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_SC_Medium.ttf?url';
@@ -9,6 +10,7 @@ import harmonyBoldUrl from '$lib/assets/fonts/HarmonyOS_Sans_SC/HarmonyOS_Sans_S
 const SYSTEM_FONT_STACK =
 	"'Microsoft YaHei', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
 const INTER_FONT_STACK = `'Inter', ${SYSTEM_FONT_STACK}`;
+const NOTO_SANS_SC_FONT_STACK = `'Noto Sans SC', ${SYSTEM_FONT_STACK}`;
 const OPPO_FONT_STACK = `'Oppo Sans', ${INTER_FONT_STACK}`;
 const HARMONY_FONT_STACK = `'HarmonyOS Sans SC', ${SYSTEM_FONT_STACK}`;
 
@@ -38,6 +40,16 @@ ${INTER_FONT_FACE_CSS}
 	font-style: normal;
 	font-weight: 400;
 	src: url('${oppoRegularUrl}') format('truetype');
+	font-display: swap;
+}
+`.trim();
+
+const NOTO_SANS_SC_FONT_FACE_CSS = `
+@font-face {
+	font-family: 'Noto Sans SC';
+	font-style: normal;
+	font-weight: 100 900;
+	src: url('${notoSansScUrl}') format('truetype');
 	font-display: swap;
 }
 `.trim();
@@ -85,6 +97,11 @@ export const FONT_PRESETS = [
 		stack: OPPO_FONT_STACK
 	},
 	{
+		id: 'noto-sans-sc',
+		labelKey: 'settings.font_noto_sans_sc',
+		stack: NOTO_SANS_SC_FONT_STACK
+	},
+	{
 		id: 'harmonyos-sans-sc',
 		labelKey: 'settings.font_harmonyos_sans_sc',
 		stack: HARMONY_FONT_STACK
@@ -113,6 +130,10 @@ export function getFontFaceCss(id: string): string {
 
 	if (id === 'oppo-sans') {
 		return OPPO_FONT_FACE_CSS;
+	}
+
+	if (id === 'noto-sans-sc') {
+		return NOTO_SANS_SC_FONT_FACE_CSS;
 	}
 
 	if (id === 'harmonyos-sans-sc') {

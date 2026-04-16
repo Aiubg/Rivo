@@ -240,6 +240,7 @@
 		"font": "Font",
 		"font_inter": "Inter",
 		"font_harmonyos_sans_sc": "HarmonyOS Sans SC",
+		"font_noto_sans_sc": "Noto Sans SC",
 		"font_oppo_sans": "Oppo Sans",
 		"font_system_default": "System Default",
 		"data_management": "Data Management",
