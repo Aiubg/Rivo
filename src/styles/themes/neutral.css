@@ -9,7 +9,7 @@
 	--popover-foreground: oklch(0.14 0 0);
 
 	--primary: oklch(0.12 0 0);
-	--secondary: oklch(0.95 0 0);
+	--secondary: oklch(0.97 0 264);
 	--secondary-foreground: oklch(0.14 0 0);
 	--muted: oklch(0.95 0 0);
 	--muted-foreground: oklch(0.4 0 0);
@@ -36,7 +36,7 @@
 	--sidebar-border: oklch(0.88 0 0);
 	--sidebar-ring: oklch(0.7 0 0);
 
-	--chat-input: oklch(0.95 0 0);
+	--chat-input: oklch(1 0 0);
 	--chat-input-foreground: oklch(0.14 0 0);
 }
 

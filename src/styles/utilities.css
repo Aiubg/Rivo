@@ -44,8 +44,9 @@
 	}
 
 	.ui-focus-ring-destructive {
-		--ui-focus-ring-color:
-			oklch(from var(--destructive) l c h / var(--ui-focus-ring-destructive-opacity));
+		--ui-focus-ring-color: oklch(
+			from var(--destructive) l c h / var(--ui-focus-ring-destructive-opacity)
+		);
 	}
 
 	.flex-center {

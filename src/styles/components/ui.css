@@ -95,7 +95,7 @@
 	}
 
 	.btn-selector {
-		@apply bg-secondary/50 hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-xl border border-transparent transition-all duration-200;
+		@apply bg-secondary hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-xl border border-transparent transition-all duration-200;
 	}
 
 	.tab-trigger {

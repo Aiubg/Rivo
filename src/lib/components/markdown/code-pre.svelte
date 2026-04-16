@@ -154,11 +154,11 @@
 	>
 		<div class="flex items-center gap-2">
 			{#if isMermaid}
-				<div class="bg-accent flex items-center gap-1 rounded-xl p-1" role="tablist">
+				<div class="bg-accent flex items-center gap-1 rounded-lg p-1" role="tablist">
 					<button
 						type="button"
 						class={cn(
-							'tab-trigger rounded-xl p-2 text-xs leading-none',
+							'tab-trigger rounded-lg p-2 text-xs leading-none',
 							activeTab === 'chart' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
 						role="tab"
@@ -170,7 +170,7 @@
 					<button
 						type="button"
 						class={cn(
-							'tab-trigger rounded-xl p-2 text-xs leading-none',
+							'tab-trigger rounded-lg p-2 text-xs leading-none',
 							activeTab === 'code' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
 						role="tab"
