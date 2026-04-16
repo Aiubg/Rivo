@@ -481,7 +481,7 @@
 							{...props}
 							size="icon-sm"
 							variant="outline"
-							class="bg-background/80 focus:border-input! focus-visible:border-input! pointer-events-auto rounded-full shadow-lg backdrop-blur-sm"
+							class="bg-background/80 focus:border-border! focus-visible:border-border! pointer-events-auto rounded-full shadow-lg backdrop-blur-sm"
 							onclick={handleScrollToBottom}
 							aria-label={$t('chat.scroll_to_latest')}
 						>

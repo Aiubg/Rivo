@@ -27,11 +27,13 @@
 
 	/* Structural colors */
 	--border: oklch(0.92 0.005 240);
-	--input: oklch(0.92 0.005 240);
+	--input: oklch(1 0 0);
+	--input-foreground: var(--foreground);
 	--ring: oklch(from var(--primary) l c h / var(--ui-focus-ring-opacity));
 
 	/* Business surfaces */
 	--chat-input: var(--background);
+	--chat-input-foreground: var(--foreground);
 
 	/* Sidebar */
 	--sidebar-background: oklch(0.99 0.002 240);
@@ -52,8 +54,6 @@
 }
 
 .dark {
-	--ui-focus-ring-opacity: 0.25;
-
 	/* Core surfaces */
 	--background: oklch(0.14 0.005 240);
 	--foreground: oklch(0.92 0.005 240);
@@ -82,11 +82,13 @@
 
 	/* Structural colors */
 	--border: oklch(0.22 0.01 240);
-	--input: oklch(0.22 0.01 240);
+	--input: oklch(0.18 0.01 240);
+	--input-foreground: var(--foreground);
 	--ring: oklch(from var(--primary) l c h / var(--ui-focus-ring-opacity));
 
 	/* Business surfaces */
 	--chat-input: oklch(0.18 0.01 240);
+	--chat-input-foreground: var(--foreground);
 
 	/* Sidebar */
 	--sidebar-background: oklch(0.12 0.005 240);
@@ -97,4 +99,11 @@
 	--sidebar-accent-foreground: var(--accent-foreground);
 	--sidebar-border: var(--border);
 	--sidebar-ring: var(--ring);
+
+	/* Chart colors */
+	--chart-1: oklch(0.72 0.15 255);
+	--chart-2: oklch(0.76 0.13 185);
+	--chart-3: oklch(0.8 0.14 85);
+	--chart-4: oklch(0.72 0.16 320);
+	--chart-5: oklch(0.74 0.15 25);
 }

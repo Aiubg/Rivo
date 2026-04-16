@@ -1,4 +1,6 @@
 @theme inline {
+	/* Bridge semantic CSS vars into Tailwind v4 theme tokens. */
+
 	/* spacing */
 	--spacing: var(--ui-space-unit);
 
@@ -43,8 +45,10 @@
 	--color-warning-foreground: var(--warning-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
+	--color-input-foreground: var(--input-foreground);
 	--color-ring: var(--ring);
 	--color-chat-input: var(--chat-input);
+	--color-chat-input-foreground: var(--chat-input-foreground);
 
 	/* sidebar */
 	--color-sidebar: var(--sidebar-background);

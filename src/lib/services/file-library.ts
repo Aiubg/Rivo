@@ -9,7 +9,6 @@ export type ManagedFile = StoredUploadFile & {
 export type RenameDialogState = {
 	fileToRename: ManagedFile | null;
 	renameExtension: string;
-	openFileMenuUrl: string | null;
 };
 
 export type FileTypeFilter = 'text' | 'image' | 'office';
@@ -180,7 +179,6 @@ export function getNextRenameDialogState(
 
 	return {
 		fileToRename: null,
-		renameExtension: '',
-		openFileMenuUrl: null
+		renameExtension: ''
 	};
 }

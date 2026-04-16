@@ -199,13 +199,11 @@ describe('managed file helpers', () => {
 		expect(
 			getNextRenameDialogState(false, {
 				fileToRename: files[1] ?? null,
-				renameExtension: '.txt',
-				openFileMenuUrl: '/uploads/b.txt'
+				renameExtension: '.txt'
 			})
 		).toEqual({
 			fileToRename: null,
-			renameExtension: '',
-			openFileMenuUrl: null
+			renameExtension: ''
 		});
 	});
 });

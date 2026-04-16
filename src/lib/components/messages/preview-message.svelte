@@ -151,7 +151,7 @@
 			{#if mode === 'edit'}
 				<div class="flex flex-col gap-2">
 					<div
-						class="bg-muted ui-border-control ui-border-control-focus-within focus-within:bg-card w-full min-w-0 overflow-hidden rounded-xl transition-colors"
+						class="bg-input ui-border-control ui-border-control-focus-within w-full min-w-0 overflow-hidden rounded-xl transition-colors"
 					>
 						<TextareaAutosize
 							bind:ref={textareaRef}

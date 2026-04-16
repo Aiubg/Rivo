@@ -266,12 +266,10 @@ export class FileLibraryState {
 		if (!this.renameDialogOpen) {
 			const nextState = getNextRenameDialogState(this.renameDialogOpen, {
 				fileToRename: this.fileToRename,
-				renameExtension: this.renameExtension,
-				openFileMenuUrl: this.openFileMenuUrl
+				renameExtension: this.renameExtension
 			});
 			this.fileToRename = nextState.fileToRename;
 			this.renameExtension = nextState.renameExtension;
-			this.openFileMenuUrl = nextState.openFileMenuUrl;
 			return;
 		}
 

@@ -221,7 +221,7 @@
 	{/if}
 
 	<InputGroup.Root
-		class="input-group-chat bg-chat-input h-auto flex-col items-stretch overflow-hidden rounded-2xl"
+		class="input-group-chat bg-chat-input text-chat-input-foreground h-auto flex-col items-stretch overflow-hidden rounded-2xl"
 		onclick={handleFocus}
 	>
 		<div class="flex flex-col gap-2">
