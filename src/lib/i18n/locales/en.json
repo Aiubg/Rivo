@@ -237,11 +237,6 @@
 	},
 	"settings": {
 		"appearance_description": "Customize the application's appearance.",
-		"color_theme": "Color Theme",
-		"color_theme_aurora": "Aurora",
-		"color_theme_ember": "Ember",
-		"color_theme_ocean": "Ocean",
-		"color_theme_neutral": "Neutral",
 		"font": "Font",
 		"font_inter": "Inter",
 		"font_harmonyos_sans_sc": "HarmonyOS Sans SC",

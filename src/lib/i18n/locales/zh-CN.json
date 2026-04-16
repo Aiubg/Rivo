@@ -237,11 +237,6 @@
 	},
 	"settings": {
 		"appearance_description": "自定义应用外观。",
-		"color_theme": "颜色主题",
-		"color_theme_aurora": "极光",
-		"color_theme_ember": "余烬",
-		"color_theme_ocean": "海洋",
-		"color_theme_neutral": "中性",
 		"font": "字体",
 		"font_inter": "Inter",
 		"font_harmonyos_sans_sc": "鸿蒙 Sans SC",

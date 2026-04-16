@@ -3,7 +3,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import * as Item from '$lib/components/ui/item';
-	import { setMode, userPrefersMode, setTheme, theme } from 'mode-watcher';
+	import { setMode, userPrefersMode } from 'mode-watcher';
 	import { t, locale, getLocaleFromNavigator } from 'svelte-i18n';
 	import { languagePreference, type LanguagePreference } from '$lib/i18n';
 	import Check from '@lucide/svelte/icons/check';
@@ -12,13 +12,6 @@
 	import Monitor from '@lucide/svelte/icons/monitor';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import { cn } from '$lib/utils/shadcn';
-	import {
-		DEFAULT_THEME_ID,
-		THEME_PRESETS,
-		getThemePreset,
-		isThemePresetId,
-		type ThemePresetId
-	} from '$lib/theme/theme-presets';
 	import {
 		DEFAULT_FONT_PRESET_ID,
 		FONT_PRESETS,
@@ -29,27 +22,6 @@
 
 	const selectedThemeMode = $derived(userPrefersMode.current ?? 'system');
 	let currentLanguagePreference = $state<LanguagePreference>(languagePreference.value ?? 'system');
-	const currentThemeId = $derived.by(() => {
-		const current = theme.current as string | undefined;
-		if (!current) return DEFAULT_THEME_ID;
-		return isThemePresetId(current) ? current : DEFAULT_THEME_ID;
-	});
-
-	const currentThemeSwatch = $derived.by(() => {
-		const preset = THEME_PRESETS.find((item) => item.id === currentThemeId);
-		return preset?.color ?? THEME_PRESETS[0]?.color;
-	});
-
-	const currentThemeLabelKey = $derived.by(() => {
-		const preset = THEME_PRESETS.find((item) => item.id === currentThemeId);
-		return (
-			preset?.labelKey ??
-			getThemePreset(DEFAULT_THEME_ID)?.labelKey ??
-			'settings.color_theme_neutral'
-		);
-	});
-
-	const themeOptions = $derived.by(() => THEME_PRESETS);
 	const currentFontId = $derived.by(() => {
 		const current = fontPreference.value as string | undefined;
 		if (!current) return DEFAULT_FONT_PRESET_ID;
@@ -63,10 +35,6 @@
 
 	function setThemeMode(val: 'light' | 'dark' | 'system') {
 		setMode(val);
-	}
-
-	function setColorTheme(nextTheme: ThemePresetId) {
-		setTheme(nextTheme);
 	}
 
 	function setFontPreset(nextFont: FontPresetId) {
@@ -85,14 +53,6 @@
 		const mode = target?.dataset.mode as 'light' | 'dark' | 'system' | undefined;
 		if (!mode) return;
 		setThemeMode(mode);
-	}
-
-	function handleColorThemeClick(event: MouseEvent) {
-		const target = event.currentTarget as HTMLElement | null;
-		const nextTheme = target?.dataset.themeValue;
-		if (!nextTheme) return;
-		if (!isThemePresetId(nextTheme)) return;
-		setColorTheme(nextTheme);
 	}
 
 	function handleLanguageClick(event: MouseEvent) {
@@ -174,64 +134,6 @@
 			</button>
 		</div>
 	</div>
-
-	<Item.Root size="none">
-		<Item.Content>
-			<Item.Title size="sm">
-				<Label for="color-theme-select" class="text-sm">{$t('settings.color_theme')}</Label>
-			</Item.Title>
-		</Item.Content>
-		<Item.Actions>
-			<div class="flex items-center gap-2">
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						{#snippet child({ props })}
-							<Button
-								{...props}
-								id="color-theme-select"
-								name="color-theme"
-								variant="ghost"
-								class="btn-selector justify-between px-4 py-2 text-sm font-medium"
-							>
-								<div class="flex items-center gap-2">
-									<span
-										class="border-input h-3 w-3 rounded-full border"
-										style:background-color={currentThemeSwatch}
-									></span>
-									<span>{$t(currentThemeLabelKey)}</span>
-								</div>
-								<ChevronRight class="size-4 rotate-90" />
-							</Button>
-						{/snippet}
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content
-						class="w-48 max-w-[calc(100vw-2rem)]"
-						align="end"
-						collisionPadding={16}
-					>
-						{#each themeOptions as option (option.id)}
-							<DropdownMenu.Item
-								class="flex items-center justify-between"
-								data-theme-value={option.id}
-								onclick={handleColorThemeClick}
-							>
-								<div class="flex items-center gap-2">
-									<span
-										class="border-input h-3 w-3 rounded-full border"
-										style:background-color={option.color}
-									></span>
-									<span>{$t(option.labelKey)}</span>
-								</div>
-								{#if currentThemeId === option.id}
-									<Check class="size-4" />
-								{/if}
-							</DropdownMenu.Item>
-						{/each}
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			</div>
-		</Item.Actions>
-	</Item.Root>
 
 	<Item.Root size="none">
 		<Item.Content>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { mode, setTheme, theme } from 'mode-watcher';
-	import { DEFAULT_THEME_ID, isThemePresetId } from '$lib/theme/theme-presets';
+	import { DEFAULT_THEME_ID } from '$lib/theme/theme-presets';
 	import {
 		DEFAULT_FONT_PRESET_ID,
 		fontPreference,
@@ -36,9 +36,9 @@
 
 	$effect(() => {
 		if (!isBrowser) return;
-		const currentTheme = (theme.current as string | undefined) ?? '';
 		const currentMode = mode.current ?? 'system';
-		const activeTheme = isThemePresetId(currentTheme) ? currentTheme : DEFAULT_THEME_ID;
+		const currentTheme = (theme.current as string | undefined) ?? '';
+		const activeTheme = DEFAULT_THEME_ID;
 		const currentFont = (fontPreference.value as string | undefined) ?? '';
 		const activeFont = isFontPresetId(currentFont) ? currentFont : DEFAULT_FONT_PRESET_ID;
 		const fontPreset = getFontPreset(activeFont);
