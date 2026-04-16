@@ -43,8 +43,8 @@
 
 	function themeOptionClasses(target: 'system' | 'light' | 'dark') {
 		return cn(
-			'tab-trigger btn-selector flex h-20 cursor-pointer flex-col items-center justify-center gap-2 p-4',
-			selectedThemeMode === target ? 'bg-accent text-accent-foreground' : ''
+			'tab-trigger btn-selector border-border/70 flex h-20 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border p-4',
+			selectedThemeMode === target ? 'bg-accent text-accent-foreground border-border' : ''
 		);
 	}
 
