@@ -28,10 +28,16 @@
 	const sidebar = useSidebar();
 	let mounted = $state(false);
 	let textareaRef = $state(null) as HTMLTextAreaElement | null;
+	let inputLayoutRef = $state(null) as HTMLDivElement | null;
+	let inlineMeasureRef = $state(null) as HTMLTextAreaElement | null;
+	let textareaExpanded = $state(false);
+	let transitionsReady = $state(false);
 	const newChatDraftStorageKey = getChatDraftStorageKey();
 	const draftStorageKey = $derived(getChatDraftStorageKey(chatState.chat?.id));
 	let storedInput = $state<LocalStorage<string> | null>(null);
 	let storedInputKey = $state('');
+	let layoutMeasureRaf = $state<number | null>(null);
+	let transitionsReadyRaf = $state<number | null>(null);
 	const loading = $derived(chatState.status === 'streaming' || chatState.status === 'submitted');
 	const hasText = $derived(chatState.input.trim().length > 0);
 	const hasAttachments = $derived(chatState.attachments.length > 0);
@@ -63,7 +69,67 @@
 	);
 
 	const showWelcome = $derived(mounted && chatState.visibleMessages.length === 0);
-	const chatInputMinLines = $derived(sidebar.isMobile ? 1 : 2);
+	const chatInputMinLines = 1;
+
+	function resolveLineHeight(style: CSSStyleDeclaration) {
+		const lineHeight = Number.parseFloat(style.lineHeight);
+		if (Number.isFinite(lineHeight) && lineHeight > 0) return lineHeight;
+		const fontSize = Number.parseFloat(style.fontSize);
+		if (Number.isFinite(fontSize) && fontSize > 0) return fontSize * 1.2;
+		return 19.2;
+	}
+
+	function resolveSingleLineHeight(style: CSSStyleDeclaration) {
+		const lineHeight = resolveLineHeight(style);
+		const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+		const paddingBottom = Number.parseFloat(style.paddingBottom) || 0;
+		const borderTop = Number.parseFloat(style.borderTopWidth) || 0;
+		const borderBottom = Number.parseFloat(style.borderBottomWidth) || 0;
+
+		let height = lineHeight + paddingTop + paddingBottom;
+		if (style.boxSizing === 'border-box') {
+			height += borderTop + borderBottom;
+		}
+		return Math.ceil(height);
+	}
+
+	function armTransitions() {
+		if (transitionsReady || transitionsReadyRaf !== null || !mounted) {
+			return;
+		}
+		if (typeof requestAnimationFrame !== 'function') {
+			transitionsReady = true;
+			return;
+		}
+		transitionsReadyRaf = requestAnimationFrame(() => {
+			transitionsReadyRaf = requestAnimationFrame(() => {
+				transitionsReady = true;
+				transitionsReadyRaf = null;
+			});
+		});
+	}
+
+	function measureInlineLayout() {
+		if (!(inlineMeasureRef instanceof HTMLTextAreaElement)) return;
+
+		inlineMeasureRef.style.height = 'auto';
+		const style = getComputedStyle(inlineMeasureRef);
+		const singleLineHeight = resolveSingleLineHeight(style);
+		textareaExpanded = inlineMeasureRef.scrollHeight > singleLineHeight + 1;
+		armTransitions();
+	}
+
+	function scheduleInlineLayoutMeasurement() {
+		if (typeof requestAnimationFrame !== 'function') {
+			measureInlineLayout();
+			return;
+		}
+		if (layoutMeasureRaf !== null) return;
+		layoutMeasureRaf = requestAnimationFrame(() => {
+			layoutMeasureRaf = null;
+			measureInlineLayout();
+		});
+	}
 
 	function setInput(value: string) {
 		chatState.input = value;
@@ -188,7 +254,14 @@
 	onMount(() => {
 		mounted = true;
 		chatState.input = storedInput?.value ?? '';
+		scheduleInlineLayoutMeasurement();
 		return () => {
+			if (layoutMeasureRaf !== null && typeof cancelAnimationFrame === 'function') {
+				cancelAnimationFrame(layoutMeasureRaf);
+			}
+			if (transitionsReadyRaf !== null && typeof cancelAnimationFrame === 'function') {
+				cancelAnimationFrame(transitionsReadyRaf);
+			}
 			storedInput?.destroy();
 			storedInput = null;
 			storedInputKey = '';
@@ -207,6 +280,29 @@
 	function handleRemoveAttachment(url: string) {
 		chatState.removeAttachment(url);
 	}
+
+	$effect(() => {
+		void chatState.input;
+		scheduleInlineLayoutMeasurement();
+	});
+
+	$effect(() => {
+		void c;
+		scheduleInlineLayoutMeasurement();
+	});
+
+	$effect(() => {
+		if (!(inputLayoutRef instanceof HTMLDivElement)) return;
+		if (typeof ResizeObserver === 'undefined') return;
+
+		const observer = new ResizeObserver(() => {
+			scheduleInlineLayoutMeasurement();
+		});
+		observer.observe(inputLayoutRef);
+		return () => {
+			observer.disconnect();
+		};
+	});
 </script>
 
 <div class="relative flex w-full flex-col gap-4">
@@ -221,12 +317,19 @@
 	{/if}
 
 	<InputGroup.Root
-		class="input-group-chat bg-chat-input text-chat-input-foreground h-auto flex-col items-stretch overflow-hidden rounded-2xl"
+		class={cn(
+			'input-group-chat bg-chat-input text-chat-input-foreground border-border/80 h-auto flex-col items-stretch overflow-hidden border',
+			'shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_rgba(15,23,42,0.08)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.28)]',
+			transitionsReady &&
+				'transition-[border-radius,padding,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+			textareaExpanded ? 'rounded-4xl px-2.5 py-2.5' : 'rounded-[1.75rem] px-2.5 py-1.5'
+		)}
+		data-layout={textareaExpanded ? 'stacked' : 'inline'}
 		onclick={handleFocus}
 	>
 		<div class="flex flex-col gap-2">
 			{#if hasAttachments || uploadsInProgress}
-				<div class="px-3 pt-3">
+				<div class="px-1 pt-1">
 					<AttachmentList
 						attachments={chatState.attachments}
 						uploadQueue={chatState.uploadQueue}
@@ -235,22 +338,90 @@
 				</div>
 			{/if}
 
-			<TextareaAutosize
-				bind:ref={textareaRef}
-				id="chat-input"
-				name="prompt"
-				aria-label={$t('chat.input_aria_label')}
-				aria-describedby={inputDescribedBy}
-				placeholder={$t('chat.placeholder')}
-				bind:value={() => chatState.input, setInput}
-				class={cn('text-base', c)}
-				minLines={chatInputMinLines}
-				maxHeight={400}
-				autofocus={!sidebar.isMobile}
-				enterkeyhint="send"
-				onkeydown={handleKeyDown}
-				onpaste={handlePaste}
-			/>
+			<div bind:this={inputLayoutRef} class="relative min-w-0">
+				<div
+					class={cn(
+						'min-w-0',
+						transitionsReady &&
+							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+						textareaExpanded ? 'px-1.5 pt-0 pb-12' : 'py-0.5 ps-11 pe-11'
+					)}
+				>
+					<TextareaAutosize
+						bind:ref={textareaRef}
+						id="chat-input"
+						name="prompt"
+						aria-label={$t('chat.input_aria_label')}
+						aria-describedby={inputDescribedBy}
+						placeholder={$t('chat.placeholder')}
+						bind:value={() => chatState.input, setInput}
+						class={cn(
+							'placeholder:text-muted-foreground/80 w-full min-w-0 bg-transparent px-0 py-1.5 text-base leading-6 wrap-anywhere',
+							transitionsReady &&
+								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							c
+						)}
+						minLines={chatInputMinLines}
+						maxHeight={400}
+						autofocus={!sidebar.isMobile}
+						enterkeyhint="send"
+						wrap="soft"
+						onkeydown={handleKeyDown}
+						onpaste={handlePaste}
+					/>
+				</div>
+
+				<div
+					class={cn(
+						'absolute left-0 z-10 will-change-transform',
+						transitionsReady &&
+							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+						textareaExpanded
+							? 'top-[calc(100%-2.5rem)] translate-y-0 opacity-100'
+							: 'top-1/2 left-0 -translate-y-1/2 opacity-100'
+					)}
+				>
+					<AttachmentUploader
+						disabled={loading}
+						onchange={handleFileChange}
+						onselectattachments={handleSelectAttachments}
+					/>
+				</div>
+
+				<div
+					class={cn(
+						'absolute right-0 z-10 will-change-transform',
+						transitionsReady &&
+							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+						textareaExpanded
+							? 'top-[calc(100%-2.5rem)] translate-y-0 opacity-100'
+							: 'top-1/2 right-0 -translate-y-1/2 opacity-100'
+					)}
+				>
+					<SubmitControls status={submitStatus} {canSend} onsend={handleSend} onstop={handleStop} />
+				</div>
+
+				<div
+					class="pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-0"
+					aria-hidden="true"
+				>
+					<div class="min-w-0 py-0.5 ps-11 pe-11">
+						<textarea
+							bind:this={inlineMeasureRef}
+							class={cn(
+								'w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1.5 text-base leading-6 wrap-anywhere shadow-none outline-none',
+								c
+							)}
+							rows={1}
+							tabindex={-1}
+							value={chatState.input || ' '}
+							readonly
+							wrap="soft"
+							style="height: auto; min-height: 0; max-height: none; unicode-bidi: plaintext; text-align: start;"
+						></textarea>
+					</div>
+				</div>
+			</div>
 
 			<p id={inputHintId} class="sr-only">
 				{$t('chat.input_shortcuts_hint')}
@@ -263,16 +434,5 @@
 				{/if}
 			</div>
 		</div>
-
-		<InputGroup.Addon align="block-end" class="w-full justify-between border-t-0 p-2">
-			<AttachmentUploader
-				disabled={loading}
-				onchange={handleFileChange}
-				onselectattachments={handleSelectAttachments}
-			/>
-			<div class="flex w-fit flex-row items-center justify-end gap-2">
-				<SubmitControls status={submitStatus} {canSend} onsend={handleSend} onstop={handleStop} />
-			</div>
-		</InputGroup.Addon>
 	</InputGroup.Root>
 </div>

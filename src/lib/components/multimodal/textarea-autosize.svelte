@@ -17,7 +17,11 @@
 		minHeight = 60,
 		minLines,
 		...restProps
-	}: TextareaProps & { maxHeight?: number; minHeight?: number; minLines?: number } = $props();
+	}: TextareaProps & {
+		maxHeight?: number;
+		minHeight?: number;
+		minLines?: number;
+	} = $props();
 
 	let rafId: number | null = null;
 	let resolvedMinHeight = $state(60);
@@ -102,21 +106,28 @@
 
 		const el = ref;
 		const handle = () => scheduleAdjustHeight();
+		const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(handle) : null;
 		el.addEventListener('input', handle);
 		el.addEventListener('paste', handle);
 		el.addEventListener('cut', handle);
 		el.addEventListener('compositionend', handle);
+		observer?.observe(el);
 		return () => {
 			el.removeEventListener('input', handle);
 			el.removeEventListener('paste', handle);
 			el.removeEventListener('cut', handle);
 			el.removeEventListener('compositionend', handle);
+			observer?.disconnect();
 		};
 	});
 	$effect(() => {
 		if (value !== undefined) {
 			scheduleAdjustHeight();
 		}
+	});
+	$effect(() => {
+		void c;
+		scheduleAdjustHeight();
 	});
 	$effect(() => {
 		void minHeight;

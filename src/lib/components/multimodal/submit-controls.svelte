@@ -18,7 +18,8 @@
 		onstop: () => void;
 	} = $props();
 
-	const submitButtonClass = 'rounded-full';
+	const submitButtonClass =
+		'size-9 rounded-full shadow-none transition-[background-color,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] disabled:bg-muted disabled:text-muted-foreground disabled:opacity-100';
 </script>
 
 {#if status === 'submitting'}

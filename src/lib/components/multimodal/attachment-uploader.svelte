@@ -197,13 +197,13 @@
 		{#snippet child({ props })}
 			<InputGroup.Button
 				{...props}
-				class="text-foreground"
+				class="text-foreground hover:bg-foreground/6 active:bg-foreground/10 size-9 rounded-full transition-[background-color,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
 				{disabled}
 				variant="ghost"
 				aria-label={$t('chat.upload_attachment')}
 				size="icon-sm"
 			>
-				<PlusIcon class="size-6" strokeWidth={1.5} />
+				<PlusIcon class="size-5" strokeWidth={1.75} />
 			</InputGroup.Button>
 		{/snippet}
 	</DropdownMenuTrigger>

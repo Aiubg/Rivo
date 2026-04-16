@@ -6,7 +6,6 @@ import { env as privateEnv } from '$env/dynamic/private';
 import { MODEL_REGISTRY, modelSupportsVision } from '$lib/ai/model-registry';
 import { UIMessageStreamSupervisor } from '$lib/ai/ui-message-stream-supervisor';
 import type { Attachment } from '$lib/types/attachment';
-import type { MessagePart } from '$lib/types/message';
 import { getServerContainer } from '$lib/server/composition/server-container';
 
 export function generateTitleFromUserMessage({

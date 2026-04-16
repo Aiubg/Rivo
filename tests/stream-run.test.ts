@@ -14,6 +14,13 @@ vi.mock('$lib/hooks/chat-state/run-stream', () => ({
 	readStoredRunCursor
 }));
 
+type RetryHarnessOptions = {
+	initialCursor: number;
+	readCursor: (fallback: number) => number;
+	fetchStream: (cursor: number, signal: AbortSignal) => Promise<Response>;
+	processStream: (body: ReadableStream<Uint8Array>) => Promise<void>;
+};
+
 describe('streamRunWithRetry', () => {
 	beforeEach(() => {
 		connectRunStreamWithRetry.mockReset();
@@ -22,7 +29,7 @@ describe('streamRunWithRetry', () => {
 	});
 
 	it('delegates run stream retries with the standard fetch and cursor wiring', async () => {
-		connectRunStreamWithRetry.mockImplementationOnce(async (options: any) => {
+		connectRunStreamWithRetry.mockImplementationOnce(async (options: RetryHarnessOptions) => {
 			expect(options.initialCursor).toBe(3);
 			expect(options.readCursor(5)).toBe(12);
 			expect(await options.fetchStream(9, new AbortController().signal)).toBeInstanceOf(Response);
@@ -52,7 +59,7 @@ describe('streamRunWithRetry', () => {
 	});
 
 	it('rethrows normalized process stream errors so retry logic can handle them', async () => {
-		connectRunStreamWithRetry.mockImplementationOnce(async (options: any) => {
+		connectRunStreamWithRetry.mockImplementationOnce(async (options: RetryHarnessOptions) => {
 			await options.processStream(new ReadableStream());
 		});
 
