@@ -187,7 +187,7 @@
 						onswitchbranch={(p, m) => chatState.handleSwitchBranch(p, m)}
 					/>
 
-					<form class="bg-background mx-auto flex w-full max-w-220 gap-2 px-6 pb-2 md:px-12">
+					<form class="bg-background mx-auto flex w-full max-w-220 gap-2 px-6 pb-4 md:px-12 md:pb-6">
 						<MultimodalInput {chatState} class="flex-1" />
 					</form>
 				{/if}

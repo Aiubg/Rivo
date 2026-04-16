@@ -85,7 +85,7 @@
 	},
 	"chat": {
 		"welcome": "How can I help you today?",
-		"placeholder": "Type a message, then press Enter to send",
+		"placeholder": "Ask me anything",
 		"edit": "Edit",
 		"copy": "Copy",
 		"zoom_in": "Zoom In",

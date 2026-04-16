@@ -85,7 +85,7 @@
 	},
 	"chat": {
 		"welcome": "今天有什么可以帮到你？",
-		"placeholder": "输入消息后按 Enter 发送",
+		"placeholder": "有问题，尽管问",
 		"edit": "编辑",
 		"copy": "复制",
 		"zoom_in": "放大",
