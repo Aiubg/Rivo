@@ -344,7 +344,7 @@
 						'min-w-0',
 						transitionsReady &&
 							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						textareaExpanded ? 'px-1.5 pt-0 pb-12' : 'py-0.5 ps-11 pe-11'
+						textareaExpanded ? 'px-1.5 pt-0 pb-11' : 'py-0.5 ps-11 pe-11'
 					)}
 				>
 					<TextareaAutosize
@@ -356,9 +356,10 @@
 						placeholder={$t('chat.placeholder')}
 						bind:value={() => chatState.input, setInput}
 						class={cn(
-							'placeholder:text-muted-foreground/80 w-full min-w-0 bg-transparent px-0 py-1.5 text-base leading-6 wrap-anywhere',
+							'placeholder:text-muted-foreground/80 w-full min-w-0 bg-transparent px-0 text-base leading-6 wrap-anywhere',
 							transitionsReady &&
 								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							textareaExpanded ? 'py-1' : 'py-1.5',
 							c
 						)}
 						minLines={chatInputMinLines}
@@ -375,9 +376,9 @@
 					class={cn(
 						'absolute left-0 z-10 will-change-transform',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
 						textareaExpanded
-							? 'top-[calc(100%-2.5rem)] translate-y-0 opacity-100'
+							? 'bottom-0 translate-y-0 opacity-100'
 							: 'top-1/2 left-0 -translate-y-1/2 opacity-100'
 					)}
 				>
@@ -392,9 +393,9 @@
 					class={cn(
 						'absolute right-0 z-10 will-change-transform',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
 						textareaExpanded
-							? 'top-[calc(100%-2.5rem)] translate-y-0 opacity-100'
+							? 'bottom-0 translate-y-0 opacity-100'
 							: 'top-1/2 right-0 -translate-y-1/2 opacity-100'
 					)}
 				>

@@ -78,6 +78,6 @@
 	--sidebar-border: oklch(0.3 0 0);
 	--sidebar-ring: oklch(0.4 0 0);
 
-	--chat-input: oklch(0.18 0 0);
+	--chat-input: oklch(0.2 0 0);
 	--chat-input-foreground: oklch(0.98 0 0);
 }
