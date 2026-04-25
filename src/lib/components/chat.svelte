@@ -169,8 +169,10 @@
 				<ChatHeader {user} chat={chatState.chat} />
 
 				{#if visibleMessages.length === 0}
-					<div class="flex flex-1 flex-col items-center justify-center px-6 md:px-12">
-						<form class="mx-auto flex w-full max-w-3xl gap-2">
+					<div
+						class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center px-6 md:px-12"
+					>
+						<form class="pointer-events-auto mx-auto flex w-full max-w-3xl gap-2">
 							<MultimodalInput {chatState} class="flex-1" />
 						</form>
 					</div>

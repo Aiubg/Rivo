@@ -319,7 +319,7 @@
 	<InputGroup.Root
 		class={cn(
 			'input-group-chat bg-chat-input text-chat-input-foreground border-border/80 h-auto flex-col items-stretch overflow-hidden border',
-			'shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_30px_rgba(15,23,42,0.08)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.28)]',
+			'shadow-lg',
 			transitionsReady &&
 				'transition-[border-radius,padding,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
 			textareaExpanded ? 'rounded-4xl px-2.5 py-2.5' : 'rounded-[1.75rem] px-2.5 py-1.5'

@@ -44,6 +44,16 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 		}
 	},
 	{
+		id: 'tencent-hy3-preview-free',
+		name: 'Tencent Hy3 Preview',
+		description: 'OpenRouter free-tier Tencent model for agentic chat, coding, and reasoning',
+		provider: 'openrouter',
+		model: 'tencent/hy3-preview:free',
+		capabilities: {
+			reasoning: true
+		}
+	},
+	{
 		id: 'deepseek-chat',
 		name: 'DeepSeek-Chat',
 		description: 'Balanced chat model for writing, coding, and tool use',

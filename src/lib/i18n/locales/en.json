@@ -233,6 +233,10 @@
 		"google-gemma-4-31b-it-free": {
 			"name": "Gemma 4 31B Instruct",
 			"description": "Google Gemma via OpenRouter's free tier for chat, coding, and vision input."
+		},
+		"tencent-hy3-preview-free": {
+			"name": "Tencent Hy3 Preview",
+			"description": "Tencent Hy3 via OpenRouter's free tier for agentic chat, coding, and reasoning."
 		}
 	},
 	"settings": {
