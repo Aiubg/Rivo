@@ -42,6 +42,7 @@ describe('file helpers', () => {
 
 	it('formats upload metadata consistently', () => {
 		expect(getStoredUploadName('/uploads/demo.sql')).toBe('demo.sql');
+		expect(getStoredUploadName('/api/files/blob/users/hash/demo.sql')).toBe('users/hash/demo.sql');
 		expect(guessContentType('report.xlsx')).toBe(
 			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 		);

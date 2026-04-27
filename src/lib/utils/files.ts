@@ -53,9 +53,12 @@ const MIME_BY_EXTENSION: Record<string, string> = {
 	xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 };
 
+const UPLOAD_NAME_PREFIXES = ['/api/files/blob/', '/uploads/'];
+
 export function getStoredUploadName(url: string): string {
-	if (!url.startsWith('/uploads/')) return url;
-	return url.slice('/uploads/'.length);
+	const prefix = UPLOAD_NAME_PREFIXES.find((candidate) => url.startsWith(candidate));
+	if (!prefix) return url;
+	return url.slice(prefix.length);
 }
 
 export function getFileExtension(fileName: string): string {

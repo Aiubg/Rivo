@@ -42,6 +42,7 @@
 	import DownloadIcon from '@lucide/svelte/icons/download';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import XIcon from '@lucide/svelte/icons/x';
+	import { UPLOAD_INPUT_ACCEPT } from '$lib/utils/upload-constraints';
 	import type { Component } from 'svelte';
 	import type { PageData } from './$types';
 
@@ -90,7 +91,7 @@
 	onchange={fileLibraryState.handleUploadChange}
 	tabindex={-1}
 	aria-hidden="true"
-	accept="text/*,application/json,application/javascript,.py,.ts,.tsx,.jsx,.md,.yaml,.yml,.toml,.txt,.docx,.xlsx"
+	accept={UPLOAD_INPUT_ACCEPT}
 />
 
 {#snippet filesListPanel()}

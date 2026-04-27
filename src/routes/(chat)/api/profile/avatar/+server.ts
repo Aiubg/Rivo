@@ -2,13 +2,10 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { handleServerError } from '$lib/server/utils';
 import { getServerContainer } from '$lib/server/composition/server-container';
-
-const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
-const ALLOWED_MIME_TYPES: Record<string, string> = {
-	'image/png': '.png',
-	'image/jpeg': '.jpg',
-	'image/webp': '.webp'
-};
+import {
+	ALLOWED_AVATAR_MIME_EXTENSIONS,
+	MAX_AVATAR_FILE_SIZE
+} from '$lib/utils/upload-constraints';
 
 export const POST: RequestHandler = async ({ request, locals: { user } }) => {
 	if (!user) {
@@ -17,15 +14,18 @@ export const POST: RequestHandler = async ({ request, locals: { user } }) => {
 
 	try {
 		const formData = await request.formData();
-		const file = formData.get('file') as File | null;
-		if (!file) {
+		const fileEntry = formData.get('file');
+		if (!(fileEntry instanceof File)) {
 			throw error(400, 'upload.no_file_uploaded');
 		}
-		if (file.size > MAX_AVATAR_SIZE) {
+		const file = fileEntry;
+		if (file.size > MAX_AVATAR_FILE_SIZE) {
 			throw error(400, 'profile.avatar_too_large');
 		}
 
-		const extension = ALLOWED_MIME_TYPES[file.type];
+		const contentType = file.type.toLowerCase();
+		const extension =
+			ALLOWED_AVATAR_MIME_EXTENSIONS[contentType as keyof typeof ALLOWED_AVATAR_MIME_EXTENSIONS];
 		if (!extension) {
 			throw error(400, 'profile.avatar_type_not_allowed');
 		}
@@ -34,7 +34,7 @@ export const POST: RequestHandler = async ({ request, locals: { user } }) => {
 		const avatarUrl = await getServerContainer().services.profile.uploadAvatar({
 			userId: user.id,
 			body: new Uint8Array(arrayBuffer),
-			contentType: file.type,
+			contentType,
 			extension
 		});
 

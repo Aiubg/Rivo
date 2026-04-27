@@ -34,6 +34,12 @@
 		isStoredImageFile,
 		resolveStoredFileAttachment
 	} from '$lib/services/stored-file-attachment';
+	import {
+		BASE_UPLOAD_INPUT_ACCEPT,
+		IMAGE_UPLOAD_INPUT_ACCEPT,
+		isAllowedUploadFile,
+		isUploadImageFile
+	} from '$lib/utils/upload-constraints';
 
 	let {
 		disabled = false,
@@ -59,11 +65,10 @@
 	const isMobile = $derived(isMobileViewport.current);
 	const selectedChatModel = SelectedModel.fromContext();
 	const supportsVisionInput = $derived(modelSupportsVision(selectedChatModel.value));
-	const BASE_FILE_ACCEPT =
-		'text/*,application/json,application/javascript,.py,.ts,.tsx,.jsx,.md,.yaml,.yml,.toml,.txt,.docx,.xlsx';
-	const IMAGE_FILE_ACCEPT = 'image/png,image/jpeg,image/webp,image/gif,image/bmp,image/svg+xml';
 	const fileInputAccept = $derived(
-		supportsVisionInput ? `${BASE_FILE_ACCEPT},${IMAGE_FILE_ACCEPT}` : BASE_FILE_ACCEPT
+		supportsVisionInput
+			? `${BASE_UPLOAD_INPUT_ACCEPT},${IMAGE_UPLOAD_INPUT_ACCEPT}`
+			: BASE_UPLOAD_INPUT_ACCEPT
 	);
 	const RECENT_FILES_LIMIT = 5;
 	const RECENT_FILES_TTL_MS = 15_000;
@@ -76,10 +81,7 @@
 	const modifier = $derived(isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win'));
 
 	function isImageFile(file: File): boolean {
-		return (
-			file.type.toLowerCase().startsWith('image/') ||
-			/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)
-		);
+		return isUploadImageFile(file);
 	}
 
 	function openUploadPicker() {
@@ -89,12 +91,18 @@
 
 	async function handleFileChange(event: Event & { currentTarget: HTMLInputElement }) {
 		const files = Array.from(event.currentTarget.files || []);
-		const imageFiles = files.filter((file) => isImageFile(file));
+		const allowedFiles = files.filter((file) => isAllowedUploadFile(file));
+		if (allowedFiles.length !== files.length) {
+			toast.error(get(t)('upload.file_type_not_allowed'));
+		}
+		const imageFiles = allowedFiles.filter((file) => isImageFile(file));
 		const blockedByVision = !supportsVisionInput && imageFiles.length > 0;
 		if (blockedByVision) {
 			toast.error(get(t)('models.vision_not_supported'));
 		}
-		const acceptedFiles = blockedByVision ? files.filter((file) => !isImageFile(file)) : files;
+		const acceptedFiles = blockedByVision
+			? allowedFiles.filter((file) => !isImageFile(file))
+			: allowedFiles;
 		if (acceptedFiles.length > 0) {
 			onchange(acceptedFiles);
 		}

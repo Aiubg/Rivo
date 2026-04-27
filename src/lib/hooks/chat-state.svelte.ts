@@ -26,7 +26,7 @@ import { processChatStream } from '$lib/hooks/chat-state/process-stream';
 import { clearStoredRunCursor } from '$lib/hooks/chat-state/run-stream';
 import { getChatSearchResults } from '$lib/hooks/chat-state/search-results';
 import { RunResumeScheduler } from '$lib/hooks/chat-state/run-resume-scheduler';
-import { getFileUploadKey, uploadAttachmentFile } from '$lib/hooks/chat-state/upload';
+import { ChatAttachmentUploadState } from '$lib/hooks/chat-state/attachments.svelte';
 
 /**
  * ChatState class manages the state and logic for a single chat conversation.
@@ -48,14 +48,17 @@ export class ChatState {
 	input = $state('');
 	/** List of uploaded attachments */
 	attachments = $state<Attachment[]>([]);
-	/** Queue of filenames currently being uploaded */
-	uploadQueue = new SvelteSet<string>();
 
 	private abortController: AbortController | null = null;
 	private chatHistory = ChatHistory.fromContext();
 	private _generatedChatId: string | null = null;
 	private activeRunId: string | null = null;
-	private uploadControllers = new SvelteMap<string, AbortController>();
+	private attachmentUploads = new ChatAttachmentUploadState({
+		getAttachments: () => this.attachments,
+		setAttachments: (attachments) => {
+			this.attachments = attachments;
+		}
+	});
 	private runResumeScheduler = new RunResumeScheduler({
 		onResume: (options) => {
 			void this.resumeActiveRun(options);
@@ -217,6 +220,11 @@ export class ChatState {
 		return getChatSearchResults(this.allMessages);
 	}
 
+	/** Queue of filenames currently being uploaded */
+	get uploadQueue(): SvelteSet<string> {
+		return this.attachmentUploads.uploadQueue;
+	}
+
 	/**
 	 * Returns the current chat ID, generating a random one if it's a new chat.
 	 */
@@ -234,46 +242,14 @@ export class ChatState {
 	 * @returns The uploaded attachment details or undefined on failure.
 	 */
 	async uploadFile(file: File): Promise<Attachment | undefined> {
-		const uploadKey = getFileUploadKey(file);
-		this.uploadControllers.get(uploadKey)?.abort();
-		const controller = new AbortController();
-		this.uploadControllers.set(uploadKey, controller);
-		try {
-			const result = await uploadAttachmentFile(file, controller);
-			if (result.ok) {
-				return result.attachment;
-			}
-
-			if (!result.aborted) {
-				toast.error(get(t)(result.errorKey));
-			}
-		} catch (error) {
-			logger.error('Error uploading file:', error);
-			toast.error(get(t)('upload.retry_failed'));
-		} finally {
-			if (this.uploadControllers.get(uploadKey) === controller) {
-				this.uploadControllers.delete(uploadKey);
-			}
-		}
+		return this.attachmentUploads.uploadFile(file);
 	}
 
 	/**
 	 * Handles a list of files to be uploaded.
 	 */
 	async handleFileChange(files: File[]) {
-		const fileNames = files.map((file) => file.name);
-		fileNames.forEach((name) => this.uploadQueue.add(name));
-		try {
-			const uploaded = await Promise.all(files.map((f) => this.uploadFile(f)));
-			const okAttachments = uploaded.filter((a): a is Attachment => a !== undefined);
-			if (okAttachments.length > 0) {
-				this.attachments = [...this.attachments, ...okAttachments];
-			}
-		} catch (error) {
-			logger.error('File upload process failed', error);
-		} finally {
-			fileNames.forEach((name) => this.uploadQueue.delete(name));
-		}
+		await this.attachmentUploads.handleFileChange(files);
 	}
 
 	/**

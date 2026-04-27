@@ -16,6 +16,7 @@
 	import { SelectedModel } from '$lib/hooks/selected-model.svelte';
 	import type { ChatState } from '$lib/hooks/chat-state.svelte';
 	import type { Attachment } from '$lib/types/attachment';
+	import { isAllowedUploadFile, isUploadImageFile } from '$lib/utils/upload-constraints';
 
 	let {
 		chatState,
@@ -192,24 +193,18 @@
 
 		if (files.length > 0) {
 			event.preventDefault();
-			const imageFiles = files.filter(
-				(file) =>
-					file.type.toLowerCase().startsWith('image/') ||
-					/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)
-			);
+			const allowedFiles = files.filter((file) => isAllowedUploadFile(file));
+			if (allowedFiles.length !== files.length) {
+				toast.error(get(t)('upload.file_type_not_allowed'));
+			}
+			const imageFiles = allowedFiles.filter((file) => isUploadImageFile(file));
 			const blockedByVision = !supportsVisionInput && imageFiles.length > 0;
 			if (blockedByVision) {
 				toast.error(get(t)('models.vision_not_supported'));
 			}
 			const acceptedFiles = blockedByVision
-				? files.filter(
-						(file) =>
-							!(
-								file.type.toLowerCase().startsWith('image/') ||
-								/\.(png|jpe?g|webp|gif|bmp|svg)$/i.test(file.name)
-							)
-					)
-				: files;
+				? allowedFiles.filter((file) => !isUploadImageFile(file))
+				: allowedFiles;
 			if (acceptedFiles.length > 0) {
 				chatState.handleFileChange(acceptedFiles);
 			}

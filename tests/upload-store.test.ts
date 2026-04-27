@@ -9,9 +9,14 @@ import {
 	upsertUploadMetadata
 } from '$lib/server/files/upload-store';
 import { UploadForbiddenError } from '$lib/server/errors/upload';
+import { getServerContainer } from '$lib/server/composition/server-container';
 
 const originalCwd = process.cwd();
 let testRoot = '';
+
+function blobUrl(name: string): string {
+	return `/api/files/blob/${name}`;
+}
 
 beforeEach(async () => {
 	testRoot = await mkdtemp(join(tmpdir(), 'rivo-upload-store-'));
@@ -85,7 +90,7 @@ describe('upload-store metadata writes', () => {
 		const originalNameByUrl = new Map(files.map((file) => [file.url, file.originalName]));
 
 		for (const item of fixtures) {
-			expect(originalNameByUrl.get(item.url)).toBe(item.originalName);
+			expect(originalNameByUrl.get(blobUrl(item.storedName))).toBe(item.originalName);
 		}
 	});
 
@@ -117,7 +122,7 @@ describe('upload-store metadata writes', () => {
 		const user1Files = await listStoredUploads({ type: 'user', userId: 'user-1' });
 
 		expect(user1Files).toHaveLength(1);
-		expect(user1Files[0]?.url).toBe('/uploads/u1.txt');
+		expect(user1Files[0]?.url).toBe(blobUrl('u1.txt'));
 
 		await expect(
 			getUploadPreview('/uploads/u2.txt', { type: 'user', userId: 'user-1' })
@@ -155,7 +160,7 @@ describe('upload-store metadata writes', () => {
 		});
 
 		expect(anonFiles).toHaveLength(1);
-		expect(anonFiles[0]?.url).toBe('/uploads/anon-1.txt');
+		expect(anonFiles[0]?.url).toBe(blobUrl('anon-1.txt'));
 
 		await expect(
 			getUploadPreview('/uploads/anon-2.txt', {
@@ -163,5 +168,60 @@ describe('upload-store metadata writes', () => {
 				anonymousSessionId: 'anon-a'
 			})
 		).rejects.toBeInstanceOf(UploadForbiddenError);
+	});
+
+	it('keeps identical uploaded bytes isolated per owner', async () => {
+		const service = getServerContainer().services.files;
+		const fileA = new File(['shared content'], 'notes.txt', {
+			type: 'text/plain',
+			lastModified: 10
+		});
+		const fileB = new File(['shared content'], 'notes.txt', {
+			type: 'text/plain',
+			lastModified: 20
+		});
+
+		const savedA = await service.saveUpload({
+			file: fileA,
+			scope: { type: 'user', userId: 'user-a' }
+		});
+		const savedB = await service.saveUpload({
+			file: fileB,
+			scope: { type: 'user', userId: 'user-b' }
+		});
+
+		expect(savedA.hash).toBe(savedB.hash);
+		expect(savedA.url).not.toBe(savedB.url);
+		expect(savedA.url).toMatch(/^\/api\/files\/blob\/users\/[a-f0-9]{32}\/[a-f0-9]{64}\.txt$/);
+		expect(savedB.url).toMatch(/^\/api\/files\/blob\/users\/[a-f0-9]{32}\/[a-f0-9]{64}\.txt$/);
+
+		const userAFiles = await listStoredUploads({ type: 'user', userId: 'user-a' });
+		const userBFiles = await listStoredUploads({ type: 'user', userId: 'user-b' });
+		expect(userAFiles.map((file) => file.url)).toEqual([savedA.url]);
+		expect(userBFiles.map((file) => file.url)).toEqual([savedB.url]);
+
+		await service.removeUpload(savedA.url, { type: 'user', userId: 'user-a' });
+
+		await expect(
+			getUploadPreview(savedA.url, { type: 'user', userId: 'user-a' })
+		).rejects.toBeInstanceOf(UploadForbiddenError);
+		await expect(getUploadPreview(savedB.url, { type: 'user', userId: 'user-b' })).resolves.toEqual(
+			{
+				content: 'shared content',
+				contentType: 'text/plain'
+			}
+		);
+	});
+
+	it('does not treat extensionless filenames as storage extensions', async () => {
+		const service = getServerContainer().services.files;
+		const saved = await service.saveUpload({
+			file: new File(['hello'], 'README', { type: 'text/plain', lastModified: 1 }),
+			scope: { type: 'anonymous', anonymousSessionId: 'anon-readme' }
+		});
+
+		expect(saved.url).toMatch(/^\/api\/files\/blob\/anonymous\/[a-f0-9]{32}\/[a-f0-9]{64}$/);
+		expect(saved.url).not.toContain('.README');
+		expect(saved.contentType).toBe('text/plain');
 	});
 });

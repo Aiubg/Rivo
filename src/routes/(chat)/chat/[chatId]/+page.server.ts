@@ -21,10 +21,8 @@ export const load: PageServerLoad = async ({ params: { chatId }, locals: { user 
 	}
 	const chat = chatResult.value;
 
-	if (chat.visibility === 'private') {
-		if (!user || chat.userId !== user.id) {
-			throw error(404, 'common.not_found');
-		}
+	if (!user || chat.userId !== user.id) {
+		throw error(404, 'common.not_found');
 	}
 
 	const messagesResult = await getMessagesByChatId({ id: chatId });

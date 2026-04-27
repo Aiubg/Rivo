@@ -12,10 +12,16 @@ import { GET as listFilesRoute } from '../src/routes/(chat)/api/files/+server';
 import { GET as previewFileRoute } from '../src/routes/(chat)/api/files/preview/+server';
 import { PATCH as renameFileRoute } from '../src/routes/(chat)/api/files/rename/+server';
 import { DELETE as deleteFileRoute } from '../src/routes/(chat)/api/files/delete/+server';
+import { POST as uploadFileRoute } from '../src/routes/(chat)/api/files/upload/+server';
+import { GET as fileBlobRoute } from '../src/routes/(chat)/api/files/blob/[...path]/+server';
 import { upsertUploadMetadata } from '$lib/server/files/upload-store';
 
 const originalCwd = process.cwd();
 let testRoot = '';
+
+function blobUrl(name: string): string {
+	return `/api/files/blob/${name}`;
+}
 
 beforeEach(async () => {
 	testRoot = await mkdtemp(join(tmpdir(), 'rivo-file-routes-'));
@@ -78,7 +84,7 @@ describe('file api routes', () => {
 			files: Array<{ url: string; originalName: string }>;
 		};
 		expect(payload.files).toHaveLength(1);
-		expect(payload.files[0]?.url).toBe('/uploads/anon-a.txt');
+		expect(payload.files[0]?.url).toBe(blobUrl('anon-a.txt'));
 		expect(payload.files[0]?.originalName).toBe('anon-a.txt');
 	});
 
@@ -158,5 +164,49 @@ describe('file api routes', () => {
 		await expect(readFile(join('static', 'uploads', 'owned.txt'), 'utf8')).rejects.toMatchObject({
 			code: 'ENOENT'
 		});
+	});
+
+	it('serves owned blobs through the authenticated file route', async () => {
+		await writeFile(join('static', 'uploads', 'owned-blob.txt'), 'owned blob');
+		await upsertUploadMetadata({
+			url: '/uploads/owned-blob.txt',
+			originalName: 'owned-blob.txt',
+			contentType: 'text/plain',
+			size: 10,
+			lastModified: 1,
+			userId: null,
+			anonymousSessionId: 'anon-owner'
+		});
+
+		const response = await fileBlobRoute({
+			locals: { anonymousSessionId: 'anon-owner' },
+			url: new URL('http://localhost/api/files/blob/owned-blob.txt')
+		} as never);
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get('content-type')).toBe('text/plain');
+		expect(await response.text()).toBe('owned blob');
+
+		await expect(
+			fileBlobRoute({
+				locals: { anonymousSessionId: 'anon-other' },
+				url: new URL('http://localhost/api/files/blob/owned-blob.txt')
+			} as never)
+		).rejects.toMatchObject({ status: 403 });
+	});
+
+	it('rejects malformed multipart uploads instead of crashing', async () => {
+		const formData = new FormData();
+		formData.set('file', 'not-a-file');
+
+		await expect(
+			uploadFileRoute({
+				locals: { anonymousSessionId: 'anon-owner' },
+				request: new Request('http://localhost/api/files/upload', {
+					method: 'POST',
+					body: formData
+				})
+			} as never)
+		).rejects.toMatchObject({ status: 400 });
 	});
 });

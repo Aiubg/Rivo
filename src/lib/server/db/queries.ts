@@ -15,6 +15,7 @@ export {
 	appendRunEvents,
 	createGenerationRun,
 	failAllActiveGenerationRuns,
+	failStaleGenerationRuns,
 	getActiveGenerationRunByChatId,
 	getActiveRunChatIdsByUserId,
 	getGenerationRunById,

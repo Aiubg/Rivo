@@ -12,6 +12,7 @@
 	import { toast } from 'svelte-sonner';
 	import { t } from 'svelte-i18n';
 	import { get } from 'svelte/store';
+	import { AVATAR_INPUT_ACCEPT } from '$lib/utils/upload-constraints';
 
 	let {
 		open = $bindable(false),
@@ -196,7 +197,7 @@
 							<input
 								id={avatarInputId}
 								type="file"
-								accept="image/png,image/jpeg,image/webp"
+								accept={AVATAR_INPUT_ACCEPT}
 								class="hidden"
 								onchange={handleAvatarChange}
 							/>

@@ -250,3 +250,61 @@ export function failAllActiveGenerationRuns({
 		return ok(runIds.length);
 	});
 }
+
+type ActiveGenerationRunForRecovery = Pick<
+	GenerationRun,
+	'id' | 'status' | 'createdAt' | 'startedAt'
+>;
+
+export function isGenerationRunStaleForRecovery(
+	run: ActiveGenerationRunForRecovery,
+	staleBefore: Date
+): boolean {
+	const referenceTime = run.status === 'running' ? (run.startedAt ?? run.createdAt) : run.createdAt;
+	return referenceTime.getTime() < staleBefore.getTime();
+}
+
+export function failStaleGenerationRuns({
+	staleBefore,
+	errorKey
+}: {
+	staleBefore: Date;
+	errorKey?: string | null;
+}): ResultAsync<number, DbError> {
+	return safeTry(async function* () {
+		const rows = yield* fromPromise(
+			db
+				.select({
+					id: generationRun.id,
+					status: generationRun.status,
+					createdAt: generationRun.createdAt,
+					startedAt: generationRun.startedAt
+				})
+				.from(generationRun)
+				.where(or(eq(generationRun.status, 'queued'), eq(generationRun.status, 'running'))),
+			(error) => new DbInternalError({ cause: error })
+		);
+
+		const runIds = rows
+			.filter((run) => isGenerationRunStaleForRecovery(run, staleBefore))
+			.map((run) => run.id)
+			.filter((id): id is string => typeof id === 'string' && id.length > 0);
+		if (runIds.length === 0) return ok(0);
+
+		yield* fromPromise(
+			runSerializedWrite(() =>
+				db
+					.update(generationRun)
+					.set({
+						status: 'failed',
+						error: errorKey ?? 'run.failed',
+						finishedAt: new Date()
+					})
+					.where(inArray(generationRun.id, runIds))
+			),
+			(error) => new DbInternalError({ cause: error })
+		);
+
+		return ok(runIds.length);
+	});
+}

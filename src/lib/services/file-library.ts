@@ -1,5 +1,5 @@
 import type { StoredUploadFile } from '$lib/services/files-api';
-import { isOfficeDocument, isTextLikeContentType } from '$lib/utils/files';
+import { getStoredUploadName, isOfficeDocument, isTextLikeContentType } from '$lib/utils/files';
 
 export type ManagedFile = StoredUploadFile & {
 	previewContent?: string | null;
@@ -48,7 +48,7 @@ export function createManagedFileFromUploadResponse(
 
 	const managed = toManagedFile({
 		url: data.url,
-		storedName: data.url.startsWith('/uploads/') ? data.url.slice('/uploads/'.length) : data.url,
+		storedName: getStoredUploadName(data.url),
 		originalName: data.pathname,
 		contentType: data.contentType,
 		size: typeof data.size === 'number' ? data.size : file.size,
