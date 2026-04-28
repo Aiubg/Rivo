@@ -230,6 +230,10 @@
 			"name": "DeepSeek Chat",
 			"description": "Balanced for everyday chat, writing, coding, and tool use."
 		},
+		"deepseek-v4-flash": {
+			"name": "DeepSeek V4 Flash",
+			"description": "Fast DeepSeek model for responsive chat and coding tasks."
+		},
 		"google-gemma-4-31b-it-free": {
 			"name": "Gemma 4 31B Instruct",
 			"description": "Google Gemma via OpenRouter's free tier for chat, coding, and vision input."
@@ -247,6 +251,11 @@
 		"font_noto_sans_sc": "Noto Sans SC",
 		"font_oppo_sans": "Oppo Sans",
 		"font_system_default": "System Default",
+		"font_size": "Font Size",
+		"font_size_compact": "Compact",
+		"font_size_default": "Default",
+		"font_size_large": "Large",
+		"font_size_extra_large": "Extra Large",
 		"data_management": "Data Management",
 		"data_management_description": "Manage shared links and conversation data.",
 		"my_shares": "My Shared Links",

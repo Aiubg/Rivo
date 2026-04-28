@@ -62,6 +62,14 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 		capabilities: {}
 	},
 	{
+		id: 'deepseek-v4-flash',
+		name: 'DeepSeek V4 Flash',
+		description: 'Fast DeepSeek model for responsive chat and coding tasks',
+		provider: 'deepseek',
+		model: 'deepseek-v4-flash',
+		capabilities: {}
+	},
+	{
 		id: 'deepseek-reasoner',
 		name: 'DeepSeek-Reasoner',
 		description: 'Deeper reasoning model for complex problems and longer answers',

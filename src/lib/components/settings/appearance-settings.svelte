@@ -19,6 +19,13 @@
 		isFontPresetId,
 		type FontPresetId
 	} from '$lib/theme/font-presets';
+	import {
+		DEFAULT_FONT_SIZE_PRESET_ID,
+		FONT_SIZE_PRESETS,
+		fontSizePreference,
+		isFontSizePresetId,
+		type FontSizePresetId
+	} from '$lib/theme/font-sizes';
 
 	const selectedThemeMode = $derived(userPrefersMode.current ?? 'system');
 	let currentLanguagePreference = $state<LanguagePreference>(languagePreference.value ?? 'system');
@@ -32,6 +39,16 @@
 		const preset = FONT_PRESETS.find((item) => item.id === currentFontId);
 		return preset?.labelKey ?? FONT_PRESETS[0]?.labelKey ?? 'settings.font_inter';
 	});
+	const currentFontSizeId = $derived.by(() => {
+		const current = fontSizePreference.value as string | undefined;
+		if (!current) return DEFAULT_FONT_SIZE_PRESET_ID;
+		return isFontSizePresetId(current) ? current : DEFAULT_FONT_SIZE_PRESET_ID;
+	});
+	const fontSizeOptions = $derived.by(() => FONT_SIZE_PRESETS);
+	const currentFontSizeLabel = $derived.by(() => {
+		const preset = FONT_SIZE_PRESETS.find((item) => item.id === currentFontSizeId);
+		return preset?.labelKey ?? FONT_SIZE_PRESETS[0]?.labelKey ?? 'settings.font_size_default';
+	});
 
 	function setThemeMode(val: 'light' | 'dark' | 'system') {
 		setMode(val);
@@ -39,6 +56,10 @@
 
 	function setFontPreset(nextFont: FontPresetId) {
 		fontPreference.value = nextFont;
+	}
+
+	function setFontSizePreset(nextFontSize: FontSizePresetId) {
+		fontSizePreference.value = nextFontSize;
 	}
 
 	function themeOptionClasses(target: 'system' | 'light' | 'dark') {
@@ -68,6 +89,14 @@
 		if (!nextFont) return;
 		if (!isFontPresetId(nextFont)) return;
 		setFontPreset(nextFont);
+	}
+
+	function handleFontSizePresetClick(event: MouseEvent) {
+		const target = event.currentTarget as HTMLElement | null;
+		const nextFontSize = target?.dataset.fontSizeValue;
+		if (!nextFontSize) return;
+		if (!isFontSizePresetId(nextFontSize)) return;
+		setFontSizePreset(nextFontSize);
 	}
 
 	function setLanguage(lang: LanguagePreference) {
@@ -240,6 +269,50 @@
 						>
 							<span>{$t(option.labelKey)}</span>
 							{#if currentFontId === option.id}
+								<Check class="size-4" />
+							{/if}
+						</DropdownMenu.Item>
+					{/each}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		</Item.Actions>
+	</Item.Root>
+
+	<Item.Root size="none">
+		<Item.Content>
+			<Item.Title size="sm">
+				<Label for="font-size-select" class="text-sm">{$t('settings.font_size')}</Label>
+			</Item.Title>
+		</Item.Content>
+		<Item.Actions>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					{#snippet child({ props })}
+						<Button
+							{...props}
+							id="font-size-select"
+							name="font-size"
+							variant="ghost"
+							class="btn-selector justify-between px-4 py-2 text-sm font-medium"
+						>
+							<span>{$t(currentFontSizeLabel)}</span>
+							<ChevronRight class="size-4 rotate-90" />
+						</Button>
+					{/snippet}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content
+					class="w-44 max-w-[calc(100vw-2rem)]"
+					align="end"
+					collisionPadding={16}
+				>
+					{#each fontSizeOptions as option (option.id)}
+						<DropdownMenu.Item
+							class="flex items-center justify-between"
+							data-font-size-value={option.id}
+							onclick={handleFontSizePresetClick}
+						>
+							<span>{$t(option.labelKey)}</span>
+							{#if currentFontSizeId === option.id}
 								<Check class="size-4" />
 							{/if}
 						</DropdownMenu.Item>

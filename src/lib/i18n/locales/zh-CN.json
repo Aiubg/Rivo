@@ -230,6 +230,10 @@
 			"name": "DeepSeek Chat",
 			"description": "适合日常对话，也兼顾写作、编程和工具调用。"
 		},
+		"deepseek-v4-flash": {
+			"name": "DeepSeek V4 Flash",
+			"description": "快速响应的 DeepSeek 模型，适合对话、编程和轻量任务。"
+		},
 		"google-gemma-4-31b-it-free": {
 			"name": "Gemma 4 31B Instruct",
 			"description": "\u7531 OpenRouter \u63d0\u4f9b\u7684 Google Gemma\uff0c\u652f\u6301\u5bf9\u8bdd\u3001\u7f16\u7a0b\u3001\u63a8\u7406\u548c\u89c6\u89c9\u8f93\u5165\u3002"
@@ -247,6 +251,11 @@
 		"font_noto_sans_sc": "Noto Sans SC",
 		"font_oppo_sans": "OPPO Sans",
 		"font_system_default": "系统默认",
+		"font_size": "字体大小",
+		"font_size_compact": "紧凑",
+		"font_size_default": "默认",
+		"font_size_large": "较大",
+		"font_size_extra_large": "特大",
 		"data_management": "数据管理",
 		"data_management_description": "管理分享链接与对话数据。",
 		"my_shares": "我共享的链接",

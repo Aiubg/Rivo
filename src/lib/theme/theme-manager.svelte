@@ -8,6 +8,12 @@
 		getFontPreset,
 		isFontPresetId
 	} from '$lib/theme/font-presets';
+	import {
+		DEFAULT_FONT_SIZE_PRESET_ID,
+		fontSizePreference,
+		getFontSizePreset,
+		isFontSizePresetId
+	} from '$lib/theme/font-sizes';
 
 	const isBrowser = typeof document !== 'undefined';
 	const FONT_FACE_STYLE_ID = 'rivo-active-font-face';
@@ -42,17 +48,29 @@
 		const currentFont = (fontPreference.value as string | undefined) ?? '';
 		const activeFont = isFontPresetId(currentFont) ? currentFont : DEFAULT_FONT_PRESET_ID;
 		const fontPreset = getFontPreset(activeFont);
+		const currentFontSize = (fontSizePreference.value as string | undefined) ?? '';
+		const activeFontSize = isFontSizePresetId(currentFontSize)
+			? currentFontSize
+			: DEFAULT_FONT_SIZE_PRESET_ID;
+		const fontSizePreset = getFontSizePreset(activeFontSize);
 		if (currentTheme !== activeTheme) {
 			setTheme(activeTheme);
 		}
 		if (currentFont !== activeFont) {
 			fontPreference.value = activeFont;
 		}
+		if (currentFontSize !== activeFontSize) {
+			fontSizePreference.value = activeFontSize;
+		}
 		document.documentElement.setAttribute('data-theme', activeTheme);
 		if (fontPreset) {
 			syncFontFaceStyle(fontPreset.id);
 			document.documentElement.style.setProperty('--font-sans', fontPreset.stack);
 			document.documentElement.setAttribute('data-font', fontPreset.id);
+		}
+		if (fontSizePreset) {
+			document.documentElement.style.setProperty('--ui-app-font-base', fontSizePreset.value);
+			document.documentElement.setAttribute('data-font-size', fontSizePreset.id);
 		}
 
 		const background = getComputedStyle(document.documentElement)
