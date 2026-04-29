@@ -12,11 +12,13 @@
 	import { getChatDraftStorageKey } from '$lib/components/multimodal/draft-storage';
 	import SubmitControls from '$lib/components/multimodal/submit-controls.svelte';
 	import TextareaAutosize from '$lib/components/multimodal/textarea-autosize.svelte';
-	import { modelSupportsVision } from '$lib/ai/model-registry';
+	import { modelSupportsThinkingMode, modelSupportsVision } from '$lib/ai/model-registry';
 	import { SelectedModel } from '$lib/hooks/selected-model.svelte';
 	import type { ChatState } from '$lib/hooks/chat-state.svelte';
 	import type { Attachment } from '$lib/types/attachment';
 	import { isAllowedUploadFile, isUploadImageFile } from '$lib/utils/upload-constraints';
+	import AtomIcon from '@lucide/svelte/icons/atom';
+	import XIcon from '@lucide/svelte/icons/x';
 
 	let {
 		chatState,
@@ -47,6 +49,9 @@
 	);
 	const selectedChatModel = SelectedModel.fromContext();
 	const supportsVisionInput = $derived(modelSupportsVision(selectedChatModel.value));
+	const supportsThinkingMode = $derived(modelSupportsThinkingMode(selectedChatModel.value));
+	const thinkingEnabled = $derived(chatState.modelOptions.thinking?.mode === 'enabled');
+	const inputUsesStackedLayout = $derived(textareaExpanded || thinkingEnabled);
 	const hasUnsupportedImageAttachments = $derived(hasImageAttachments && !supportsVisionInput);
 	const uploadsInProgress = $derived(chatState.uploadQueue.size > 0);
 	const canSend = $derived(
@@ -176,6 +181,15 @@
 		chatState.addAttachments(attachments);
 	}
 
+	function enableThinkingMode() {
+		if (!supportsThinkingMode || loading) return;
+		chatState.modelOptions = { thinking: { mode: 'enabled' } };
+	}
+
+	function disableThinkingMode() {
+		chatState.modelOptions = {};
+	}
+
 	function handlePaste(event: ClipboardEvent) {
 		const items = event.clipboardData?.items;
 		if (!items) return;
@@ -287,6 +301,12 @@
 	});
 
 	$effect(() => {
+		if (!supportsThinkingMode && thinkingEnabled) {
+			disableThinkingMode();
+		}
+	});
+
+	$effect(() => {
 		if (!(inputLayoutRef instanceof HTMLDivElement)) return;
 		if (typeof ResizeObserver === 'undefined') return;
 
@@ -317,9 +337,11 @@
 			'shadow-lg',
 			transitionsReady &&
 				'transition-[border-radius,padding,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-			textareaExpanded ? 'rounded-4xl px-2.5 py-2.5' : 'rounded-[1.75rem] px-2.5 py-1.5'
+			inputUsesStackedLayout
+				? 'rounded-4xl px-[10px] py-[10px]'
+				: 'rounded-[1.75rem] px-[10px] py-[6px]'
 		)}
-		data-layout={textareaExpanded ? 'stacked' : 'inline'}
+		data-layout={inputUsesStackedLayout ? 'stacked' : 'inline'}
 		onclick={handleFocus}
 	>
 		<div class="flex flex-col gap-2">
@@ -339,7 +361,7 @@
 						'min-w-0',
 						transitionsReady &&
 							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						textareaExpanded ? 'px-1.5 pt-0 pb-11' : 'py-0.5 ps-11 pe-11'
+						inputUsesStackedLayout ? 'px-3 pt-0 pb-14' : 'py-[2px] ps-11 pe-11'
 					)}
 				>
 					<TextareaAutosize
@@ -354,7 +376,7 @@
 							'placeholder:text-muted-foreground/80 w-full min-w-0 bg-transparent px-0 text-base leading-6 wrap-anywhere',
 							transitionsReady &&
 								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-							textareaExpanded ? 'py-1' : 'py-1.5',
+							inputUsesStackedLayout ? 'py-1' : 'py-[6px]',
 							c
 						)}
 						minLines={chatInputMinLines}
@@ -369,19 +391,43 @@
 
 				<div
 					class={cn(
-						'absolute left-0 z-10 will-change-transform',
+						'absolute left-0 z-10 flex max-w-[calc(100%-3rem)] items-center gap-1 will-change-transform',
 						transitionsReady &&
 							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						textareaExpanded
+						inputUsesStackedLayout
 							? 'bottom-0 translate-y-0 opacity-100'
 							: 'top-1/2 left-0 -translate-y-1/2 opacity-100'
 					)}
 				>
 					<AttachmentUploader
 						disabled={loading}
+						{supportsThinkingMode}
+						{thinkingEnabled}
 						onchange={handleFileChange}
 						onselectattachments={handleSelectAttachments}
+						ontogglethinking={enableThinkingMode}
 					/>
+
+					{#if thinkingEnabled}
+						<button
+							type="button"
+							class="group/thinking bg-secondary text-accent-foreground hover:bg-accent inline-flex h-9 min-w-0 items-center gap-[6px] rounded-full px-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
+							aria-label={$t('chat.disable_deep_thinking')}
+							disabled={loading}
+							onclick={(event) => {
+								event.stopPropagation();
+								disableThinkingMode();
+							}}
+						>
+							<AtomIcon
+								class="size-4 shrink-0 group-hover/thinking:hidden group-focus-visible/thinking:hidden"
+							/>
+							<XIcon
+								class="hidden size-4 shrink-0 group-hover/thinking:block group-focus-visible/thinking:block"
+							/>
+							<span class="min-w-0 truncate">{$t('chat.deep_thinking_badge')}</span>
+						</button>
+					{/if}
 				</div>
 
 				<div
@@ -389,7 +435,7 @@
 						'absolute right-0 z-10 will-change-transform',
 						transitionsReady &&
 							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						textareaExpanded
+						inputUsesStackedLayout
 							? 'bottom-0 translate-y-0 opacity-100'
 							: 'top-1/2 right-0 -translate-y-1/2 opacity-100'
 					)}
@@ -401,11 +447,11 @@
 					class="pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-0"
 					aria-hidden="true"
 				>
-					<div class="min-w-0 py-0.5 ps-11 pe-11">
+					<div class="min-w-0 py-[2px] ps-11 pe-11">
 						<textarea
 							bind:this={inlineMeasureRef}
 							class={cn(
-								'w-full min-w-0 resize-none border-0 bg-transparent px-0 py-1.5 text-base leading-6 wrap-anywhere shadow-none outline-none',
+								'w-full min-w-0 resize-none border-0 bg-transparent px-0 py-[6px] text-base leading-6 wrap-anywhere shadow-none outline-none',
 								c
 							)}
 							rows={1}

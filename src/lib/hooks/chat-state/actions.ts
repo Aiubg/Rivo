@@ -17,6 +17,7 @@ import { get } from 'svelte/store';
 import { t } from 'svelte-i18n';
 import { toast } from 'svelte-sonner';
 import { SvelteDate } from 'svelte/reactivity';
+import type { ModelRequestOptions } from '$lib/ai/model-options';
 
 export type ChatSubmitOptions = {
 	experimental_attachments?: Attachment[];
@@ -102,6 +103,8 @@ export type ChatStateActionContext = {
 		set input(value: string);
 		get attachments(): Attachment[];
 		set attachments(value: Attachment[]);
+		get modelOptions(): ModelRequestOptions;
+		set modelOptions(value: ModelRequestOptions);
 		get abortController(): AbortController | null;
 		set abortController(value: AbortController | null);
 		get activeRunId(): string | null;
@@ -185,6 +188,7 @@ export class ChatStateActions {
 				messages: options.payloadMessages,
 				parentId: options.parentId,
 				assistantMessageId: options.assistantMessageId,
+				modelOptions: this.context.state.modelOptions,
 				personalization: personalization.value
 			}),
 			signal: options.outerAbortSignal,
@@ -420,6 +424,7 @@ export class ChatStateActions {
 						messages: payloadMessages,
 						parentId: userMessage.parentId,
 						assistantMessageId,
+						modelOptions: this.context.state.modelOptions,
 						personalization: personalization.value
 					}),
 					signal: outerAbortSignal,

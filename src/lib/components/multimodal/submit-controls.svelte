@@ -84,7 +84,7 @@
 						onsend();
 					}}
 				>
-					<ArrowUpIcon class="size-5 rtl-mirror" strokeWidth={1.75} />
+					<ArrowUpIcon class="rtl-mirror size-5" strokeWidth={1.75} />
 				</InputGroup.Button>
 			{/snippet}
 		</TooltipTrigger>
@@ -107,7 +107,7 @@
 						}}
 						disabled={true}
 					>
-						<ArrowUpIcon class="size-5 rtl-mirror" strokeWidth={1.75}/>
+						<ArrowUpIcon class="rtl-mirror size-5" strokeWidth={1.75} />
 					</InputGroup.Button>
 				</span>
 			{/snippet}

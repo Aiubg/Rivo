@@ -1,7 +1,7 @@
 import { logger } from '$lib/utils/logger';
 import { myProvider } from '$lib/server/ai/models';
 import { systemPrompt } from '$lib/server/ai/prompts';
-import { getModelRequestPreset } from '$lib/ai/model-registry';
+import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import {
 	convertToCoreMessagesWithResolvedImages,
@@ -44,7 +44,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 	if (parsed instanceof Response) {
 		return parsed;
 	}
-	const { id, messages, parentId, assistantMessageId, personalization } = parsed;
+	const { id, messages, parentId, assistantMessageId, modelOptions, personalization } = parsed;
 	const selectedChatModel = cookies.get('selected-model');
 
 	if (!user && !allowAnonymousChats) {
@@ -174,7 +174,10 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 	const primaryLocale = localeHeader.split(',')[0] || undefined;
 	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const requestUrl = url.toString();
-	const modelRequestPreset = getModelRequestPreset(selectedChatModel);
+	const modelRequestConfig = resolveModelRequestConfig({
+		modelId: selectedChatModel,
+		modelOptions
+	});
 
 	try {
 		const result = streamText({
@@ -191,8 +194,8 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 			}),
 			messages: coreMessages,
 			...(tools ? { tools, stopWhen: stepCountIs(30) } : {}),
-			...(modelRequestPreset?.providerOptions
-				? { providerOptions: modelRequestPreset.providerOptions }
+			...(modelRequestConfig.providerOptions
+				? { providerOptions: modelRequestConfig.providerOptions }
 				: {})
 		});
 

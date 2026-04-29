@@ -4,7 +4,12 @@ import { generationRun, type GenerationRun, runEvent, type RunEvent } from '$lib
 import type { DbError } from '$lib/server/errors/db';
 import { DbInternalError } from '$lib/server/errors/db';
 import { unwrapSingleQueryResult } from '$lib/server/db/utils';
-import { db, eq, runSerializedWrite } from '$lib/server/db/runtime';
+import {
+	db,
+	ensureGenerationRunModelOptionsColumn,
+	eq,
+	runSerializedWrite
+} from '$lib/server/db/runtime';
 
 export function createGenerationRun({
 	run
@@ -12,6 +17,9 @@ export function createGenerationRun({
 	run: GenerationRun;
 }): ResultAsync<GenerationRun, DbError> {
 	return safeTry(async function* () {
+		yield* fromPromise(ensureGenerationRunModelOptionsColumn(), (error) => {
+			return new DbInternalError({ cause: error });
+		});
 		const rows = yield* fromPromise(
 			runSerializedWrite(() => db.insert(generationRun).values(run).returning()),
 			(error) => new DbInternalError({ cause: error })
@@ -22,6 +30,9 @@ export function createGenerationRun({
 
 export function getGenerationRunById({ id }: { id: string }): ResultAsync<GenerationRun, DbError> {
 	return safeTry(async function* () {
+		yield* fromPromise(ensureGenerationRunModelOptionsColumn(), (error) => {
+			return new DbInternalError({ cause: error });
+		});
 		const rows = yield* fromPromise(
 			db.select().from(generationRun).where(eq(generationRun.id, id)),
 			(error) => new DbInternalError({ cause: error })
@@ -35,14 +46,20 @@ export function getGenerationRunsByChatId({
 }: {
 	chatId: string;
 }): ResultAsync<GenerationRun[], DbError> {
-	return fromPromise(
-		db
-			.select()
-			.from(generationRun)
-			.where(eq(generationRun.chatId, chatId))
-			.orderBy(asc(generationRun.createdAt)),
-		(error) => new DbInternalError({ cause: error })
-	);
+	return safeTry(async function* () {
+		yield* fromPromise(ensureGenerationRunModelOptionsColumn(), (error) => {
+			return new DbInternalError({ cause: error });
+		});
+		const rows = yield* fromPromise(
+			db
+				.select()
+				.from(generationRun)
+				.where(eq(generationRun.chatId, chatId))
+				.orderBy(asc(generationRun.createdAt)),
+			(error) => new DbInternalError({ cause: error })
+		);
+		return ok(rows);
+	});
 }
 
 export function getActiveGenerationRunByChatId({
@@ -53,6 +70,9 @@ export function getActiveGenerationRunByChatId({
 	userId: string;
 }): ResultAsync<GenerationRun | null, DbError> {
 	return safeTry(async function* () {
+		yield* fromPromise(ensureGenerationRunModelOptionsColumn(), (error) => {
+			return new DbInternalError({ cause: error });
+		});
 		const rows = yield* fromPromise(
 			db
 				.select()

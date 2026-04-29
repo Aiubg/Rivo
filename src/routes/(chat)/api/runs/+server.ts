@@ -3,6 +3,7 @@ import {
 	validateModelApiKey,
 	validateModelVisionCompatibility
 } from '$lib/server/ai/utils';
+import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import {
 	createGenerationRun,
 	getChatById,
@@ -27,7 +28,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies 
 	if (parsed instanceof Response) {
 		return parsed;
 	}
-	const { id, messages, parentId, assistantMessageId, personalization } = parsed;
+	const { id, messages, parentId, assistantMessageId, modelOptions, personalization } = parsed;
 	const selectedChatModel = cookies.get('selected-model');
 
 	if (!user) {
@@ -57,6 +58,10 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies 
 	}
 
 	const runId = crypto.randomUUID();
+	const modelRequestConfig = resolveModelRequestConfig({
+		modelId: selectedChatModel,
+		modelOptions
+	});
 
 	await safeTry(async function* () {
 		const chatResult = await getChatById({ id });
@@ -148,6 +153,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies 
 				userId: user.id,
 				status: 'queued',
 				modelId: selectedChatModel,
+				modelOptions: modelRequestConfig.modelOptions,
 				userMessageId: userMessage.id,
 				assistantMessageId,
 				messages: messages as unknown as UIMessage[],

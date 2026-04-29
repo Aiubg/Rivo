@@ -12,7 +12,9 @@
 		DropdownMenuSubTrigger,
 		DropdownMenuTrigger
 	} from '$lib/components/ui/dropdown-menu';
+	import AtomIcon from '@lucide/svelte/icons/atom';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
+	import CheckIcon from '@lucide/svelte/icons/check';
 	import Spinner from '$lib/components/ui/spinner.svelte';
 	import LibraryFilePickerModal from '$lib/components/multimodal/library-file-picker-modal.svelte';
 	import PlusIcon from '@lucide/svelte/icons/plus';
@@ -43,12 +45,18 @@
 
 	let {
 		disabled = false,
+		supportsThinkingMode = false,
+		thinkingEnabled = false,
 		onchange,
-		onselectattachments
+		onselectattachments,
+		ontogglethinking
 	}: {
 		disabled?: boolean;
+		supportsThinkingMode?: boolean;
+		thinkingEnabled?: boolean;
 		onchange: (files: File[]) => void;
 		onselectattachments: (attachments: Attachment[]) => void;
+		ontogglethinking?: () => void;
 	} = $props();
 
 	let fileInputRef = $state<HTMLInputElement | null>(null);
@@ -155,6 +163,12 @@
 		mobileRecentView = false;
 	}
 
+	function enableThinking() {
+		if (disabled || thinkingEnabled || !supportsThinkingMode) return;
+		ontogglethinking?.();
+		menuOpen = false;
+	}
+
 	$effect(() => {
 		if (menuOpen && (recentMenuOpen || (isMobile && mobileRecentView))) {
 			void loadRecentFiles();
@@ -216,7 +230,7 @@
 		{/snippet}
 	</DropdownMenuTrigger>
 
-	<DropdownMenuContent align="start" side="top" class="w-64 p-2">
+	<DropdownMenuContent align="start" side="top" class="w-52 p-2">
 		{#if isMobile}
 			{#if mobileRecentView}
 				<button
@@ -240,7 +254,7 @@
 						<span class="min-w-0 flex-1 truncate">{$t('files.add_from_library')}</span>
 					</button>
 
-					<DropdownMenuSeparator class="my-1" />
+					<DropdownMenuSeparator />
 
 					{#if loadingRecent}
 						<div class="text-muted-foreground flex items-center gap-2 px-3 py-2 text-sm">
@@ -278,12 +292,7 @@
 					}}
 				>
 					<UploadIcon class="size-4 shrink-0" />
-					<div class="min-w-0 flex-1">
-						<div class="truncate text-sm font-medium">{$t('files.upload')}</div>
-						<div class="text-muted-foreground truncate text-xs">
-							{$t('chat.upload_attachment_hint')}
-						</div>
-					</div>
+					<span class="min-w-0 flex-1 truncate text-sm font-medium">{$t('files.upload')}</span>
 					<Kbd.Group
 						class="ms-2 hidden opacity-0 transition-opacity group-focus-within/upload-shortcut:opacity-100 group-hover/upload-shortcut:opacity-100 md:flex"
 					>
@@ -301,14 +310,32 @@
 					}}
 				>
 					<FileClockIcon class="size-4 shrink-0" />
-					<div class="min-w-0 flex-1">
-						<div class="truncate text-sm font-medium">{$t('chat.recent_files')}</div>
-						<div class="text-muted-foreground truncate text-xs">
-							{$t('chat.recent_files_hint')}
-						</div>
-					</div>
+					<span class="min-w-0 flex-1 truncate text-sm font-medium">
+						{$t('chat.recent_files')}
+					</span>
 					<ChevronRightIcon class="ml-auto size-4 shrink-0" />
 				</DropdownMenuItem>
+
+				{#if supportsThinkingMode}
+					<DropdownMenuSeparator />
+
+					<DropdownMenuItem
+						disabled={disabled || thinkingEnabled}
+						class="items-center"
+						onclick={(event) => {
+							event.preventDefault();
+							enableThinking();
+						}}
+					>
+						<AtomIcon class="size-4 shrink-0" />
+						<span class="min-w-0 flex-1 truncate text-sm font-medium">
+							{$t('chat.deep_thinking')}
+						</span>
+						{#if thinkingEnabled}
+							<CheckIcon class="ml-auto size-4 shrink-0" />
+						{/if}
+					</DropdownMenuItem>
+				{/if}
 			{/if}
 		{:else}
 			<DropdownMenuItem
@@ -320,12 +347,7 @@
 				}}
 			>
 				<UploadIcon class="size-4 shrink-0" />
-				<div class="min-w-0 flex-1">
-					<div class="truncate text-sm font-medium">{$t('files.upload')}</div>
-					<div class="text-muted-foreground truncate text-xs">
-						{$t('chat.upload_attachment_hint')}
-					</div>
-				</div>
+				<span class="min-w-0 flex-1 truncate text-sm font-medium">{$t('files.upload')}</span>
 				<Kbd.Group
 					class="ms-2 hidden opacity-0 transition-opacity group-focus-within/upload-shortcut:opacity-100 group-hover/upload-shortcut:opacity-100 md:flex"
 				>
@@ -337,14 +359,13 @@
 			<DropdownMenuSub bind:open={recentMenuOpen}>
 				<DropdownMenuSubTrigger {disabled} class="items-center">
 					<FileClockIcon class="size-4 shrink-0" />
-					<div class="min-w-0 flex-1">
-						<div class="truncate text-sm font-medium">{$t('chat.recent_files')}</div>
-						<div class="text-muted-foreground truncate text-xs">{$t('chat.recent_files_hint')}</div>
-					</div>
+					<span class="min-w-0 flex-1 truncate text-sm font-medium">
+						{$t('chat.recent_files')}
+					</span>
 					<ChevronRightIcon class="ml-auto size-4 shrink-0" />
 				</DropdownMenuSubTrigger>
 
-				<DropdownMenuSubContent class="w-72 p-2">
+				<DropdownMenuSubContent class="w-60 p-2">
 					<DropdownMenuItem
 						{disabled}
 						onclick={(event) => {
@@ -384,6 +405,27 @@
 					{/if}
 				</DropdownMenuSubContent>
 			</DropdownMenuSub>
+
+			{#if supportsThinkingMode}
+				<DropdownMenuSeparator />
+
+				<DropdownMenuItem
+					disabled={disabled || thinkingEnabled}
+					class="items-center"
+					onclick={(event) => {
+						event.preventDefault();
+						enableThinking();
+					}}
+				>
+					<AtomIcon class="size-4 shrink-0" />
+					<span class="min-w-0 flex-1 truncate text-sm font-medium">
+						{$t('chat.deep_thinking')}
+					</span>
+					{#if thinkingEnabled}
+						<CheckIcon class="ml-auto size-4 shrink-0" />
+					{/if}
+				</DropdownMenuItem>
+			{/if}
 		{/if}
 	</DropdownMenuContent>
 </DropdownMenu>

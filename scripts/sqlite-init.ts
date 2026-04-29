@@ -73,6 +73,7 @@ async function run() {
       userId TEXT NOT NULL,
       status TEXT NOT NULL,
       modelId TEXT NOT NULL,
+      modelOptions TEXT NOT NULL DEFAULT '{}',
       userMessageId TEXT NOT NULL,
       assistantMessageId TEXT NOT NULL,
       messages TEXT NOT NULL,

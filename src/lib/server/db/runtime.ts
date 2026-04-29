@@ -32,6 +32,7 @@ function getDb() {
 			void cachedDatabasePort?.dispose?.();
 			messageSearchTextSetupPromise = null;
 			storedUploadTableSetupPromise = null;
+			generationRunModelOptionsSetupPromise = null;
 		}
 		cachedDatabasePort = createDatabasePort(config);
 		cachedDatabaseSignature = signature;
@@ -60,6 +61,7 @@ export async function disposeDatabasePort(): Promise<void> {
 	cachedDatabaseSignature = null;
 	messageSearchTextSetupPromise = null;
 	storedUploadTableSetupPromise = null;
+	generationRunModelOptionsSetupPromise = null;
 }
 
 export const db = new Proxy({} as unknown as ReturnType<typeof drizzle>, {
@@ -124,8 +126,17 @@ function isDuplicateSearchTextColumnError(error: unknown): boolean {
 	);
 }
 
+function isDuplicateModelOptionsColumnError(error: unknown): boolean {
+	const messageText = flattenErrorMessages(error);
+	return (
+		messageText.toLowerCase().includes('duplicate column name') &&
+		messageText.toLowerCase().includes('modeloptions')
+	);
+}
+
 let messageSearchTextSetupPromise: Promise<void> | null = null;
 let storedUploadTableSetupPromise: Promise<void> | null = null;
+let generationRunModelOptionsSetupPromise: Promise<void> | null = null;
 
 async function hasMessageSearchTextColumn(): Promise<boolean> {
 	const rows = (await db.all(sql.raw('PRAGMA table_info(`Message`)'))) as Array<{
@@ -190,6 +201,46 @@ export async function ensureMessageSearchTextColumn(): Promise<void> {
 	});
 
 	return messageSearchTextSetupPromise;
+}
+
+async function hasGenerationRunModelOptionsColumn(): Promise<boolean> {
+	const rows = (await db.all(sql.raw('PRAGMA table_info(`GenerationRun`)'))) as Array<{
+		name?: unknown;
+	}>;
+
+	return rows.some((row) => row?.name === 'modelOptions');
+}
+
+export async function ensureGenerationRunModelOptionsColumn(): Promise<void> {
+	const { signature } = getDatabaseSignature();
+	if (cachedDatabaseSignature !== signature) {
+		generationRunModelOptionsSetupPromise = null;
+	}
+	if (generationRunModelOptionsSetupPromise) {
+		return generationRunModelOptionsSetupPromise;
+	}
+
+	generationRunModelOptionsSetupPromise = runSerializedWrite(async () => {
+		const hasColumn = await hasGenerationRunModelOptionsColumn();
+		if (!hasColumn) {
+			try {
+				await db.run(
+					sql.raw(
+						"ALTER TABLE `GenerationRun` ADD COLUMN `modelOptions` text NOT NULL DEFAULT '{}';"
+					)
+				);
+			} catch (error) {
+				if (!isDuplicateModelOptionsColumnError(error)) {
+					throw error;
+				}
+			}
+		}
+	}).catch((error) => {
+		generationRunModelOptionsSetupPromise = null;
+		throw error;
+	});
+
+	return generationRunModelOptionsSetupPromise;
 }
 
 export async function ensureStoredUploadTable(): Promise<void> {

@@ -121,9 +121,7 @@
 						<span class="text-muted-foreground truncate text-xs">{handle}</span>
 					</div>
 				</DropdownMenuItem>
-				<div class="px-2">
-					<DropdownMenuSeparator class="mx-0" />
-				</div>
+				<DropdownMenuSeparator />
 				<DropdownMenuItem class="cursor-pointer" onSelect={() => (settingsState.open = true)}>
 					<SettingsIcon class="size-4" />
 					<span>{$t('common.settings')}</span>

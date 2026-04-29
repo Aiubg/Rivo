@@ -27,6 +27,7 @@ import { clearStoredRunCursor } from '$lib/hooks/chat-state/run-stream';
 import { getChatSearchResults } from '$lib/hooks/chat-state/search-results';
 import { RunResumeScheduler } from '$lib/hooks/chat-state/run-resume-scheduler';
 import { ChatAttachmentUploadState } from '$lib/hooks/chat-state/attachments.svelte';
+import type { ModelRequestOptions } from '$lib/ai/model-options';
 
 /**
  * ChatState class manages the state and logic for a single chat conversation.
@@ -48,6 +49,8 @@ export class ChatState {
 	input = $state('');
 	/** List of uploaded attachments */
 	attachments = $state<Attachment[]>([]);
+	/** Draft-scoped model request options, such as thinking mode. */
+	modelOptions = $state<ModelRequestOptions>({});
 
 	private abortController: AbortController | null = null;
 	private chatHistory = ChatHistory.fromContext();
@@ -171,6 +174,12 @@ export class ChatState {
 				},
 				set attachments(value) {
 					readChatState().attachments = value;
+				},
+				get modelOptions() {
+					return readChatState().modelOptions;
+				},
+				set modelOptions(value) {
+					readChatState().modelOptions = value;
 				},
 				get abortController() {
 					return readChatState().abortController;

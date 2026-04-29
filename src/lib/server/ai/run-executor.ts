@@ -3,7 +3,7 @@ import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import { logger } from '$lib/utils/logger';
 import { myProvider } from '$lib/server/ai/models';
 import { systemPrompt } from '$lib/server/ai/prompts';
-import { getModelRequestPreset } from '$lib/ai/model-registry';
+import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import {
 	convertToCoreMessagesWithResolvedImages,
 	mapModelProviderErrorToErrorKey,
@@ -170,7 +170,10 @@ class RunExecutor {
 
 			const now = new Date();
 			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			const modelRequestPreset = getModelRequestPreset(run.modelId);
+			const modelRequestConfig = resolveModelRequestConfig({
+				modelId: run.modelId,
+				modelOptions: run.modelOptions
+			});
 
 			const result = streamText({
 				model: myProvider.languageModel(run.modelId),
@@ -186,8 +189,8 @@ class RunExecutor {
 				}),
 				messages: coreMessages,
 				...(tools ? { tools, stopWhen: stepCountIs(30) } : {}),
-				...(modelRequestPreset?.providerOptions
-					? { providerOptions: modelRequestPreset.providerOptions }
+				...(modelRequestConfig.providerOptions
+					? { providerOptions: modelRequestConfig.providerOptions }
 					: {}),
 				abortSignal: abortController.signal
 			});

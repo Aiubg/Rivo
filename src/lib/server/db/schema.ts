@@ -9,6 +9,7 @@ import {
 import { sql } from 'drizzle-orm';
 import type { UIMessage } from 'ai';
 import type { Attachment } from '$lib/types/attachment';
+import type { ModelRequestOptions } from '$lib/ai/model-options';
 
 export const user = sqliteTable('User', (_t) => ({
 	id: text('id').primaryKey().notNull(),
@@ -107,6 +108,10 @@ export const generationRun = sqliteTable('GenerationRun', (_t) => ({
 		.references(() => user.id, { onDelete: 'cascade' }),
 	status: text('status').notNull(),
 	modelId: text('modelId').notNull(),
+	modelOptions: text('modelOptions', { mode: 'json' })
+		.$type<ModelRequestOptions>()
+		.notNull()
+		.default(sql`'{}'`),
 	userMessageId: text('userMessageId')
 		.notNull()
 		.references(() => message.id, { onDelete: 'cascade' }),

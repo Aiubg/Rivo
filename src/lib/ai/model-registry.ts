@@ -1,12 +1,20 @@
+import {
+	normalizeModelRequestOptions,
+	type ModelRequestOptions,
+	type ThinkingMode
+} from '$lib/ai/model-options';
+
 export const DEFAULT_CHAT_MODEL: string = 'deepseek-chat';
 
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+type ProviderOptionsPreset = Record<string, { [key: string]: JsonValue }>;
 
 export type ModelCapabilities = {
 	vision?: boolean;
 	imageGeneration?: boolean;
 	reasoning?: boolean;
+	thinkingMode?: boolean;
 	toolUse?: boolean;
 	jsonMode?: boolean;
 };
@@ -17,7 +25,11 @@ export type ModelRequestPreset = {
 	 * Example:
 	 * { openrouter: { reasoning: { enabled: true } } }
 	 */
-	providerOptions?: Record<string, { [key: string]: JsonValue }>;
+	providerOptions?: ProviderOptionsPreset;
+	thinkingMode?: {
+		defaultMode?: ThinkingMode;
+		providerOptions: Partial<Record<ThinkingMode, ProviderOptionsPreset>>;
+	};
 };
 
 export type ModelRegistryItem = {
@@ -67,7 +79,27 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 		description: 'Fast DeepSeek model for responsive chat and coding tasks',
 		provider: 'deepseek',
 		model: 'deepseek-v4-flash',
-		capabilities: {}
+		capabilities: {
+			reasoning: true,
+			thinkingMode: true
+		},
+		requestPreset: {
+			thinkingMode: {
+				defaultMode: 'disabled',
+				providerOptions: {
+					enabled: {
+						deepseek: {
+							thinking: { type: 'enabled' }
+						}
+					},
+					disabled: {
+						deepseek: {
+							thinking: { type: 'disabled' }
+						}
+					}
+				}
+			}
+		}
 	},
 	{
 		id: 'deepseek-reasoner',
@@ -100,6 +132,67 @@ export function modelSupportsVision(modelId: string): boolean {
 	return getModelCapabilities(modelId).vision === true;
 }
 
+export function modelSupportsThinkingMode(modelId: string): boolean {
+	return (
+		getModelCapabilities(modelId).thinkingMode === true ||
+		getModelRequestPreset(modelId)?.thinkingMode !== undefined
+	);
+}
+
 export function getModelRequestPreset(modelId: string): ModelRequestPreset | undefined {
 	return getModelRegistryItem(modelId)?.requestPreset;
+}
+
+function mergeProviderOptions(
+	current: ProviderOptionsPreset | undefined,
+	next: ProviderOptionsPreset | undefined
+): ProviderOptionsPreset | undefined {
+	if (!next) return current;
+
+	const merged: ProviderOptionsPreset = { ...(current ?? {}) };
+	for (const [provider, providerOptions] of Object.entries(next)) {
+		merged[provider] = {
+			...(merged[provider] ?? {}),
+			...providerOptions
+		};
+	}
+
+	return merged;
+}
+
+function isEmptyProviderOptions(providerOptions: ProviderOptionsPreset | undefined): boolean {
+	return !providerOptions || Object.keys(providerOptions).length === 0;
+}
+
+export function resolveModelRequestConfig({
+	modelId,
+	modelOptions
+}: {
+	modelId: string;
+	modelOptions?: ModelRequestOptions | null;
+}): {
+	modelOptions: ModelRequestOptions;
+	providerOptions?: ProviderOptionsPreset;
+} {
+	const requestPreset = getModelRequestPreset(modelId);
+	let providerOptions = mergeProviderOptions(undefined, requestPreset?.providerOptions);
+	const resolvedModelOptions: ModelRequestOptions = {};
+	const normalizedModelOptions = normalizeModelRequestOptions(modelOptions);
+
+	const configuredThinkingMode = normalizedModelOptions.thinking?.mode;
+	const defaultThinkingMode = requestPreset?.thinkingMode?.defaultMode;
+	const thinkingMode = configuredThinkingMode ?? defaultThinkingMode;
+
+	if (thinkingMode && requestPreset?.thinkingMode) {
+		resolvedModelOptions.thinking = { mode: thinkingMode };
+		providerOptions = mergeProviderOptions(
+			providerOptions,
+			requestPreset.thinkingMode.providerOptions[thinkingMode]
+		);
+	}
+
+	return {
+		modelOptions: resolvedModelOptions,
+		...(isEmptyProviderOptions(providerOptions) ? {} : { providerOptions })
+	};
 }

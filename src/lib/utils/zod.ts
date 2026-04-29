@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { THINKING_MODES } from '$lib/ai/model-options';
 
 export const DeleteChatSchema = z.object({
 	id: z.string()
@@ -8,6 +9,15 @@ export const ChatRequestSchema = z.object({
 	id: z.string(),
 	parentId: z.string().nullable().optional(),
 	assistantMessageId: z.string().optional(),
+	modelOptions: z
+		.object({
+			thinking: z
+				.object({
+					mode: z.enum(THINKING_MODES).optional()
+				})
+				.optional()
+		})
+		.optional(),
 	personalization: z
 		.object({
 			tone: z.string().optional(),
