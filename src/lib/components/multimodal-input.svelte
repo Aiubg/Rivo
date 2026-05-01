@@ -411,7 +411,7 @@
 					{#if thinkingEnabled}
 						<button
 							type="button"
-							class="group/thinking bg-secondary text-accent-foreground hover:bg-accent inline-flex h-9 min-w-0 items-center gap-[6px] rounded-full px-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
+							class="group/thinking bg-muted text-accent-foreground hover:bg-accent inline-flex h-9 min-w-0 items-center gap-[6px] rounded-full px-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
 							aria-label={$t('chat.disable_deep_thinking')}
 							disabled={loading}
 							onclick={(event) => {
