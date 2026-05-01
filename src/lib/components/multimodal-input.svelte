@@ -181,9 +181,9 @@
 		chatState.addAttachments(attachments);
 	}
 
-	function enableThinkingMode() {
+	function toggleThinkingMode() {
 		if (!supportsThinkingMode || loading) return;
-		chatState.modelOptions = { thinking: { mode: 'enabled' } };
+		chatState.modelOptions = thinkingEnabled ? {} : { thinking: { mode: 'enabled' } };
 	}
 
 	function disableThinkingMode() {
@@ -361,7 +361,7 @@
 						'min-w-0',
 						transitionsReady &&
 							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						inputUsesStackedLayout ? 'px-3 pt-0 pb-14' : 'py-[2px] ps-11 pe-11'
+						inputUsesStackedLayout ? 'px-[10px] pt-0 pb-14' : 'py-[2px] ps-11 pe-11'
 					)}
 				>
 					<TextareaAutosize
@@ -405,7 +405,7 @@
 						{thinkingEnabled}
 						onchange={handleFileChange}
 						onselectattachments={handleSelectAttachments}
-						ontogglethinking={enableThinkingMode}
+						ontogglethinking={toggleThinkingMode}
 					/>
 
 					{#if thinkingEnabled}

@@ -163,8 +163,8 @@
 		mobileRecentView = false;
 	}
 
-	function enableThinking() {
-		if (disabled || thinkingEnabled || !supportsThinkingMode) return;
+	function toggleThinking() {
+		if (disabled || !supportsThinkingMode) return;
 		ontogglethinking?.();
 		menuOpen = false;
 	}
@@ -230,7 +230,7 @@
 		{/snippet}
 	</DropdownMenuTrigger>
 
-	<DropdownMenuContent align="start" side="top" class="w-52 p-2">
+	<DropdownMenuContent align="start" side="top" class="w-48 p-2">
 		{#if isMobile}
 			{#if mobileRecentView}
 				<button
@@ -320,11 +320,11 @@
 					<DropdownMenuSeparator />
 
 					<DropdownMenuItem
-						disabled={disabled || thinkingEnabled}
+						{disabled}
 						class="items-center"
 						onclick={(event) => {
 							event.preventDefault();
-							enableThinking();
+							toggleThinking();
 						}}
 					>
 						<AtomIcon class="size-4 shrink-0" />
@@ -365,7 +365,7 @@
 					<ChevronRightIcon class="ml-auto size-4 shrink-0" />
 				</DropdownMenuSubTrigger>
 
-				<DropdownMenuSubContent class="w-60 p-2">
+				<DropdownMenuSubContent class="w-56 p-2">
 					<DropdownMenuItem
 						{disabled}
 						onclick={(event) => {
@@ -410,11 +410,11 @@
 				<DropdownMenuSeparator />
 
 				<DropdownMenuItem
-					disabled={disabled || thinkingEnabled}
+					{disabled}
 					class="items-center"
 					onclick={(event) => {
 						event.preventDefault();
-						enableThinking();
+						toggleThinking();
 					}}
 				>
 					<AtomIcon class="size-4 shrink-0" />
