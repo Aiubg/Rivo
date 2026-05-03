@@ -17,7 +17,7 @@
 	toastOptions={{
 		classes: {
 			toast:
-				'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-xl',
+				'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-popover',
 			success:
 				'group-[.toaster]:!bg-success group-[.toaster]:!text-success-foreground group-[.toaster]:!border-success [&_[data-icon]]:text-success-foreground',
 			error:

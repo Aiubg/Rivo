@@ -12,13 +12,49 @@
 	--radius-xl: var(--ui-radius-xl);
 	--radius-2xl: var(--ui-radius-2xl);
 	--radius-3xl: var(--ui-radius-3xl);
+	--radius-control-sm: var(--ui-radius-control-sm);
+	--radius-control: var(--ui-radius-control);
+	--radius-surface: var(--ui-radius-surface);
+	--radius-popover: var(--ui-radius-popover);
+	--radius-dialog: var(--ui-radius-dialog);
+	--radius-chat-input: var(--ui-radius-chat-input);
+	--radius-chat-input-expanded: var(--ui-radius-chat-input-expanded);
+	--radius-message: var(--ui-radius-message);
+	--radius-code: var(--ui-radius-code);
+	--radius-tooltip: var(--ui-radius-tooltip);
 
 	/* shadow */
-	--shadow-sm: 0 0 4px 0 oklch(var(--shadow-color) / calc(var(--shadow-intensity) * 0.5));
-	--shadow-md: 0 0 10px 0 oklch(var(--shadow-color) / var(--shadow-intensity));
-	--shadow-lg: 0 0 20px 0 oklch(var(--shadow-color) / var(--shadow-intensity));
-	--shadow-xl: 0 0 30px 0 oklch(var(--shadow-color) / var(--shadow-intensity));
-	--shadow-2xl: 0 0 50px 0 oklch(var(--shadow-color) / var(--shadow-intensity));
+	--shadow-xs: 0 1px 2px -1px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-sm:
+		0 1px 2px -1px oklch(var(--ui-shadow-color) / var(--ui-shadow-strength)),
+		0 1px 1px 0 oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-soft-strength) * 0.8));
+	--shadow-md:
+		0 4px 10px -6px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.25)),
+		0 2px 4px -2px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-lg:
+		0 10px 24px -14px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.5)),
+		0 4px 8px -4px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-xl:
+		0 18px 44px -22px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.8)),
+		0 8px 16px -10px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-2xl:
+		0 26px 70px -30px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 2)),
+		0 12px 26px -18px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-input:
+		inset 0 1px 0 oklch(var(--ui-shadow-highlight) / var(--ui-shadow-highlight-alpha)),
+		0 1px 2px -1px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-chat-input:
+		0 18px 42px -28px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.8)),
+		0 6px 14px -10px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-popover:
+		0 18px 42px -24px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.75)),
+		0 8px 16px -10px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-dialog:
+		0 28px 80px -32px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 2)),
+		0 12px 28px -18px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+	--shadow-tooltip:
+		0 12px 30px -20px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.6)),
+		0 4px 10px -7px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
 
 	/* color */
 	--color-background: var(--background);
@@ -74,12 +110,19 @@
 		'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
 		'Courier New', monospace;
 	--text-xs: var(--ui-font-size-xs);
+	--text-xs--line-height: var(--ui-line-height-normal);
 	--text-sm: var(--ui-font-size-sm);
+	--text-sm--line-height: var(--ui-line-height-normal);
 	--text-base: var(--ui-font-size-base);
+	--text-base--line-height: var(--ui-line-height-normal);
 	--text-lg: var(--ui-font-size-lg);
+	--text-lg--line-height: var(--ui-line-height-snug);
 	--text-xl: var(--ui-font-size-xl);
+	--text-xl--line-height: var(--ui-line-height-snug);
 	--text-2xl: var(--ui-font-size-2xl);
+	--text-2xl--line-height: var(--ui-line-height-tight);
 	--text-3xl: var(--ui-font-size-3xl);
+	--text-3xl--line-height: var(--ui-line-height-tight);
 
 	/* Animations */
 	--animate-shimmer: shimmer 2s infinite linear;

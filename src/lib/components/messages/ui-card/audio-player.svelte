@@ -100,7 +100,7 @@
 </script>
 
 <div
-	class="bg-background group relative w-full max-w-md overflow-hidden rounded-xl border shadow-sm transition-all select-none"
+	class="bg-background rounded-surface group relative w-full max-w-md overflow-hidden border shadow-sm transition-all select-none"
 >
 	<!-- Background Gradient/Blur -->
 	{#if coverUrl}
@@ -120,7 +120,7 @@
 		<div class="flex gap-4">
 			<!-- Cover -->
 			<div
-				class="border-border/50 bg-muted relative h-26 w-26 shrink-0 overflow-hidden rounded-lg border shadow-sm"
+				class="border-border/50 bg-muted rounded-control relative h-26 w-26 shrink-0 overflow-hidden border shadow-sm"
 			>
 				{#if coverUrl}
 					<img src={coverUrl} alt={title} class="h-full w-full object-cover" loading="lazy" />
@@ -150,7 +150,7 @@
 				<div class="mt-2 flex items-center justify-between">
 					<button
 						class={cn(
-							'bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full shadow-sm  transition-all',
+							'bg-primary text-primary-foreground hover:bg-primary/90 flex h-9 w-9 items-center justify-center rounded-full shadow-xs transition-all',
 							isError && 'cursor-not-allowed opacity-50'
 						)}
 						onclick={togglePlay}

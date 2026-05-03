@@ -15,7 +15,7 @@
 	data-slot="sidebar-inset"
 	class={cn(
 		'bg-background relative flex w-full flex-1 flex-col overflow-hidden',
-		'md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-lg md:peer-data-[variant=inset]:shadow-md md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-2',
+		'md:peer-data-[variant=inset]:rounded-surface md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:shadow-md md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-2',
 		className
 	)}
 	{...restProps}

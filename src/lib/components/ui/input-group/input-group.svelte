@@ -15,7 +15,7 @@
 	data-slot="input-group"
 	role="group"
 	class={cn(
-		'group/input-group input-group-control relative flex w-full items-center rounded-md outline-none',
+		'group/input-group input-group-control relative flex w-full items-center outline-none',
 		'has-[>textarea]:h-auto',
 		'has-[>[data-align=inline-start]]:[&>input]:ps-2',
 		'has-[>[data-align=inline-end]]:[&>input]:pe-2',

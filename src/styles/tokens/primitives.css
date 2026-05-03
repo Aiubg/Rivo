@@ -11,9 +11,24 @@
 	--ui-radius-2xl: 1.5rem; /* 24 */
 	--ui-radius-3xl: 2rem; /* 32 */
 
-	/* Shadow */
-	--shadow-color: 0.24 0.01 240;
-	--shadow-intensity: 0.08;
+	/* Component radius roles */
+	--ui-radius-control-sm: var(--ui-radius-md);
+	--ui-radius-control: var(--ui-radius-lg);
+	--ui-radius-surface: var(--ui-radius-xl);
+	--ui-radius-popover: var(--ui-radius-xl);
+	--ui-radius-dialog: var(--ui-radius-2xl);
+	--ui-radius-chat-input: 2.5rem;
+	--ui-radius-chat-input-expanded: 1.5rem;
+	--ui-radius-message: var(--ui-radius-xl);
+	--ui-radius-code: var(--ui-radius-xl);
+	--ui-radius-tooltip: var(--ui-radius-lg);
+
+	/* Shadow system */
+	--ui-shadow-color: 0.24 0.01 240;
+	--ui-shadow-strength: 0.12;
+	--ui-shadow-soft-strength: 0.07;
+	--ui-shadow-highlight: 1 0 0;
+	--ui-shadow-highlight-alpha: 0.55;
 
 	/* Type scale */
 	--ui-font-size-xs: 0.75rem; /* 12 */
@@ -23,6 +38,23 @@
 	--ui-font-size-xl: 1.25rem; /* 20 */
 	--ui-font-size-2xl: 1.5rem; /* 24 */
 	--ui-font-size-3xl: 1.875rem; /* 30 */
+	--ui-line-height-tight: 1.25;
+	--ui-line-height-snug: 1.375;
+	--ui-line-height-normal: 1.5;
+	--ui-line-height-relaxed: 1.65;
+
+	/* Control sizing */
+	--ui-control-height-sm: 2rem;
+	--ui-control-height: 2.25rem;
+	--ui-control-height-lg: 2.5rem;
+	--ui-control-padding-x: 0.75rem;
+	--ui-control-padding-y: 0.25rem;
+	--ui-control-gap: 0.5rem;
+	--ui-chat-composer-padding-x: 0.625rem;
+	--ui-chat-composer-padding-y: 0.375rem;
+	--ui-chat-composer-padding-stacked: 0.625rem;
+	--ui-chat-composer-inner-x: 0.625rem;
+	--ui-chat-composer-textarea-y: 0.375rem;
 
 	/* Focus tokens */
 	--ui-focus-ring-width: 3px;
@@ -39,6 +71,8 @@
 .dark {
 	--ui-focus-ring-opacity: 0.25;
 	--ui-focus-ring-destructive-opacity: 0.4;
-	--shadow-color: 0 0 0;
-	--shadow-intensity: 0.4;
+	--ui-shadow-color: 0 0 0;
+	--ui-shadow-strength: 0.48;
+	--ui-shadow-soft-strength: 0.28;
+	--ui-shadow-highlight-alpha: 0.08;
 }

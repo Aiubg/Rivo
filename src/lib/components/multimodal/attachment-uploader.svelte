@@ -235,7 +235,7 @@
 			{#if mobileRecentView}
 				<button
 					type="button"
-					class="hover:bg-accent hover:text-accent-foreground inline-flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+					class="hover:bg-accent hover:text-accent-foreground rounded-control-sm inline-flex w-full items-center gap-2 px-3 py-2 text-sm font-medium transition-colors"
 					onclick={() => {
 						mobileRecentView = false;
 					}}
@@ -247,7 +247,7 @@
 				<div class="mt-1 max-h-60 overflow-y-auto">
 					<button
 						type="button"
-						class="hover:bg-accent hover:text-accent-foreground mb-1 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm transition-colors"
+						class="hover:bg-accent hover:text-accent-foreground rounded-control-sm mb-1 flex w-full items-center gap-2 px-3 py-2 text-start text-sm transition-colors"
 						onclick={openLibraryPicker}
 					>
 						<LibraryBigIcon class="size-4 shrink-0" />
@@ -267,7 +267,7 @@
 						{#each recentFiles as file (file.url)}
 							<button
 								type="button"
-								class="hover:bg-accent hover:text-accent-foreground flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm transition-colors disabled:opacity-50"
+								class="hover:bg-accent hover:text-accent-foreground rounded-control-sm flex w-full items-center gap-2 px-3 py-2 text-start text-sm transition-colors disabled:opacity-50"
 								disabled={disabled || selectingRecentUrl !== null}
 								onclick={() => {
 									void handleSelectRecentFile(file);

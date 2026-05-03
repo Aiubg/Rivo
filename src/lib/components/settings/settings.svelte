@@ -90,7 +90,7 @@
 	<Sheet.Root bind:open>
 		<Sheet.Content
 			side="bottom"
-			class="flex h-[95dvh] flex-col gap-0 overflow-hidden rounded-t-xl p-0"
+			class="rounded-t-dialog flex h-[95dvh] flex-col gap-0 overflow-hidden p-0"
 			hideClose={true}
 			dir={isRTL($locale) ? 'rtl' : 'ltr'}
 		>

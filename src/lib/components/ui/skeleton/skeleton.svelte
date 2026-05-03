@@ -12,7 +12,7 @@
 <div
 	bind:this={ref}
 	data-slot="skeleton"
-	class={cn('bg-muted/50 relative overflow-hidden rounded-lg select-none', className)}
+	class={cn('bg-muted/50 rounded-control-sm relative overflow-hidden select-none', className)}
 	{...restProps}
 >
 	<div class="animate-shimmer absolute inset-0 -translate-x-full"></div>

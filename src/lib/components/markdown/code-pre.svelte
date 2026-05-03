@@ -147,18 +147,18 @@
 	}
 </script>
 
-<div class="markdown-code-block relative my-6 w-full rounded-xl">
+<div class="markdown-code-block rounded-code relative my-6 w-full">
 	<output class="sr-only" aria-live="polite">{codeActionStatus}</output>
 	<div
 		class="markdown-code-header rounded-t-surface flex items-center justify-between px-4 py-2 text-xs"
 	>
 		<div class="flex items-center gap-2">
 			{#if isMermaid}
-				<div class="bg-accent flex items-center gap-1 rounded-lg p-1" role="tablist">
+				<div class="bg-accent rounded-control-sm flex items-center gap-1 p-1" role="tablist">
 					<button
 						type="button"
 						class={cn(
-							'tab-trigger rounded-lg p-2 text-xs leading-none',
+							'tab-trigger rounded-control-sm p-2 text-xs leading-none',
 							activeTab === 'chart' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
 						role="tab"
@@ -170,7 +170,7 @@
 					<button
 						type="button"
 						class={cn(
-							'tab-trigger rounded-lg p-2 text-xs leading-none',
+							'tab-trigger rounded-control-sm p-2 text-xs leading-none',
 							activeTab === 'code' ? 'bg-background text-foreground' : 'hover:bg-background/50'
 						)}
 						role="tab"
@@ -383,7 +383,7 @@
 			bind:this={preEl}
 			{...rest}
 			class={cn(
-				'hljs w-full rounded-xl border-0 bg-transparent px-4 py-4 text-sm leading-relaxed',
+				'hljs rounded-code w-full border-0 bg-transparent px-4 py-4 text-sm leading-relaxed',
 				className
 			)}>{@render children?.()}</pre>
 	{/if}

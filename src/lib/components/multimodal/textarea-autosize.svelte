@@ -148,7 +148,7 @@
 	{placeholder}
 	{...restProps}
 	class={cn(
-		'resize-none rounded-none border-0 bg-transparent pt-3 pb-0 text-base shadow-none ring-0 focus:outline-none focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-none',
+		'resize-none rounded-none border-0 bg-transparent py-0 text-base shadow-none ring-0 focus:outline-none focus-visible:border-transparent focus-visible:ring-0 focus-visible:outline-none',
 		c
 	)}
 	style={`min-height: ${resolvedMinHeight}px; max-height: ${maxHeight}px; unicode-bidi: plaintext; text-align: start;`}

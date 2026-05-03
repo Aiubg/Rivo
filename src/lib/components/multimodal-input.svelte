@@ -76,6 +76,7 @@
 
 	const showWelcome = $derived(mounted && chatState.visibleMessages.length === 0);
 	const chatInputMinLines = 1;
+	const chatInputLayoutHysteresisPx = 2;
 
 	function resolveLineHeight(style: CSSStyleDeclaration) {
 		const lineHeight = Number.parseFloat(style.lineHeight);
@@ -121,7 +122,14 @@
 		inlineMeasureRef.style.height = 'auto';
 		const style = getComputedStyle(inlineMeasureRef);
 		const singleLineHeight = resolveSingleLineHeight(style);
-		textareaExpanded = inlineMeasureRef.scrollHeight > singleLineHeight + 1;
+		const overflow = inlineMeasureRef.scrollHeight - singleLineHeight;
+		const shouldExpand = textareaExpanded
+			? overflow > chatInputLayoutHysteresisPx / 2
+			: overflow > chatInputLayoutHysteresisPx;
+
+		if (textareaExpanded !== shouldExpand) {
+			textareaExpanded = shouldExpand;
+		}
 		armTransitions();
 	}
 
@@ -320,7 +328,7 @@
 	});
 </script>
 
-<div class="relative flex w-full flex-col gap-4">
+<div class={cn('relative flex w-full flex-col gap-4', c)}>
 	{#if showWelcome}
 		<div class="absolute inset-x-0 bottom-full mb-6 pb-4">
 			<p
@@ -333,13 +341,10 @@
 
 	<InputGroup.Root
 		class={cn(
-			'input-group-chat bg-chat-input text-chat-input-foreground border-border/80 h-auto flex-col items-stretch overflow-hidden border',
-			'shadow-lg',
+			'input-group-chat bg-chat-input text-chat-input-foreground chat-composer h-auto flex-col items-stretch overflow-hidden border',
 			transitionsReady &&
 				'transition-[border-radius,padding,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-			inputUsesStackedLayout
-				? 'rounded-4xl px-[10px] py-[10px]'
-				: 'rounded-[1.75rem] px-[10px] py-[6px]'
+			inputUsesStackedLayout ? 'rounded-chat-input-expanded' : 'rounded-chat-input'
 		)}
 		data-layout={inputUsesStackedLayout ? 'stacked' : 'inline'}
 		onclick={handleFocus}
@@ -358,10 +363,9 @@
 			<div bind:this={inputLayoutRef} class="relative min-w-0">
 				<div
 					class={cn(
-						'min-w-0',
+						'chat-composer-inner min-w-0',
 						transitionsReady &&
-							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-						inputUsesStackedLayout ? 'px-[10px] pt-0 pb-14' : 'py-[2px] ps-11 pe-11'
+							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
 					)}
 				>
 					<TextareaAutosize
@@ -373,11 +377,9 @@
 						placeholder={$t('chat.placeholder')}
 						bind:value={() => chatState.input, setInput}
 						class={cn(
-							'placeholder:text-muted-foreground/80 w-full min-w-0 bg-transparent px-0 text-base leading-6 wrap-anywhere',
+							'placeholder:text-muted-foreground/80 chat-composer-textarea w-full min-w-0 bg-transparent px-0 text-base leading-6 wrap-anywhere',
 							transitionsReady &&
-								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-							inputUsesStackedLayout ? 'py-1' : 'py-[6px]',
-							c
+								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
 						)}
 						minLines={chatInputMinLines}
 						maxHeight={400}
@@ -411,7 +413,7 @@
 					{#if thinkingEnabled}
 						<button
 							type="button"
-							class="group/thinking bg-muted text-accent-foreground hover:bg-accent inline-flex h-9 min-w-0 items-center gap-[6px] rounded-full px-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
+							class="group/thinking bg-muted text-accent-foreground hover:bg-accent inline-flex h-9 min-w-0 items-center gap-2 rounded-full px-3 text-sm font-medium transition-[background-color,border-color,box-shadow] duration-200 focus-visible:ring-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-60"
 							aria-label={$t('chat.disable_deep_thinking')}
 							disabled={loading}
 							onclick={(event) => {
@@ -444,15 +446,14 @@
 				</div>
 
 				<div
-					class="pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-0"
+					class="chat-composer-measure pointer-events-none absolute inset-0 -z-10 overflow-hidden opacity-0"
 					aria-hidden="true"
 				>
-					<div class="min-w-0 py-[2px] ps-11 pe-11">
+					<div class="chat-composer-inner min-w-0">
 						<textarea
 							bind:this={inlineMeasureRef}
 							class={cn(
-								'w-full min-w-0 resize-none border-0 bg-transparent px-0 py-[6px] text-base leading-6 wrap-anywhere shadow-none outline-none',
-								c
+								'chat-composer-textarea w-full min-w-0 resize-none border-0 bg-transparent px-0 text-base leading-6 wrap-anywhere shadow-none outline-none'
 							)}
 							rows={1}
 							tabindex={-1}

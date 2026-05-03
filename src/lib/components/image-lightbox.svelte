@@ -347,7 +347,7 @@
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				class="bg-background/50 text-foreground hover:bg-background absolute top-4 right-4 z-20 rounded-full shadow-lg backdrop-blur"
+				class="bg-background/50 text-foreground hover:bg-background shadow-popover absolute top-4 right-4 z-20 rounded-full backdrop-blur"
 				aria-label={$t('common.close')}
 				onclick={() => (open = false)}
 			>

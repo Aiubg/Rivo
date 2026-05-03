@@ -1,14 +1,14 @@
 @layer components {
 	.btn-xl {
-		@apply h-12 rounded-xl px-6 text-base font-medium transition-all;
+		@apply rounded-control h-12 px-6 text-base font-medium transition-all;
 	}
 
 	.input-xl {
-		@apply h-12 rounded-xl px-4 text-base transition-all;
+		@apply rounded-control h-12 px-4 text-base transition-all;
 	}
 
 	.input-base {
-		@apply bg-input text-input-foreground placeholder:text-muted-foreground flex w-full rounded-lg text-base outline-none disabled:cursor-not-allowed disabled:opacity-50;
+		@apply bg-input text-input-foreground placeholder:text-muted-foreground rounded-control-sm shadow-input flex w-full text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50;
 		transition-property:
 			color, background-color, border-color, text-decoration-color, fill, stroke, opacity,
 			box-shadow, transform, filter, backdrop-filter;
@@ -22,6 +22,9 @@
 	.input-base:focus,
 	.input-base:focus-visible {
 		border-color: var(--primary);
+		box-shadow:
+			var(--shadow-input),
+			0 0 0 var(--ui-focus-ring-width) var(--ring);
 	}
 
 	.input-base[aria-invalid='true'] {
@@ -29,10 +32,9 @@
 	}
 
 	.input-control {
-		min-height: 2.25rem;
-		padding-inline: 0.75rem;
-		padding-block: 0.25rem;
-		font-size: var(--ui-font-size-sm);
+		min-height: var(--ui-control-height);
+		padding-inline: var(--ui-control-padding-x);
+		padding-block: var(--ui-control-padding-y);
 	}
 
 	.input-control-file {
@@ -47,7 +49,9 @@
 	}
 
 	.input-group-control {
-		min-height: 2.25rem;
+		--ui-input-group-radius: var(--ui-radius-control-sm);
+		min-height: var(--ui-control-height);
+		border-radius: var(--ui-input-group-radius);
 	}
 
 	[data-slot='input-group'] {
@@ -95,11 +99,11 @@
 	}
 
 	.btn-selector {
-		@apply bg-secondary hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-xl border border-transparent transition-all duration-200;
+		@apply bg-secondary hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-control border border-transparent transition-all duration-200;
 	}
 
 	.tab-trigger {
-		@apply hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline-none;
+		@apply hover:bg-accent hover:text-accent-foreground active:bg-accent/80 rounded-control-sm px-3 py-2 text-sm font-medium transition-all duration-200 focus-visible:outline-none;
 		--ui-focus-ring-color: var(--ring);
 		-webkit-user-select: none;
 		user-select: none;
@@ -110,7 +114,40 @@
 	}
 
 	.message-user {
-		@apply bg-primary text-primary-foreground rounded-xl px-3 py-2 leading-relaxed;
+		@apply bg-primary text-primary-foreground rounded-message px-3 py-2 text-sm leading-relaxed;
+	}
+
+	[data-slot='input-group'].chat-composer {
+		--ui-input-group-radius: var(--ui-radius-chat-input);
+		border-color: color-mix(in srgb, var(--border) 88%, transparent);
+		border-radius: var(--ui-radius-chat-input);
+		box-shadow: var(--shadow-chat-input);
+		padding-inline: var(--ui-chat-composer-padding-x);
+		padding-block: var(--ui-chat-composer-padding-y);
+	}
+
+	[data-slot='input-group'].chat-composer[data-layout='stacked'] {
+		--ui-input-group-radius: var(--ui-radius-chat-input-expanded);
+		border-radius: var(--ui-radius-chat-input-expanded);
+		padding: var(--ui-chat-composer-padding-stacked);
+	}
+
+	.chat-composer-inner {
+		padding-block: 0.125rem;
+		padding-inline-start: 2.75rem;
+		padding-inline-end: 2.75rem;
+	}
+
+	.chat-composer[data-layout='stacked'] .chat-composer-inner {
+		padding-block-start: 0;
+		padding-block-end: 3.5rem;
+		padding-inline: var(--ui-chat-composer-inner-x);
+	}
+
+	.chat-composer[data-layout='stacked'] .chat-composer-measure .chat-composer-inner {
+		padding-block: 0.125rem;
+		padding-inline-start: 2.75rem;
+		padding-inline-end: 2.75rem;
 	}
 
 	pre > code {

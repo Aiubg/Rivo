@@ -68,11 +68,11 @@
 	}
 </script>
 
-<div class="group bg-card relative flex w-52 max-w-full rounded-lg border">
+<div class="group bg-card rounded-control-sm relative flex w-52 max-w-full border">
 	<button
 		type="button"
 		class={cn(
-			'ui-focus-ring flex w-full min-w-0 items-center gap-2 rounded-lg p-2 text-left transition-all outline-none',
+			'ui-focus-ring rounded-control-sm flex w-full min-w-0 items-center gap-2 p-2 text-left transition-all outline-none',
 			onremove ? 'pe-10' : '',
 			canPreview ? 'hover:bg-accent/50 active:bg-accent/70 cursor-pointer' : 'cursor-default'
 		)}
@@ -80,14 +80,14 @@
 		disabled={!canPreview}
 		aria-label={name ? `${$t('chat.preview')}: ${name}` : $t('chat.preview')}
 	>
-		<div class="flex h-8 w-8 shrink-0 flex-col items-center justify-center rounded-md">
+		<div class="rounded-control-sm flex h-8 w-8 shrink-0 flex-col items-center justify-center">
 			{#if uploading || isParsing}
 				<Spinner class="text-muted-foreground size-4" />
 			{:else if isImageAttachment}
 				<img
 					src={url}
 					alt={name ?? $t('common.image_attachment')}
-					class="size-full rounded-md object-cover"
+					class="rounded-control-sm size-full object-cover"
 				/>
 			{:else}
 				<FileTextIcon class="text-primary size-5" />

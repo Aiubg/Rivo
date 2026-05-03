@@ -235,7 +235,7 @@
 					href={result.url ?? '#'}
 					target="_blank"
 					rel="noopener noreferrer"
-					class="ui-focus-ring hover:bg-accent active:bg-accent/80 group relative block scroll-mt-16 space-y-1 rounded-lg px-3 py-3 text-sm transition-colors outline-none"
+					class="ui-focus-ring hover:bg-accent active:bg-accent/80 rounded-control-sm group relative block scroll-mt-16 space-y-1 px-3 py-3 text-sm transition-colors outline-none"
 				>
 					<div class="flex items-start justify-between gap-3">
 						<h3 class="text-foreground line-clamp-2 flex-1 text-sm leading-snug font-normal">

@@ -190,14 +190,14 @@
 						{@const Icon = getFileIcon(file)}
 						<button
 							type="button"
-							class="ui-focus-ring hover:bg-accent data-[selected=true]:bg-accent/70 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors outline-none"
+							class="ui-focus-ring hover:bg-accent data-[selected=true]:bg-accent/70 rounded-control flex w-full items-center gap-3 px-3 py-3 text-left transition-colors outline-none"
 							data-selected={selectedUrls.includes(file.url)}
 							onclick={() => {
 								toggleSelection(file);
 							}}
 						>
 							<div
-								class="bg-muted text-muted-foreground flex size-10 shrink-0 items-center justify-center rounded-lg"
+								class="bg-muted text-muted-foreground rounded-control-sm flex size-10 shrink-0 items-center justify-center"
 							>
 								<Icon class="size-5" />
 							</div>
