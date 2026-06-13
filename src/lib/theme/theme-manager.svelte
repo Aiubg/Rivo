@@ -15,7 +15,6 @@
 		isFontSizePresetId
 	} from '$lib/theme/font-sizes';
 
-	const isBrowser = typeof document !== 'undefined';
 	const FONT_FACE_STYLE_ID = 'rivo-active-font-face';
 	const setMetaThemeColor = (color: string) => {
 		const meta = document.querySelector('meta[name="theme-color"]');
@@ -41,7 +40,6 @@
 	};
 
 	$effect(() => {
-		if (!isBrowser) return;
 		const currentMode = mode.current ?? 'system';
 		const currentTheme = (theme.current as string | undefined) ?? '';
 		const activeTheme = DEFAULT_THEME_ID;

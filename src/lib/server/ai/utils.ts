@@ -1,4 +1,5 @@
 import { generateText, type ModelMessage, type TextPart, type ImagePart, type UIMessage } from 'ai';
+import { error } from '@sveltejs/kit';
 import { myProvider } from '$lib/server/ai/models';
 import { AIInternalError, type AIError } from '$lib/server/errors/ai';
 import { fromPromise, ok, safeTry, type ResultAsync } from 'neverthrow';
@@ -103,6 +104,30 @@ export function validateModelVisionCompatibility(
 	}
 
 	return { isValid: true };
+}
+
+/**
+ * Validates a chat/run request's model selection: a model must be chosen, its
+ * provider API key configured, and the model must support any image attachments.
+ * Throws the appropriate SvelteKit 400 error otherwise.
+ */
+export function assertValidModelRequest(
+	selectedChatModel: string | undefined,
+	messages: MessageWithAttachments[]
+): asserts selectedChatModel is string {
+	if (!selectedChatModel) {
+		throw error(400, 'models.no_model_selected');
+	}
+
+	const validation = validateModelApiKey(selectedChatModel);
+	if (!validation.isValid) {
+		throw error(400, validation.error || 'models.invalid_model');
+	}
+
+	const visionValidation = validateModelVisionCompatibility(selectedChatModel, messages);
+	if (!visionValidation.isValid) {
+		throw error(400, visionValidation.error || 'models.vision_not_supported');
+	}
 }
 
 function extractErrorMessages(value: unknown, out: string[], depth = 0): void {

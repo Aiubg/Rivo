@@ -219,7 +219,7 @@
 		{#snippet child({ props })}
 			<InputGroup.Button
 				{...props}
-				class="text-foreground hover:bg-foreground/6 active:bg-foreground/10 size-9 rounded-full transition-[background-color,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]"
+				class="text-foreground hover:bg-foreground/6 active:bg-foreground/10 size-9 rounded-full transition-[background-color,transform,opacity] duration-300 ease-emphasized"
 				{disabled}
 				variant="ghost"
 				aria-label={$t('chat.upload_attachment')}

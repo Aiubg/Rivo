@@ -386,7 +386,7 @@
 			'input-group-chat bg-chat-input text-chat-input-foreground chat-composer h-auto flex-col items-stretch overflow-hidden border',
 			welcomeAnchorHeight > 0 && 'absolute inset-x-0 top-0',
 			transitionsReady &&
-				'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
+				'transition-[padding] duration-300 ease-emphasized motion-reduce:transition-none'
 		)}
 		data-layout={inputUsesStackedLayout ? 'stacked' : 'inline'}
 		onclick={handleFocus}
@@ -407,7 +407,7 @@
 					class={cn(
 						'chat-composer-inner min-w-0',
 						transitionsReady &&
-							'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
+							'transition-[padding] duration-300 ease-emphasized motion-reduce:transition-none'
 					)}
 				>
 					<TextareaAutosize
@@ -421,7 +421,7 @@
 						class={cn(
 							'placeholder:text-muted-foreground/80 chat-composer-textarea w-full min-w-0 bg-transparent px-0 text-base leading-6 wrap-anywhere',
 							transitionsReady &&
-								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
+								'transition-[padding] duration-300 ease-emphasized motion-reduce:transition-none'
 						)}
 						minLines={chatInputMinLines}
 						maxHeight={240}
@@ -437,7 +437,7 @@
 					class={cn(
 						'absolute left-0 z-10 flex max-w-[calc(100%-3rem)] items-center gap-1 will-change-transform',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,transform,opacity] duration-300 ease-emphasized motion-reduce:transition-none',
 						inputUsesStackedLayout
 							? 'top-full -translate-y-full opacity-100'
 							: 'top-1/2 -translate-y-1/2 opacity-100'
@@ -478,7 +478,7 @@
 					class={cn(
 						'absolute right-0 z-10 will-change-transform',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,transform,opacity] duration-300 ease-emphasized motion-reduce:transition-none',
 						inputUsesStackedLayout
 							? 'top-full -translate-y-full opacity-100'
 							: 'top-1/2 -translate-y-1/2 opacity-100'

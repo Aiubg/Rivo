@@ -88,6 +88,7 @@
 	--color-ring: var(--ring);
 	--color-chat-input: var(--chat-input);
 	--color-chat-input-foreground: var(--chat-input-foreground);
+	--color-overlay: var(--overlay);
 
 	/* sidebar */
 	--color-sidebar: var(--sidebar-background);
@@ -129,6 +130,9 @@
 
 	/* Animations */
 	--animate-shimmer: shimmer 2s infinite linear;
+
+	/* Easing — emphasized decelerate, shared by composer transitions */
+	--ease-emphasized: cubic-bezier(0.22, 1, 0.36, 1);
 
 	@keyframes shimmer {
 		0% {

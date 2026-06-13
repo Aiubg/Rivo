@@ -35,6 +35,9 @@
 	--chat-input: var(--background);
 	--chat-input-foreground: var(--foreground);
 
+	/* Overlay scrim (modal/dialog backdrops) */
+	--overlay: oklch(0 0 0 / 0.4);
+
 	/* Sidebar */
 	--sidebar-background: oklch(0.99 0.002 240);
 	--sidebar-foreground: var(--foreground);
@@ -89,6 +92,9 @@
 	/* Business surfaces */
 	--chat-input: oklch(0.18 0.01 240);
 	--chat-input-foreground: var(--foreground);
+
+	/* Overlay scrim (modal/dialog backdrops) */
+	--overlay: oklch(0 0 0 / 0.6);
 
 	/* Sidebar */
 	--sidebar-background: oklch(0.12 0.005 240);

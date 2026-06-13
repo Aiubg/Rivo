@@ -1,24 +1,21 @@
 /**
- * Generates a random UUID or a fallback random ID.
+ * Generates a UUID. Falls back to getRandomValues outside secure contexts,
+ * where crypto.randomUUID is unavailable (e.g. self-hosting over plain HTTP).
  */
 export function randomId() {
-	const globalCrypto = typeof crypto !== 'undefined' ? crypto : undefined;
-	if (globalCrypto && typeof globalCrypto.randomUUID === 'function') {
-		return globalCrypto.randomUUID();
+	if (typeof crypto.randomUUID === 'function') {
+		return crypto.randomUUID();
 	}
-	if (globalCrypto && typeof globalCrypto.getRandomValues === 'function') {
-		const bytes = new Uint8Array(16);
-		globalCrypto.getRandomValues(bytes);
-		const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
-		return [
-			hex.slice(0, 8),
-			hex.slice(8, 12),
-			hex.slice(12, 16),
-			hex.slice(16, 20),
-			hex.slice(20)
-		].join('-');
-	}
-	return Math.random().toString(36).slice(2) + Date.now().toString(36);
+	const bytes = new Uint8Array(16);
+	crypto.getRandomValues(bytes);
+	const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+	return [
+		hex.slice(0, 8),
+		hex.slice(8, 12),
+		hex.slice(12, 16),
+		hex.slice(16, 20),
+		hex.slice(20)
+	].join('-');
 }
 
 /**

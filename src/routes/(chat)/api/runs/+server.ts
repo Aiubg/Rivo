@@ -1,7 +1,6 @@
 import {
 	generateTitleFromUserMessage,
-	validateModelApiKey,
-	validateModelVisionCompatibility
+	assertValidModelRequest
 } from '$lib/server/ai/utils';
 import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import {
@@ -35,22 +34,10 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies 
 		throw error(401, 'common.unauthorized');
 	}
 
-	if (!selectedChatModel) {
-		throw error(400, 'models.no_model_selected');
-	}
-
-	const validation = validateModelApiKey(selectedChatModel);
-	if (!validation.isValid) {
-		throw error(400, validation.error || 'models.invalid_model');
-	}
-
-	const visionValidation = validateModelVisionCompatibility(
+	assertValidModelRequest(
 		selectedChatModel,
 		messages as Array<{ role?: unknown; attachments?: unknown }>
 	);
-	if (!visionValidation.isValid) {
-		throw error(400, visionValidation.error || 'models.vision_not_supported');
-	}
 
 	const userMessage = getMostRecentUserMessage(messages);
 	if (!userMessage) {

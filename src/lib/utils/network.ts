@@ -11,23 +11,7 @@ export function combineAbortSignals(
 	const validSignals = signals.filter((signal): signal is AbortSignal => signal != null);
 	if (validSignals.length === 0) return undefined;
 	if (validSignals.length === 1) return validSignals[0];
-
-	const anyFn = (
-		AbortSignal as typeof AbortSignal & {
-			any?: (signals: AbortSignal[]) => AbortSignal;
-		}
-	).any;
-
-	if (typeof anyFn === 'function') {
-		return anyFn(validSignals);
-	}
-
-	const controller = new AbortController();
-	const abort = () => controller.abort();
-	for (const signal of validSignals) {
-		signal.addEventListener('abort', abort, { once: true });
-	}
-	return controller.signal;
+	return AbortSignal.any(validSignals);
 }
 
 /**

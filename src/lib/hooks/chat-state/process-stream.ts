@@ -52,7 +52,7 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 	let lastFlushTime = 0;
 	let highestProcessedCursor = 0;
 
-	if (options.activeRunId && typeof window !== 'undefined') {
+	if (options.activeRunId) {
 		highestProcessedCursor = readStoredRunCursor(options.activeRunId, 0);
 	}
 
@@ -111,12 +111,7 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			return;
 		}
 
-		if (
-			typeof window !== 'undefined' &&
-			options.activeRunId &&
-			currentEventId !== null &&
-			currentEventId > 0
-		) {
+		if (options.activeRunId && currentEventId !== null && currentEventId > 0) {
 			if (currentEventId <= highestProcessedCursor) {
 				return;
 			}
@@ -130,12 +125,7 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			options.onFirstRecord?.();
 		}
 
-		if (
-			typeof window !== 'undefined' &&
-			options.activeRunId &&
-			currentEventId !== null &&
-			currentEventId > 0
-		) {
+		if (options.activeRunId && currentEventId !== null && currentEventId > 0) {
 			const now = Date.now();
 			if (
 				currentEventId > lastPersistedCursor &&
@@ -225,7 +215,6 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 	} finally {
 		reader.releaseLock();
 		if (
-			typeof window !== 'undefined' &&
 			options.activeRunId &&
 			highestProcessedCursor > 0 &&
 			highestProcessedCursor > lastPersistedCursor
