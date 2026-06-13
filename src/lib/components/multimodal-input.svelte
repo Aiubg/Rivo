@@ -33,6 +33,10 @@
 	let textareaRef = $state(null) as HTMLTextAreaElement | null;
 	let inputLayoutRef = $state(null) as HTMLDivElement | null;
 	let inlineMeasureRef = $state(null) as HTMLTextAreaElement | null;
+	let composerRootEl = $state(null) as HTMLDivElement | null;
+	let composerBoxEl = $state(null) as HTMLDivElement | null;
+	let composerHeight = $state(0);
+	let composerBaselineHeight = $state(0);
 	let textareaExpanded = $state(false);
 	let transitionsReady = $state(false);
 	const newChatDraftStorageKey = getChatDraftStorageKey();
@@ -75,6 +79,15 @@
 	);
 
 	const showWelcome = $derived(mounted && chatState.visibleMessages.length === 0);
+	// On the welcome page the composer is vertically centered. Freeze its box height to
+	// the single-line baseline so the centered position never moves; taller content
+	// (extra lines, attachments, thinking mode) overflows downward only, keeping the top
+	// edge and the welcome heading above it fixed. Because the anchor is the frozen
+	// baseline — never the live, animating height — the top stays put even mid-collapse.
+	// In an existing chat the composer is bottom-pinned, so no anchor is applied.
+	const welcomeAnchorHeight = $derived(
+		showWelcome && composerBaselineHeight > 0 ? composerBaselineHeight : 0
+	);
 	const chatInputMinLines = 1;
 	const chatInputLayoutHysteresisPx = 2;
 
@@ -326,9 +339,37 @@
 			observer.disconnect();
 		};
 	});
+
+	$effect(() => {
+		if (!(composerBoxEl instanceof HTMLDivElement)) return;
+		const el = composerBoxEl;
+		const measure = () => {
+			composerHeight = el.offsetHeight;
+		};
+		measure();
+		if (typeof ResizeObserver === 'undefined') return;
+		const observer = new ResizeObserver(measure);
+		observer.observe(el);
+		return () => {
+			observer.disconnect();
+		};
+	});
+
+	// Capture the single-line composer height as the baseline. This freezes the
+	// centered welcome-page slot so the top edge never moves; the box overflows
+	// downward out of the slot. Only sampled in the single-line/no-extras state.
+	$effect(() => {
+		if (inputUsesStackedLayout || hasAttachments || uploadsInProgress) return;
+		if (composerHeight <= 0) return;
+		composerBaselineHeight = composerHeight;
+	});
 </script>
 
-<div class={cn('relative flex w-full flex-col gap-4', c)}>
+<div
+	bind:this={composerRootEl}
+	class={cn('relative flex w-full flex-col gap-4', welcomeAnchorHeight > 0 && 'block', c)}
+	style:height={welcomeAnchorHeight > 0 ? `${welcomeAnchorHeight}px` : null}
+>
 	{#if showWelcome}
 		<div class="absolute inset-x-0 bottom-full mb-6 pb-4">
 			<p
@@ -340,11 +381,12 @@
 	{/if}
 
 	<InputGroup.Root
+		bind:ref={composerBoxEl}
 		class={cn(
 			'input-group-chat bg-chat-input text-chat-input-foreground chat-composer h-auto flex-col items-stretch overflow-hidden border',
+			welcomeAnchorHeight > 0 && 'absolute inset-x-0 top-0',
 			transitionsReady &&
-				'transition-[border-radius,padding,box-shadow] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
-			inputUsesStackedLayout ? 'rounded-chat-input-expanded' : 'rounded-chat-input'
+				'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
 		)}
 		data-layout={inputUsesStackedLayout ? 'stacked' : 'inline'}
 		onclick={handleFocus}
@@ -382,7 +424,7 @@
 								'transition-[padding] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none'
 						)}
 						minLines={chatInputMinLines}
-						maxHeight={400}
+						maxHeight={240}
 						autofocus={!sidebar.isMobile}
 						enterkeyhint="send"
 						wrap="soft"
@@ -395,10 +437,10 @@
 					class={cn(
 						'absolute left-0 z-10 flex max-w-[calc(100%-3rem)] items-center gap-1 will-change-transform',
 						transitionsReady &&
-							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
 						inputUsesStackedLayout
-							? 'bottom-0 translate-y-0 opacity-100'
-							: 'top-1/2 left-0 -translate-y-1/2 opacity-100'
+							? 'top-full -translate-y-full opacity-100'
+							: 'top-1/2 -translate-y-1/2 opacity-100'
 					)}
 				>
 					<AttachmentUploader
@@ -436,10 +478,10 @@
 					class={cn(
 						'absolute right-0 z-10 will-change-transform',
 						transitionsReady &&
-							'transition-[top,bottom,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
+							'transition-[top,transform,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none',
 						inputUsesStackedLayout
-							? 'bottom-0 translate-y-0 opacity-100'
-							: 'top-1/2 right-0 -translate-y-1/2 opacity-100'
+							? 'top-full -translate-y-full opacity-100'
+							: 'top-1/2 -translate-y-1/2 opacity-100'
 					)}
 				>
 					<SubmitControls status={submitStatus} {canSend} onsend={handleSend} onstop={handleStop} />

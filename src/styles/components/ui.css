@@ -118,17 +118,19 @@
 	}
 
 	[data-slot='input-group'].chat-composer {
-		--ui-input-group-radius: var(--ui-radius-chat-input);
+		/* Unified radius across single-line and multi-line. At ~1.5rem the radius
+		   exceeds half the single-line height, so the inline state still reads as a
+		   pill while the stacked state is a rounded rect — with no radius morph in
+		   between, the layout switch stays smooth. */
+		--ui-input-group-radius: var(--ui-radius-chat-input-expanded);
 		border-color: color-mix(in srgb, var(--border) 88%, transparent);
-		border-radius: var(--ui-radius-chat-input);
+		border-radius: var(--ui-radius-chat-input-expanded);
 		box-shadow: var(--shadow-chat-input);
 		padding-inline: var(--ui-chat-composer-padding-x);
 		padding-block: var(--ui-chat-composer-padding-y);
 	}
 
 	[data-slot='input-group'].chat-composer[data-layout='stacked'] {
-		--ui-input-group-radius: var(--ui-radius-chat-input-expanded);
-		border-radius: var(--ui-radius-chat-input-expanded);
 		padding: var(--ui-chat-composer-padding-stacked);
 	}
 
