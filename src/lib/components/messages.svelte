@@ -53,6 +53,7 @@
 		return computeMessagesWithSiblings(allMessages, messages);
 	});
 	const outlineMessages = $derived(getUserMessages(messages));
+	const shouldShowOutline = $derived(messages.length > 3 && outlineMessages.length > 0);
 
 	let isAtBottom = $state(true);
 	let messagesInitialized = false;
@@ -118,7 +119,7 @@
 	}
 
 	onMount(() => {
-		if (window.matchMedia('(min-width: 768px)').matches && outlineMessages.length > 0) {
+		if (window.matchMedia('(min-width: 768px)').matches && shouldShowOutline) {
 			void loadMessageOutline();
 		}
 	});
@@ -387,7 +388,7 @@
 	});
 
 	$effect(() => {
-		if (!browser || outlineMessages.length === 0) return;
+		if (!browser || !shouldShowOutline) return;
 		if (!window.matchMedia('(min-width: 768px)').matches) return;
 		void loadMessageOutline();
 	});
@@ -459,7 +460,7 @@
 		</div>
 	</div>
 
-	{#if outlineMessages.length > 0 && MessageOutlineComponent}
+	{#if shouldShowOutline && MessageOutlineComponent}
 		<div class="absolute end-2 bottom-1/2 z-20 hidden translate-y-1/2 md:block">
 			<MessageOutlineComponent
 				messages={outlineMessages}

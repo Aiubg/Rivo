@@ -123,6 +123,13 @@
 		   pill while the stacked state is a rounded rect — with no radius morph in
 		   between, the layout switch stays smooth. */
 		--ui-input-group-radius: var(--ui-radius-chat-input-expanded);
+		--ui-chat-composer-inner-y: 0.125rem;
+		--ui-chat-composer-line-height: 1.5rem;
+		--ui-chat-composer-textarea-block: calc(
+			var(--ui-chat-composer-line-height) + var(--ui-chat-composer-textarea-y) * 2
+		);
+		--ui-chat-composer-control-size: var(--ui-chat-composer-textarea-block);
+		--ui-chat-composer-actions-bottom: var(--ui-chat-composer-inner-y);
 		border-color: color-mix(in srgb, var(--border) 88%, transparent);
 		border-radius: var(--ui-radius-chat-input-expanded);
 		box-shadow: var(--shadow-chat-input);
@@ -131,19 +138,24 @@
 	}
 
 	[data-slot='input-group'].chat-composer[data-layout='stacked'] {
-		padding: var(--ui-chat-composer-padding-stacked);
+		padding-inline: var(--ui-chat-composer-padding-x);
+		padding-block: var(--ui-chat-composer-padding-y);
 	}
 
 	.chat-composer-inner {
-		padding-block: 0.125rem;
+		padding-block: var(--ui-chat-composer-inner-y);
 		padding-inline-start: 2.75rem;
 		padding-inline-end: 2.75rem;
 	}
 
 	.chat-composer[data-layout='stacked'] .chat-composer-inner {
-		padding-block-start: 0;
-		padding-block-end: 3.5rem;
+		padding-block-start: var(--ui-chat-composer-inner-y);
+		padding-block-end: 3rem;
 		padding-inline: var(--ui-chat-composer-inner-x);
+	}
+
+	.chat-composer-actions {
+		bottom: var(--ui-chat-composer-actions-bottom);
 	}
 
 	.chat-composer[data-layout='stacked'] .chat-composer-measure .chat-composer-inner {

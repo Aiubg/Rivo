@@ -25,15 +25,6 @@
 
 	let rafId: number | null = null;
 	let resolvedMinHeight = $state(60);
-	let collapseAnim: Animation | null = null;
-
-	function prefersReducedMotion() {
-		return (
-			typeof window !== 'undefined' &&
-			typeof window.matchMedia === 'function' &&
-			window.matchMedia('(prefers-reduced-motion: reduce)').matches
-		);
-	}
 
 	$effect(() => {
 		if (!(ref instanceof HTMLTextAreaElement)) {
@@ -70,12 +61,6 @@
 	function adjustHeight() {
 		if (!(ref instanceof HTMLTextAreaElement)) return;
 
-		// Capture the current rendered height (reflecting any in-flight collapse
-		// animation) before forcing the measurement reflow below.
-		const startHeight = ref.getBoundingClientRect().height;
-		collapseAnim?.cancel();
-		collapseAnim = null;
-
 		ref.style.height = 'auto';
 		const style = getComputedStyle(ref);
 		const minHeightPx = resolveMinHeight(style);
@@ -93,27 +78,7 @@
 
 		ref.style.height = `${height}px`;
 		ref.style.overflowY = overflowY;
-		if (stickToBottom) {
-			ref.scrollTop = ref.scrollHeight;
-		}
-
-		// Animate only when shrinking (e.g. multi-line → single-line) so the
-		// bottom expansion glides away in sync with the composer's padding
-		// transition instead of snapping. Growth stays instant so typing feels
-		// responsive. The instant `height = 'auto'` measurement above commits the
-		// shrunk height immediately, so without this the box would jump.
-		if (typeof ref.animate === 'function' && !prefersReducedMotion() && startHeight > height + 0.5) {
-			const animation = ref.animate(
-				[{ height: `${startHeight}px` }, { height: `${height}px` }],
-				{ duration: 300, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' }
-			);
-			collapseAnim = animation;
-			const clear = () => {
-				if (collapseAnim === animation) collapseAnim = null;
-			};
-			animation.onfinish = clear;
-			animation.oncancel = clear;
-		}
+		ref.scrollTop = stickToBottom ? ref.scrollHeight : 0;
 	}
 
 	function scheduleAdjustHeight() {
@@ -134,20 +99,13 @@
 			ref.focus();
 		}
 	});
+
 	$effect(() => {
 		if (!(ref instanceof HTMLTextAreaElement)) return;
 
 		const el = ref;
 		const handle = () => scheduleAdjustHeight();
-		// The collapse animation changes the textarea's height every frame, which
-		// makes ResizeObserver fire and re-run adjustHeight — that would cancel the
-		// animation one frame in. Ignore observer callbacks while collapsing; the
-		// height change is self-induced. Real edits still flow through input/value.
-		const handleResize = () => {
-			if (collapseAnim) return;
-			scheduleAdjustHeight();
-		};
-		const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(handleResize) : null;
+		const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(handle) : null;
 		el.addEventListener('input', handle);
 		el.addEventListener('paste', handle);
 		el.addEventListener('cut', handle);
@@ -161,21 +119,25 @@
 			observer?.disconnect();
 		};
 	});
+
 	$effect(() => {
 		if (value !== undefined) {
 			scheduleAdjustHeight();
 		}
 	});
+
 	$effect(() => {
 		void c;
 		scheduleAdjustHeight();
 	});
+
 	$effect(() => {
 		void minHeight;
 		void minLines;
 		void maxHeight;
 		scheduleAdjustHeight();
 	});
+
 	$effect(() => {
 		const viewportInnerHeight = innerHeight.current;
 		void viewportInnerHeight;

@@ -355,14 +355,28 @@
 		};
 	});
 
-	// Capture the single-line composer height as the baseline. This freezes the
-	// centered welcome-page slot so the top edge never moves; the box overflows
-	// downward out of the slot. Only sampled in the single-line/no-extras state.
+	// Capture the single-line composer height once so the centered welcome slot
+	// stays fixed while the live composer grows and shrinks underneath it.
 	$effect(() => {
 		if (inputUsesStackedLayout || hasAttachments || uploadsInProgress) return;
 		if (composerHeight <= 0) return;
-		composerBaselineHeight = composerHeight;
+		if (composerBaselineHeight === 0) {
+			composerBaselineHeight = composerHeight;
+		}
 	});
+
+	// A viewport change (e.g. browser zoom or font-size change) can legitimately
+	// alter the single-line height. Re-sample directly on resize, when static.
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+		const onResize = () => {
+			if (inputUsesStackedLayout || hasAttachments || uploadsInProgress) return;
+			if (composerHeight > 0) composerBaselineHeight = composerHeight;
+		};
+		window.addEventListener('resize', onResize);
+		return () => window.removeEventListener('resize', onResize);
+	});
+
 </script>
 
 <div
@@ -435,12 +449,9 @@
 
 				<div
 					class={cn(
-						'absolute left-0 z-10 flex max-w-[calc(100%-3rem)] items-center gap-1 will-change-transform',
+						'chat-composer-actions absolute left-0 z-10 flex max-w-[calc(100%-3rem)] items-center gap-1',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-emphasized motion-reduce:transition-none',
-						inputUsesStackedLayout
-							? 'top-full -translate-y-full opacity-100'
-							: 'top-1/2 -translate-y-1/2 opacity-100'
+							'transition-opacity duration-300 ease-emphasized motion-reduce:transition-none'
 					)}
 				>
 					<AttachmentUploader
@@ -476,12 +487,9 @@
 
 				<div
 					class={cn(
-						'absolute right-0 z-10 will-change-transform',
+						'chat-composer-actions absolute right-0 z-10',
 						transitionsReady &&
-							'transition-[top,transform,opacity] duration-300 ease-emphasized motion-reduce:transition-none',
-						inputUsesStackedLayout
-							? 'top-full -translate-y-full opacity-100'
-							: 'top-1/2 -translate-y-1/2 opacity-100'
+							'transition-opacity duration-300 ease-emphasized motion-reduce:transition-none'
 					)}
 				>
 					<SubmitControls status={submitStatus} {canSend} onsend={handleSend} onstop={handleStop} />

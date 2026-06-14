@@ -50,9 +50,8 @@
 	--ui-control-padding-x: 0.75rem;
 	--ui-control-padding-y: 0.25rem;
 	--ui-control-gap: 0.5rem;
-	--ui-chat-composer-padding-x: 0.625rem;
-	--ui-chat-composer-padding-y: 0.375rem;
-	--ui-chat-composer-padding-stacked: 0.625rem;
+	--ui-chat-composer-padding-x: 0.5rem;
+	--ui-chat-composer-padding-y: 0.3125rem;
 	--ui-chat-composer-inner-x: 0.625rem;
 	--ui-chat-composer-textarea-y: 0.375rem;
 

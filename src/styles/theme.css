@@ -46,9 +46,12 @@
 	/* Keep the negative spread smaller than half the single-line composer height
 	   (~21px) so the shadow does not vertically collapse in the inline/pill state
 	   and stays visually consistent with the taller stacked state. */
+	/* Soft, light, evenly diffused halo — large blur with near-zero spread so the
+	   shadow wraps the pill on all sides instead of pooling under it. */
 	--shadow-chat-input:
-		0 14px 34px -12px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.5)),
-		0 5px 12px -7px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));
+		0 1px 2px 0 oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-soft-strength) * 0.4)),
+		0 3px 8px 0 oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-soft-strength) * 0.45)),
+		0 6px 18px 0 oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 0.28));
 	--shadow-popover:
 		0 18px 42px -24px oklch(var(--ui-shadow-color) / calc(var(--ui-shadow-strength) * 1.75)),
 		0 8px 16px -10px oklch(var(--ui-shadow-color) / var(--ui-shadow-soft-strength));

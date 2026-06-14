@@ -71,7 +71,7 @@
 		<Input
 			id="email"
 			name="email"
-			class="bg-background/70 rounded-control shadow-input h-11 px-4 text-base md:text-sm"
+			class="bg-background rounded-control shadow-input h-11 px-4 text-base md:text-sm"
 			type="email"
 			placeholder={$t('auth.email_placeholder')}
 			autocomplete="email"
@@ -94,7 +94,7 @@
 			<Input
 				id="password"
 				name="password"
-				class="bg-background/70 rounded-control shadow-input h-11 px-4 pe-11 text-base md:text-sm"
+				class="bg-background rounded-control shadow-input h-11 px-4 pe-11 text-base md:text-sm"
 				type={showPassword ? 'text' : 'password'}
 				autocomplete={isSignUp ? 'new-password' : 'current-password'}
 				required

@@ -11,7 +11,7 @@
 <Button
 	type={pending ? 'button' : 'submit'}
 	disabled={pending || success}
-	class="relative"
+	class="rounded-control relative mt-1 h-11 w-full text-base font-medium"
 	aria-busy={pending ? 'true' : 'false'}
 >
 	<span class={pending || success ? 'text-transparent' : ''}>
