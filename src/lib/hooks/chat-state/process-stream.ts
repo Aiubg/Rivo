@@ -24,6 +24,9 @@ type ProcessChatStreamOptions = {
 };
 
 const FLUSH_INTERVAL_MS = 100;
+// Balance localStorage churn for high-frequency streams against resume precision for slow streams.
+const CURSOR_PERSIST_INTERVAL_MS = 250;
+const CURSOR_PERSIST_EVENT_DELTA = 25;
 
 function scheduleAnimationFrame(callback: () => void) {
 	if (typeof requestAnimationFrame === 'function') {
@@ -129,7 +132,8 @@ export async function processChatStream(options: ProcessChatStreamOptions) {
 			const now = Date.now();
 			if (
 				currentEventId > lastPersistedCursor &&
-				(now - lastCursorPersistAt >= 250 || currentEventId - lastPersistedCursor >= 25)
+				(now - lastCursorPersistAt >= CURSOR_PERSIST_INTERVAL_MS ||
+					currentEventId - lastPersistedCursor >= CURSOR_PERSIST_EVENT_DELTA)
 			) {
 				persistStoredRunCursor(options.activeRunId, currentEventId);
 				lastPersistedCursor = currentEventId;

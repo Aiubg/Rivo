@@ -4,7 +4,7 @@ import { myProvider } from '$lib/server/ai/models';
 import { AIInternalError, type AIError } from '$lib/server/errors/ai';
 import { fromPromise, ok, safeTry, type ResultAsync } from 'neverthrow';
 import { env as privateEnv } from '$env/dynamic/private';
-import { MODEL_REGISTRY, modelSupportsVision } from '$lib/ai/model-registry';
+import { getModelRegistryItem, modelSupportsVision } from '$lib/ai/model-registry';
 import { UIMessageStreamSupervisor } from '$lib/ai/ui-message-stream-supervisor';
 import type { Attachment } from '$lib/types/attachment';
 import { getServerContainer } from '$lib/server/composition/server-container';
@@ -39,7 +39,7 @@ export function validateModelApiKey(selectedChatModel: string): {
 	isValid: boolean;
 	error?: string;
 } {
-	const registryItem = MODEL_REGISTRY.find((m) => m.id === selectedChatModel);
+	const registryItem = getModelRegistryItem(selectedChatModel);
 	if (!registryItem) {
 		return {
 			isValid: false,

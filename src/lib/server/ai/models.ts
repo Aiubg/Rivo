@@ -7,7 +7,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createDeepSeek } from '@ai-sdk/deepseek';
 import { env as privateEnv } from '$env/dynamic/private';
-import { MODEL_REGISTRY, type ModelRegistryItem } from '$lib/ai/model-registry';
+import { getModelRegistryItem, type ModelRegistryItem } from '$lib/ai/model-registry';
 
 const openrouter = createOpenRouter({
 	apiKey: String(privateEnv.OPENROUTER_API_KEY || ''),
@@ -60,7 +60,7 @@ export const myProvider = {
 			return deepseek(titleModelId);
 		}
 
-		const registryItem = MODEL_REGISTRY.find((item) => item.id === id);
+		const registryItem = getModelRegistryItem(id);
 		if (!registryItem) {
 			throw new Error(`Unknown model id: ${id}`);
 		}

@@ -42,30 +42,27 @@
 
 ## P1：注册表索引化
 
-- [ ] 在 `src/lib/ai/model-registry.ts` 中建立 `modelRegistryById`。
-- [ ] 将 `getModelRegistryItem()` 从 `MODEL_REGISTRY.find()` 改为 Map 查询。
-- [ ] 将 `src/lib/server/ai/models.ts` 中的模型查找改为复用 `getModelRegistryItem()`。
-- [ ] 将 `src/lib/server/ai/utils.ts` 中的模型查找改为复用 `getModelRegistryItem()`。
-- [ ] 在 `src/lib/server/ai/tools/registry.ts` 中建立 `toolByName`。
-- [ ] 在 `src/lib/server/ai/tools/registry.ts` 中建立 `toolConfigByName`，如果仍保留工具配置。
-- [ ] 将 `ToolRegistry.get()` 从 `records.find()` 改为 Map 查询。
-- [ ] 补充测试，覆盖未知 model id、未知 tool name、已知 tool name 查询。
+- [x] 在 `src/lib/ai/model-registry.ts` 中建立 `modelRegistryById`。
+- [x] 将 `getModelRegistryItem()` 从 `MODEL_REGISTRY.find()` 改为 Map 查询。
+- [x] 将 `src/lib/server/ai/models.ts` 中的模型查找改为复用 `getModelRegistryItem()`。
+- [x] 将 `src/lib/server/ai/utils.ts` 中的模型查找改为复用 `getModelRegistryItem()`。
+- [x] 在 `src/lib/server/ai/tools/registry.ts` 中建立 `toolByName`。
+- [x] 不建立 `toolConfigByName`，因为本轮已删除空壳工具配置。
+- [x] 将 `ToolRegistry.get()` 从 `records.find()` 改为 Map 查询。
+- [x] 补充测试，覆盖未知 model id、未知 tool name、已知 tool name 查询。
 
 ---
 
 ## P1：清理或真实启用工具管理配置
 
-- [ ] 决定 `managerConfig` 的最终方向：删除空壳，或接入真实配置。
-- [ ] 如果删除空壳：
-  - [ ] 删除 `ToolManagerConfigItem`。
-  - [ ] 删除 `managerConfig`。
-  - [ ] 删除 `findConfig()`。
-  - [ ] 简化 `isToolEnabledForModel()`。
-- [ ] 如果接入真实配置：
-  - [ ] 设计环境变量，例如 `DISABLED_TOOLS`。
-  - [ ] 设计模型级 allowlist/blocklist 配置。
-  - [ ] 增加配置解析和测试。
-- [ ] 确保工具列表、模型工具能力、实验工具过滤逻辑保持一致。
+- [x] 决定 `managerConfig` 的最终方向：删除空壳，或接入真实配置。
+- [x] 如果删除空壳：
+  - [x] 删除 `ToolManagerConfigItem`。
+  - [x] 删除 `managerConfig`。
+  - [x] 删除 `findConfig()`。
+  - [x] 简化 `isToolEnabledForModel()`。
+- [x] 本轮不接入真实配置；如后续需要，再单独设计环境变量和模型级 allowlist/blocklist。
+- [x] 确保工具列表、模型工具能力、实验工具过滤逻辑保持一致。
 
 ---
 
@@ -129,11 +126,11 @@
 
 ## P2：cursor 和流刷新阈值常量化
 
-- [ ] 将 `process-stream.ts` 中 cursor 持久化的 `250ms` 抽成命名常量。
-- [ ] 将 cursor 持久化的 `25` 条事件阈值抽成命名常量。
-- [ ] 为这些常量添加简短说明，解释慢模型和高频流之间的取舍。
-- [ ] 保持现有默认行为不变。
-- [ ] 补充最小测试，确保 cursor 持久化触发条件不变。
+- [x] 将 `process-stream.ts` 中 cursor 持久化的 `250ms` 抽成命名常量。
+- [x] 将 cursor 持久化的 `25` 条事件阈值抽成命名常量。
+- [x] 为这些常量添加简短说明，解释慢模型和高频流之间的取舍。
+- [x] 保持现有默认行为不变。
+- [x] 补充最小测试，确保 cursor 持久化触发条件不变。
 
 ---
 
@@ -221,11 +218,11 @@
 
 ## 建议 PR 拆分
 
-- [ ] PR 1：低风险清理
-  - [ ] 模型注册表 Map。
-  - [ ] ToolRegistry Map。
-  - [ ] 清理或启用 `managerConfig`。
-  - [ ] cursor 阈值抽常量。
+- [x] PR 1：低风险清理
+  - [x] 模型注册表 Map。
+  - [x] ToolRegistry Map。
+  - [x] 清理或启用 `managerConfig`。
+  - [x] cursor 阈值抽常量。
 - [ ] PR 2：本地存储 key 规范化
   - [ ] 新增 storage key helper。
   - [ ] 新旧 key 兼容迁移。

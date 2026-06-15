@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { processChatStream } from '$lib/hooks/chat-state/process-stream';
 
 function createStreamBody(...chunks: string[]) {
@@ -14,6 +14,11 @@ function createStreamBody(...chunks: string[]) {
 }
 
 describe('processChatStream', () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+		vi.unstubAllGlobals();
+	});
+
 	it('consumes CRLF SSE frames and flushes a final finish event without a trailing separator', async () => {
 		const onFinish = vi.fn();
 		const clearRunRecoveryState = vi.fn();
@@ -113,6 +118,43 @@ describe('processChatStream', () => {
 			{ type: 'reasoning', text: 'User asks politely' },
 			{ type: 'text', text: 'Done' }
 		]);
+	});
+
+	it('persists run cursor during high-frequency streams after the event threshold', async () => {
+		const store = new Map<string, string>();
+		const setItem = vi.fn((key: string, value: string) => {
+			store.set(key, value);
+		});
+		vi.stubGlobal('localStorage', {
+			getItem: (key: string) => store.get(key) ?? null,
+			setItem,
+			removeItem: (key: string) => {
+				store.delete(key);
+			}
+		});
+		vi.stubGlobal('window', {});
+		vi.spyOn(Date, 'now').mockReturnValue(0);
+
+		const frames = [
+			'id: 1\ndata: {"type":"text-start"}\n\n',
+			...Array.from(
+				{ length: 25 },
+				(_, index) => `id: ${index + 2}\ndata: {"type":"text-delta","delta":"x"}\n\n`
+			),
+			'id: 27\ndata: {"type":"finish"}'
+		];
+
+		await processChatStream({
+			body: createStreamBody(...frames),
+			assistantMessageId: 'assistant-threshold',
+			activeRunId: 'run-threshold',
+			getMessages: () => [{ id: 'assistant-threshold', role: 'assistant', parts: [] }],
+			updateAssistantParts: vi.fn(),
+			clearRunRecoveryState: vi.fn()
+		});
+
+		expect(setItem).toHaveBeenCalledWith('run_cursor_run-threshold', '25');
+		expect(setItem).toHaveBeenLastCalledWith('run_cursor_run-threshold', '27');
 	});
 
 	it('fails when a stream finishes without any visible output', async () => {

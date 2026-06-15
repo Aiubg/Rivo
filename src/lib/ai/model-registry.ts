@@ -113,6 +113,8 @@ export const MODEL_REGISTRY: Array<ModelRegistryItem> = [
 	}
 ];
 
+const modelRegistryById = new Map(MODEL_REGISTRY.map((item) => [item.id, item]));
+
 type ChatModel = Pick<ModelRegistryItem, 'id' | 'name' | 'description'>;
 export const chatModels: Array<ChatModel> = MODEL_REGISTRY.map(({ id, name, description }) => ({
 	id,
@@ -121,7 +123,7 @@ export const chatModels: Array<ChatModel> = MODEL_REGISTRY.map(({ id, name, desc
 }));
 
 export function getModelRegistryItem(modelId: string): ModelRegistryItem | undefined {
-	return MODEL_REGISTRY.find((item) => item.id === modelId);
+	return modelRegistryById.get(modelId);
 }
 
 export function getModelCapabilities(modelId: string): ModelCapabilities {

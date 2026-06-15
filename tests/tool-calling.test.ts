@@ -10,6 +10,10 @@ describe('tool calling system', () => {
 		expect(allTools.length).toBeGreaterThan(0);
 		expect(allTools.some((t) => t.definition.name === 'calculator')).toBe(true);
 		expect(allTools.some((t) => t.definition.name === 'ui_card')).toBe(true);
+		expect(ToolRegistry.get('calculator')?.definition.name).toBe('calculator');
+		expect(ToolRegistry.get('missing_tool')).toBeUndefined();
+		expect(ToolRegistry.isEnabledForModel('calculator', DEFAULT_CHAT_MODEL)).toBe(true);
+		expect(ToolRegistry.isEnabledForModel('calculator', 'missing-model')).toBe(false);
 
 		const selectionCtx = {
 			modelId: MODEL_REGISTRY.find((m) => m.capabilities.toolUse)?.id ?? DEFAULT_CHAT_MODEL,

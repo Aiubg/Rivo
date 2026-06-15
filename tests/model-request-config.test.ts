@@ -1,8 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { modelSupportsThinkingMode, resolveModelRequestConfig } from '$lib/ai/model-registry';
+import {
+	getModelRegistryItem,
+	modelSupportsThinkingMode,
+	resolveModelRequestConfig
+} from '$lib/ai/model-registry';
 import { ChatRequestSchema } from '$lib/utils/zod';
 
 describe('model request config', () => {
+	it('looks up model registry entries by id', () => {
+		expect(getModelRegistryItem('deepseek-chat')?.provider).toBe('deepseek');
+		expect(getModelRegistryItem('unknown-model')).toBeUndefined();
+	});
+
 	it('maps DeepSeek V4 Flash thinking mode to provider options', () => {
 		expect(modelSupportsThinkingMode('deepseek-v4-flash')).toBe(true);
 
