@@ -1,6 +1,9 @@
 import { replaceState } from '$app/navigation';
 import { resolve } from '$app/paths';
-import { getChatDraftStorageKey } from '$lib/components/multimodal/draft-storage';
+import {
+	getChatDraftStorageKey,
+	getLegacyChatDraftStorageKey
+} from '$lib/components/multimodal/draft-storage';
 import { hasVisibleMessageParts } from '$lib/ai/ui-message-stream-supervisor';
 import { personalization } from '$lib/hooks/personalization.svelte';
 import { randomId } from '$lib/utils/misc';
@@ -18,6 +21,7 @@ import { t } from 'svelte-i18n';
 import { toast } from 'svelte-sonner';
 import { SvelteDate } from 'svelte/reactivity';
 import type { ModelRequestOptions } from '$lib/ai/model-options';
+import { removeStorageKeys } from '$lib/utils/storage-keys';
 
 export type ChatSubmitOptions = {
 	experimental_attachments?: Attachment[];
@@ -341,7 +345,7 @@ export class ChatStateActions {
 				this.context.state.attachments = [];
 			}
 			if (typeof window !== 'undefined' && shouldClearNewChatDraft) {
-				localStorage.removeItem(getChatDraftStorageKey());
+				removeStorageKeys(getChatDraftStorageKey(), getLegacyChatDraftStorageKey());
 			}
 
 			if (this.context.state.user) {

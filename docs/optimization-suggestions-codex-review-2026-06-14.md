@@ -68,22 +68,22 @@
 
 ## P1：localStorage key 规范化
 
-- [ ] 新增统一 storage key helper，例如 `src/lib/utils/storage-keys.ts`。
-- [ ] 统一 key 格式为 `rivo:v1:<domain>:<id>`。
-- [ ] 迁移聊天分支路径 key：
-  - [ ] 从 `chat_path_${chat.id}` 读取旧值。
-  - [ ] 写入新 key。
-  - [ ] 成功迁移后清理旧 key。
-- [ ] 迁移 run cursor key：
-  - [ ] 从 `run_cursor_${runId}` 读取旧值。
-  - [ ] 写入新 key。
-  - [ ] 成功迁移后清理旧 key。
-- [ ] 迁移草稿 key：
-  - [ ] 从 `chat_input_draft:${id}` 读取旧值。
-  - [ ] 写入新 key。
-  - [ ] 成功迁移后清理旧 key。
-- [ ] 统一 `Resizable.PaneGroup` 的 `autoSaveId` 命名。
-- [ ] 为 storage key helper 增加单元测试。
+- [x] 新增统一 storage key helper，例如 `src/lib/utils/storage-keys.ts`。
+- [x] 统一 key 格式为 `rivo:v1:<domain>:<id>`。
+- [x] 迁移聊天分支路径 key：
+  - [x] 从 `chat_path_${chat.id}` 读取旧值。
+  - [x] 写入新 key。
+  - [x] 成功迁移后清理旧 key。
+- [x] 迁移 run cursor key：
+  - [x] 从 `run_cursor_${runId}` 读取旧值。
+  - [x] 写入新 key。
+  - [x] 成功迁移后清理旧 key。
+- [x] 迁移草稿 key：
+  - [x] 从 `chat_input_draft:${id}` 读取旧值。
+  - [x] 写入新 key。
+  - [x] 成功迁移后清理旧 key。
+- [x] 统一 `Resizable.PaneGroup` 的 `autoSaveId` 命名。
+- [x] 为 storage key helper 增加单元测试。
 - [ ] 手动验证已有草稿、聊天分支选择、run 恢复 cursor 不丢失。
 
 ---
@@ -223,10 +223,10 @@
   - [x] ToolRegistry Map。
   - [x] 清理或启用 `managerConfig`。
   - [x] cursor 阈值抽常量。
-- [ ] PR 2：本地存储 key 规范化
-  - [ ] 新增 storage key helper。
-  - [ ] 新旧 key 兼容迁移。
-  - [ ] 覆盖 chat path、run cursor、draft key、layout autoSaveId。
+- [x] PR 2：本地存储 key 规范化
+  - [x] 新增 storage key helper。
+  - [x] 新旧 key 兼容迁移。
+  - [x] 覆盖 chat path、run cursor、draft key、layout autoSaveId。
 - [ ] PR 3：匿名停止语义
   - [ ] `/api/chat` 感知 request abort。
   - [ ] observer 分支停止 upsert。

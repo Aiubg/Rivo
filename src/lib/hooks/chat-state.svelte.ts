@@ -28,6 +28,12 @@ import { getChatSearchResults } from '$lib/hooks/chat-state/search-results';
 import { RunResumeScheduler } from '$lib/hooks/chat-state/run-resume-scheduler';
 import { ChatAttachmentUploadState } from '$lib/hooks/chat-state/attachments.svelte';
 import type { ModelRequestOptions } from '$lib/ai/model-options';
+import {
+	legacyStorageKeys,
+	readStorageValueWithLegacy,
+	removeStorageKeys,
+	storageKeys
+} from '$lib/utils/storage-keys';
 
 /**
  * ChatState class manages the state and logic for a single chat conversation.
@@ -102,7 +108,9 @@ export class ChatState {
 
 		const defaultIds = computeDefaultSelectedMessageIds(initialMessages);
 		if (typeof window !== 'undefined' && chat?.id) {
-			const saved = localStorage.getItem(`chat_path_${chat.id}`);
+			const saved = readStorageValueWithLegacy(storageKeys.chatPath(chat.id), [
+				legacyStorageKeys.chatPath(chat.id)
+			]);
 			if (saved) {
 				try {
 					this.selectedMessageIds = { ...defaultIds, ...JSON.parse(saved) };
@@ -121,7 +129,11 @@ export class ChatState {
 
 	private saveSelectedMessageIds() {
 		if (typeof window !== 'undefined') {
-			localStorage.setItem(`chat_path_${this.chatId}`, JSON.stringify(this.selectedMessageIds));
+			localStorage.setItem(
+				storageKeys.chatPath(this.chatId),
+				JSON.stringify(this.selectedMessageIds)
+			);
+			removeStorageKeys(legacyStorageKeys.chatPath(this.chatId));
 		}
 	}
 

@@ -19,6 +19,7 @@
 	import type { Component } from 'svelte';
 	import { modelSupportsVision } from '$lib/ai/model-registry';
 	import { SelectedModel } from '$lib/hooks/selected-model.svelte';
+	import { legacyStorageKeys, migrateStorageValue, storageKeys } from '$lib/utils/storage-keys';
 
 	let {
 		user,
@@ -35,6 +36,7 @@
 	const sidebar = useSidebar();
 	const sidebarState = setSearchSidebarContext();
 	const activeChat = ActiveChat.fromContext();
+	migrateStorageValue(storageKeys.layout.searchSidebar, [legacyStorageKeys.layout.searchSidebar]);
 
 	let paneGroup = $state<import('paneforge').PaneGroup>();
 	let SearchResultsSidebar = $state<Component<Record<string, never>> | null>(null);
@@ -161,7 +163,7 @@
 	<DragDropOverlay visible={isDragging} />
 	<Resizable.PaneGroup
 		direction="horizontal"
-		autoSaveId="rivo-search-sidebar-layout"
+		autoSaveId={storageKeys.layout.searchSidebar}
 		bind:paneGroup
 	>
 		<Resizable.Pane defaultSize={70} minSize={30}>

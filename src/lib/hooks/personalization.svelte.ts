@@ -1,4 +1,5 @@
 import { LocalStorage } from '$lib/hooks/local-storage.svelte';
+import { legacyStorageKeys, storageKeys } from '$lib/utils/storage-keys';
 
 type ToneType = 'default' | 'professional' | 'humorous' | 'warm' | 'enthusiastic';
 
@@ -13,9 +14,10 @@ const DEFAULT_SETTINGS: PersonalizationSettings = {
 };
 
 export const personalization = new LocalStorage<PersonalizationSettings>(
-	'app-personalization',
+	storageKeys.preference.personalization,
 	DEFAULT_SETTINGS,
 	{
+		legacyKeys: [legacyStorageKeys.preference.personalization],
 		fromJSON: (text, fallback) => {
 			try {
 				const parsed = JSON.parse(text);

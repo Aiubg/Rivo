@@ -8,11 +8,13 @@
 	import { useSidebar } from '$lib/components/ui/sidebar';
 	import * as Resizable from '$lib/components/ui/resizable';
 	import { t } from 'svelte-i18n';
+	import { legacyStorageKeys, migrateStorageValue, storageKeys } from '$lib/utils/storage-keys';
 
 	let { data } = $props();
 
 	const sidebarContext = useSidebar();
 	const sidebar = setSearchSidebarContext();
+	migrateStorageValue(storageKeys.layout.shareSidebar, [legacyStorageKeys.layout.shareSidebar]);
 
 	let paneGroup = $state<import('paneforge').PaneGroup>();
 </script>
@@ -22,7 +24,11 @@
 {/snippet}
 
 <div class="flex h-full w-full overflow-hidden">
-	<Resizable.PaneGroup direction="horizontal" autoSaveId="rivo-share-sidebar-layout" bind:paneGroup>
+	<Resizable.PaneGroup
+		direction="horizontal"
+		autoSaveId={storageKeys.layout.shareSidebar}
+		bind:paneGroup
+	>
 		<Resizable.Pane defaultSize={70} minSize={30}>
 			<div class="flex h-full flex-col">
 				<div class="bg-background sticky top-0 z-10 p-2">

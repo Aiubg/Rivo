@@ -10,12 +10,19 @@ import {
 	time
 } from 'svelte-i18n';
 import { LocalStorage } from '$lib/hooks/local-storage.svelte';
+import { legacyStorageKeys, storageKeys } from '$lib/utils/storage-keys';
 
 const defaultLocale = 'zh-CN';
 
 export type LanguagePreference = 'zh-CN' | 'en' | 'system';
 
-export const languagePreference = new LocalStorage<LanguagePreference>('app-language', 'system');
+export const languagePreference = new LocalStorage<LanguagePreference>(
+	storageKeys.preference.language,
+	'system',
+	{
+		legacyKeys: [legacyStorageKeys.preference.language]
+	}
+);
 
 export const RTL_LOCALES = ['fa', 'he', 'ur', 'yi'];
 

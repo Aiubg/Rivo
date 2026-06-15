@@ -153,8 +153,8 @@ describe('processChatStream', () => {
 			clearRunRecoveryState: vi.fn()
 		});
 
-		expect(setItem).toHaveBeenCalledWith('run_cursor_run-threshold', '25');
-		expect(setItem).toHaveBeenLastCalledWith('run_cursor_run-threshold', '27');
+		expect(setItem).toHaveBeenCalledWith('rivo:v1:run:cursor:run-threshold', '25');
+		expect(setItem).toHaveBeenLastCalledWith('rivo:v1:run:cursor:run-threshold', '27');
 	});
 
 	it('fails when a stream finishes without any visible output', async () => {

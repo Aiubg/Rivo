@@ -1,3 +1,10 @@
+import {
+	legacyStorageKeys,
+	readStorageValueWithLegacy,
+	removeStorageKeys,
+	storageKeys
+} from '$lib/utils/storage-keys';
+
 export const STREAM_CONNECT_TIMEOUT_MS = 10_000;
 export const STREAM_CONNECT_MAX_ATTEMPTS = 3;
 export const MAX_RUN_RESUME_ATTEMPTS = 6;
@@ -10,7 +17,7 @@ export type RunResumeState = {
 };
 
 export function getRunCursorStorageKey(runId: string): string {
-	return `run_cursor_${runId}`;
+	return storageKeys.runCursor(runId);
 }
 
 export function readStoredRunCursor(runId: string, fallback = 0): number {
@@ -18,7 +25,11 @@ export function readStoredRunCursor(runId: string, fallback = 0): number {
 		return fallback;
 	}
 
-	const rawValue = Number(localStorage.getItem(getRunCursorStorageKey(runId)) ?? String(fallback));
+	const rawValue = Number(
+		readStorageValueWithLegacy(getRunCursorStorageKey(runId), [
+			legacyStorageKeys.runCursor(runId)
+		]) ?? String(fallback)
+	);
 	return Number.isFinite(rawValue) && rawValue >= 0 ? rawValue : fallback;
 }
 
@@ -28,6 +39,7 @@ export function persistStoredRunCursor(runId: string, cursor: number): void {
 	}
 
 	localStorage.setItem(getRunCursorStorageKey(runId), String(cursor));
+	removeStorageKeys(legacyStorageKeys.runCursor(runId));
 }
 
 export function clearStoredRunCursor(runId: string): void {
@@ -35,7 +47,7 @@ export function clearStoredRunCursor(runId: string): void {
 		return;
 	}
 
-	localStorage.removeItem(getRunCursorStorageKey(runId));
+	removeStorageKeys(getRunCursorStorageKey(runId), legacyStorageKeys.runCursor(runId));
 }
 
 export function getStreamReconnectDelay(attempt: number): number {

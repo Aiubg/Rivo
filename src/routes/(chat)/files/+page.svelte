@@ -43,6 +43,7 @@
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import XIcon from '@lucide/svelte/icons/x';
 	import { UPLOAD_INPUT_ACCEPT } from '$lib/utils/upload-constraints';
+	import { legacyStorageKeys, migrateStorageValue, storageKeys } from '$lib/utils/storage-keys';
 	import type { Component } from 'svelte';
 	import type { PageData } from './$types';
 
@@ -60,6 +61,7 @@
 
 	let paneGroup = $state<import('paneforge').PaneGroup>();
 	const sidebar = useSidebar();
+	migrateStorageValue(storageKeys.layout.files, [legacyStorageKeys.layout.files]);
 	const sidebarExpanded = $derived(sidebar.isMobile ? sidebar.openMobile : sidebar.open);
 	const fileLibraryState = $derived(new FileLibraryState(data.files));
 	const files = $derived(fileLibraryState.files);
@@ -417,7 +419,11 @@
 			</Sheet.Content>
 		</Sheet.Root>
 	{:else}
-		<Resizable.PaneGroup direction="horizontal" autoSaveId="rivo-files-layout" bind:paneGroup>
+		<Resizable.PaneGroup
+			direction="horizontal"
+			autoSaveId={storageKeys.layout.files}
+			bind:paneGroup
+		>
 			<Resizable.Pane defaultSize={28} minSize={18} maxSize={45}>
 				{@render filesListPanel()}
 			</Resizable.Pane>

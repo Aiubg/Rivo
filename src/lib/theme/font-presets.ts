@@ -1,4 +1,5 @@
 import { LocalStorage } from '$lib/hooks/local-storage.svelte';
+import { legacyStorageKeys, storageKeys } from '$lib/utils/storage-keys';
 import interRegularUrl from '$lib/assets/fonts/Inter/Inter-VariableFont_opsz,wght.ttf?url';
 import interItalicUrl from '$lib/assets/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf?url';
 import notoSansScUrl from '$lib/assets/fonts/Noto_Sans_SC/NotoSansSC-wght.ttf?url';
@@ -144,6 +145,9 @@ export function getFontFaceCss(id: string): string {
 }
 
 export const fontPreference = new LocalStorage<FontPresetId>(
-	'app-font-family',
-	DEFAULT_FONT_PRESET_ID
+	storageKeys.preference.fontFamily,
+	DEFAULT_FONT_PRESET_ID,
+	{
+		legacyKeys: [legacyStorageKeys.preference.fontFamily]
+	}
 );

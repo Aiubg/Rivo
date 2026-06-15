@@ -1,8 +1,13 @@
 import { on } from 'svelte/events';
+import { readStorageValueWithLegacy, removeStorageKeys } from '$lib/utils/storage-keys';
 
 type Serializer<T> = {
 	toJSON: (value: T) => string;
 	fromJSON: (text: string, fallback: T) => T;
+};
+
+type LocalStorageOptions<T> = Partial<Serializer<T>> & {
+	legacyKeys?: string[];
 };
 
 /**
@@ -11,6 +16,7 @@ type Serializer<T> = {
  */
 export class LocalStorage<T> {
 	#key: string;
+	#legacyKeys: string[];
 	#defaultValue: T;
 	#serializer: Serializer<T>;
 	#value = $state<T>() as T;
@@ -19,10 +25,12 @@ export class LocalStorage<T> {
 	/**
 	 * @param key The localStorage key.
 	 * @param defaultValue The value to use if no value is stored.
-	 * @param serializer Optional custom serializer/deserializer.
+	 * @param options Optional serializer/deserializer and legacy migration keys.
 	 */
-	constructor(key: string, defaultValue: T, serializer?: Partial<Serializer<T>>) {
+	constructor(key: string, defaultValue: T, options?: LocalStorageOptions<T>) {
+		const { legacyKeys = [], ...serializer } = options ?? {};
 		this.#key = key;
+		this.#legacyKeys = legacyKeys.filter((legacyKey) => legacyKey !== key);
 		this.#defaultValue = defaultValue;
 		this.#serializer = {
 			toJSON: (v: T) => JSON.stringify(v),
@@ -48,9 +56,8 @@ export class LocalStorage<T> {
 	}
 
 	#load(): T {
-		if (typeof localStorage === 'undefined') return this.#defaultValue;
-		const storedValue = localStorage.getItem(this.#key);
-		if (storedValue === null || storedValue.trim() === '') return this.#defaultValue;
+		const storedValue = readStorageValueWithLegacy(this.#key, this.#legacyKeys);
+		if (storedValue === null) return this.#defaultValue;
 		return this.#serializer.fromJSON(storedValue, this.#defaultValue);
 	}
 
@@ -64,13 +71,14 @@ export class LocalStorage<T> {
 		this.#value = v;
 		if (typeof localStorage !== 'undefined') {
 			localStorage.setItem(this.#key, this.#serializer.toJSON(v));
+			removeStorageKeys(...this.#legacyKeys);
 		}
 	}
 
 	/** Removes the item from storage and resets to default value */
 	delete() {
 		if (typeof localStorage !== 'undefined') {
-			localStorage.removeItem(this.#key);
+			removeStorageKeys(this.#key, ...this.#legacyKeys);
 		}
 		this.#value = this.#defaultValue;
 	}

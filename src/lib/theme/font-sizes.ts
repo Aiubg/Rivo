@@ -1,4 +1,5 @@
 import { LocalStorage } from '$lib/hooks/local-storage.svelte';
+import { legacyStorageKeys, storageKeys } from '$lib/utils/storage-keys';
 
 export const FONT_SIZE_PRESETS = [
 	{
@@ -41,6 +42,9 @@ export function getFontSizePreset(id: string): FontSizePreset | null {
 }
 
 export const fontSizePreference = new LocalStorage<FontSizePresetId>(
-	'app-font-size',
-	DEFAULT_FONT_SIZE_PRESET_ID
+	storageKeys.preference.fontSize,
+	DEFAULT_FONT_SIZE_PRESET_ID,
+	{
+		legacyKeys: [legacyStorageKeys.preference.fontSize]
+	}
 );
