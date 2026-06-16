@@ -312,25 +312,17 @@ export class ChatStateActions {
 				parentId: userMessage.id
 			};
 
-			if (!options?.regenerateMessageId) {
-				if (userCommittedEarly) {
-					this.context.state.allMessages = [...this.context.state.allMessages, assistantMessage];
-					this.context.state.selectedMessageIds = {
-						...this.context.state.selectedMessageIds,
-						[userMessage.id]: assistantMessageId
-					};
-				} else {
-					this.context.state.allMessages = [
-						...this.context.state.allMessages,
-						userMessage,
-						assistantMessage
-					];
-					this.context.state.selectedMessageIds = {
-						...this.context.state.selectedMessageIds,
-						[userMessage.parentId || 'root']: userMessage.id,
-						[userMessage.id]: assistantMessageId
-					};
-				}
+			if (!options?.regenerateMessageId && !userCommittedEarly) {
+				this.context.state.allMessages = [
+					...this.context.state.allMessages,
+					userMessage,
+					assistantMessage
+				];
+				this.context.state.selectedMessageIds = {
+					...this.context.state.selectedMessageIds,
+					[userMessage.parentId || 'root']: userMessage.id,
+					[userMessage.id]: assistantMessageId
+				};
 			} else {
 				this.context.state.allMessages = [...this.context.state.allMessages, assistantMessage];
 				this.context.state.selectedMessageIds = {

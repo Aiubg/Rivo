@@ -365,10 +365,6 @@ export class ChatState {
 		clearStoredRunCursor(runId);
 	}
 
-	private clearPendingRunResumeTimer(runId?: string | null) {
-		this.runResumeScheduler.clearPending(runId);
-	}
-
 	private updateAssistantMessageParts(assistantMessageId: string, parts: MessagePart[]) {
 		const assistantIndex = this.allMessages.findIndex(
 			(message) => message.id === assistantMessageId
@@ -437,7 +433,7 @@ export class ChatState {
 	 * Resumes an active run that was interrupted.
 	 */
 	async resumeActiveRun(options: ResumeActiveRunOptions) {
-		this.clearPendingRunResumeTimer(options.id);
+		this.runResumeScheduler.clearPending(options.id);
 		await this.actions.resumeActiveRun(options);
 	}
 
