@@ -126,7 +126,7 @@ export function getModelRegistryItem(modelId: string): ModelRegistryItem | undef
 	return modelRegistryById.get(modelId);
 }
 
-export function getModelCapabilities(modelId: string): ModelCapabilities {
+function getModelCapabilities(modelId: string): ModelCapabilities {
 	return getModelRegistryItem(modelId)?.capabilities ?? {};
 }
 

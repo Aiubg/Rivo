@@ -4,7 +4,6 @@ import type { Session, User } from '$lib/server/db/schema';
 import {
 	createSession as createSessionDb,
 	deleteSession,
-	deleteSessionsForUser,
 	extendSession,
 	getFullSession
 } from '$lib/server/db/queries';
@@ -53,10 +52,6 @@ export function invalidateSession(sessionId: string): ResultAsync<undefined, DbE
 	return deleteSession(sessionId);
 }
 
-export function invalidateAllSessions(userId: string): ResultAsync<undefined, DbError> {
-	return deleteSessionsForUser(userId);
-}
-
 export function getSessionCookie(event: RequestEvent): string | undefined {
 	return event.cookies.get('session');
 }
@@ -68,18 +63,11 @@ export function setSessionTokenCookie(
 	url?: URL
 ): void {
 	const secure = dev ? url?.protocol === 'https:' : true;
-	// Defensive check: ensure expiresAt is a valid date
-	const expires = new Date(expiresAt);
-	if (isNaN(expires.getTime())) {
-		// Fallback to 30 days if invalid
-		expires.setTime(Date.now() + 1000 * 60 * 60 * 24 * 30);
-	}
-
 	cookies.set('session', token, {
 		httpOnly: true,
 		secure,
 		sameSite: 'lax',
-		expires,
+		expires: expiresAt,
 		path: '/'
 	});
 }

@@ -251,7 +251,7 @@ export async function convertToCoreMessagesWithResolvedImages(
 	return convertToCoreMessages(resolvedMessages);
 }
 
-export function convertToCoreMessages(messages: Array<IncomingMessage>): ModelMessage[] {
+function convertToCoreMessages(messages: Array<IncomingMessage>): ModelMessage[] {
 	return messages
 		.filter((m) => m.role === 'system' || m.role === 'user' || m.role === 'assistant')
 		.flatMap((message): ModelMessage[] => {
