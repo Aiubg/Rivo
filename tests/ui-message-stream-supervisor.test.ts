@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
 	UIMessageStreamSupervisor,
 	classifyGenerationFailureKind,
+	consumeUIMessageStream,
 	hasVisibleMessageParts
 } from '$lib/ai/ui-message-stream-supervisor';
 
@@ -44,6 +45,28 @@ describe('UIMessageStreamSupervisor', () => {
 		expect(supervisor.getOutcome()).toMatchObject({
 			state: 'empty_invalid',
 			errorKey: 'run.empty_output_invalid'
+		});
+	});
+
+	it('stops consuming and reports cancellation when the abort signal fires', async () => {
+		const abortController = new AbortController();
+		const stream = new ReadableStream<Uint8Array>({
+			start(controller) {
+				controller.enqueue(new TextEncoder().encode('data: {"type":"text-start"}\n\n'));
+				abortController.abort();
+			},
+			cancel() {}
+		});
+
+		const outcome = await consumeUIMessageStream({
+			body: stream,
+			abortSignal: abortController.signal
+		});
+
+		expect(outcome).toMatchObject({
+			state: 'canceled',
+			errorKey: 'run.canceled',
+			hasVisibleOutput: false
 		});
 	});
 });

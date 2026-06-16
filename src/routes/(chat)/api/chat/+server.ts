@@ -183,7 +183,8 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 			...(tools ? { tools, stopWhen: stepCountIs(30) } : {}),
 			...(modelRequestConfig.providerOptions
 				? { providerOptions: modelRequestConfig.providerOptions }
-				: {})
+				: {}),
+			abortSignal: request.signal
 		});
 
 		const uiResponse = result.toUIMessageStreamResponse({
@@ -197,7 +198,10 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 
 		const [clientBody, observerBody] = uiResponse.body.tee();
 		void (async () => {
-			const outcome = await consumeUIMessageStream({ body: observerBody });
+			const outcome = await consumeUIMessageStream({
+				body: observerBody,
+				abortSignal: request.signal
+			});
 			const mappedParts = outcome.parts as UIMessagePart<UIDataTypes, UITools>[];
 			const metrics = getCitationMetrics(mappedParts as unknown[]);
 			logger.debug('[citation] response metrics', {
@@ -209,6 +213,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 				outcome: outcome.state
 			});
 
+			if (outcome.state === 'canceled') return;
 			if (!user || !outcome.hasVisibleOutput) return;
 
 			const assistantId =

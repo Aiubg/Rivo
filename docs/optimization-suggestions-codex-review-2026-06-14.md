@@ -29,14 +29,14 @@
 
 ## P1：匿名停止语义
 
-- [ ] 调整 `/api/chat`，让服务端感知 `request.signal` 中断。
-- [ ] 客户端断开或用户停止时，停止 `/api/chat` 的 observer 分支继续 `consumeUIMessageStream`。
-- [ ] 客户端断开或用户停止时，避免保存用户已取消的 assistant 消息。
-- [ ] 匿名路径停止后，如果已有部分可见输出，明确是否保留在前端状态中。
-- [ ] 增加匿名聊天停止测试：
-  - [ ] 用户点击停止后不继续 upsert assistant 消息。
-  - [ ] 客户端断开后服务端监督分支退出。
-  - [ ] 部分输出和无输出两种情况行为一致。
+- [x] 调整 `/api/chat`，让服务端感知 `request.signal` 中断。
+- [x] 客户端断开或用户停止时，停止 `/api/chat` 的 observer 分支继续 `consumeUIMessageStream`。
+- [x] 客户端断开或用户停止时，避免保存用户已取消的 assistant 消息。
+- [x] 匿名路径停止后，如果已有部分可见输出，明确是否保留在前端状态中。
+- [x] 增加匿名聊天停止测试：
+  - [x] 用户点击停止后不继续 upsert assistant 消息。
+  - [x] 客户端断开后服务端监督分支退出。
+  - [x] 部分输出和无输出两种情况行为一致。
 
 ---
 
@@ -227,10 +227,10 @@
   - [x] 新增 storage key helper。
   - [x] 新旧 key 兼容迁移。
   - [x] 覆盖 chat path、run cursor、draft key、layout autoSaveId。
-- [ ] PR 3：匿名停止语义
-  - [ ] `/api/chat` 感知 request abort。
-  - [ ] observer 分支停止 upsert。
-  - [ ] 增加匿名流中断测试。
+- [x] PR 3：匿名停止语义
+  - [x] `/api/chat` 感知 request abort。
+  - [x] observer 分支停止 upsert。
+  - [x] 增加匿名流中断测试。
 - [ ] PR 4：执行路径收敛
   - [ ] 抽共享 generation core。
   - [ ] 登录 RunExecutor 接入。

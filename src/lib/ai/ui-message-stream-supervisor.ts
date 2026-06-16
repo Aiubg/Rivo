@@ -406,15 +406,47 @@ export async function consumeUIMessageStream(options: {
 	body: ReadableStream<Uint8Array>;
 	initialParts?: ReadonlyArray<MessagePart>;
 	onFrame?: (frame: string) => Promise<void> | void;
+	abortSignal?: AbortSignal | null;
 }): Promise<GenerationStreamOutcome> {
 	const reader = options.body.getReader();
 	const decoder = new TextDecoder();
 	const supervisor = new UIMessageStreamSupervisor(options.initialParts);
 	let buffer = '';
+	let aborted = options.abortSignal?.aborted ?? false;
+
+	const markAborted = () => {
+		aborted = true;
+		supervisor.ingestRecord({ type: 'abort' });
+		void reader.cancel().catch(() => {
+			// The stream may already be closed or canceled by the producer.
+		});
+	};
+
+	if (options.abortSignal) {
+		if (options.abortSignal.aborted) {
+			markAborted();
+		} else {
+			options.abortSignal.addEventListener('abort', markAborted, { once: true });
+		}
+	}
 
 	try {
 		while (true) {
-			const { done, value } = await reader.read();
+			let chunk: ReadableStreamReadResult<Uint8Array>;
+			try {
+				chunk = await reader.read();
+			} catch (e) {
+				if (aborted || options.abortSignal?.aborted) {
+					break;
+				}
+				throw e;
+			}
+
+			if (aborted || options.abortSignal?.aborted) {
+				break;
+			}
+
+			const { done, value } = chunk;
 			if (done) {
 				buffer += decoder.decode();
 			} else {
@@ -427,20 +459,34 @@ export async function consumeUIMessageStream(options: {
 			for (const frame of drained.frames) {
 				supervisor.ingestFrame(frame);
 				await options.onFrame?.(frame);
+				if (aborted || options.abortSignal?.aborted) {
+					break;
+				}
 			}
 
-			if (done) {
+			if (done || aborted || options.abortSignal?.aborted) {
 				break;
 			}
 		}
 
-		if (buffer.trim().length > 0) {
+		if (!aborted && !options.abortSignal?.aborted && buffer.trim().length > 0) {
 			supervisor.ingestFrame(buffer);
 			await options.onFrame?.(buffer);
 		}
 
+		if (aborted || options.abortSignal?.aborted) {
+			supervisor.ingestRecord({ type: 'abort' });
+		}
+
 		return supervisor.getOutcome();
 	} finally {
-		reader.releaseLock();
+		if (options.abortSignal) {
+			options.abortSignal.removeEventListener('abort', markAborted);
+		}
+		try {
+			reader.releaseLock();
+		} catch {
+			// The lock can already be released after cancellation in some runtimes.
+		}
 	}
 }

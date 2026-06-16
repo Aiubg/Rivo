@@ -284,7 +284,8 @@ class RunExecutor {
 
 			const outcome = await consumeUIMessageStream({
 				body: uiResponse.body,
-				onFrame: appendFrameEvent
+				onFrame: appendFrameEvent,
+				abortSignal: abortController.signal
 			});
 			await scheduleRunEventFlush(true);
 			await runEventFlushChain;
