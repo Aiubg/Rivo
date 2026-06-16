@@ -139,6 +139,41 @@ describe('/api/chat anonymous abort handling', () => {
 		});
 	});
 
+	it('returns the direct anonymous stream response through the shared generation core', async () => {
+		mocks.consumeUIMessageStream.mockResolvedValueOnce({
+			state: 'success',
+			parts: [{ type: 'text', text: 'partial' }],
+			errorKey: null,
+			hasVisibleOutput: true,
+			sawError: false,
+			sawFinish: true
+		});
+		const request = createChatRequest(new AbortController().signal);
+
+		const response = await chatRoute({
+			request,
+			locals: {},
+			cookies: {
+				get: (name: string) => (name === 'selected-model' ? 'test-model' : undefined)
+			},
+			url: new URL('http://localhost/api/chat')
+		} as never);
+
+		expect(response.status).toBe(200);
+		expect(response.headers.get('content-type')).toContain('text/event-stream');
+		expect(await response.text()).toContain('"delta":"partial"');
+		expect(mocks.streamText).toHaveBeenCalledWith(
+			expect.objectContaining({
+				abortSignal: request.signal
+			})
+		);
+		expect(mocks.consumeUIMessageStream).toHaveBeenCalledWith(
+			expect.objectContaining({
+				abortSignal: request.signal
+			})
+		);
+	});
+
 	it.each([
 		{
 			name: 'partial output',

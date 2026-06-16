@@ -9,21 +9,21 @@
 ## P0：执行路径收敛
 
 - [ ] 抽出共享的生成执行核心，例如 `executeGenerationCore()`，统一以下逻辑：
-  - [ ] `convertToCoreMessagesWithResolvedImages`
-  - [ ] `selectTools` / `buildToolContext`
-  - [ ] `resolveModelRequestConfig`
-  - [ ] `systemPrompt`
-  - [ ] `streamText`
+  - [x] `convertToCoreMessagesWithResolvedImages`
+  - [x] `selectTools` / `buildToolContext`
+  - [x] `resolveModelRequestConfig`
+  - [x] `systemPrompt`
+  - [x] `streamText`
   - [ ] `consumeUIMessageStream`
   - [ ] citation metrics
   - [ ] assistant message persistence
-- [ ] 让 `RunExecutor` 调用共享生成核心，避免和 `/api/chat` 重复维护生成逻辑。
-- [ ] 让 `/api/chat` 匿名直连路径调用共享生成核心。
+- [x] 让 `RunExecutor` 调用共享生成核心，避免和 `/api/chat` 重复维护生成逻辑。
+- [x] 让 `/api/chat` 匿名直连路径调用共享生成核心。
 - [ ] 评估匿名聊天是否也应进入 Run 模式。
 - [ ] 如果匿名聊天进入 Run 模式，设计匿名 run owner/scope，解决 `GenerationRun.userId` 当前非空的问题。
-- [ ] 为共享生成核心补充单元测试，覆盖模型参数、工具选择、provider options 和错误映射。
+- [x] 为共享生成核心补充单元测试，覆盖模型参数、工具选择、provider options 和错误映射。
 - [ ] 为登录 Run 路径补充集成测试，确保 SSE、持久化、恢复、取消行为不回退。
-- [ ] 为匿名直连路径补充测试，确保共享核心接入后仍能正常流式响应。
+- [x] 为匿名直连路径补充测试，确保共享核心接入后仍能正常流式响应。
 
 ---
 
@@ -232,9 +232,9 @@
   - [x] observer 分支停止 upsert。
   - [x] 增加匿名流中断测试。
 - [ ] PR 4：执行路径收敛
-  - [ ] 抽共享 generation core。
-  - [ ] 登录 RunExecutor 接入。
-  - [ ] 匿名 `/api/chat` 接入共享核心。
+  - [x] 抽共享 generation core。
+  - [x] 登录 RunExecutor 接入。
+  - [x] 匿名 `/api/chat` 接入共享核心。
   - [ ] 再评估是否让匿名也进入 Run 模型。
 - [ ] PR 5：错误反馈体验
   - [ ] 定义 assistant inline error 状态。

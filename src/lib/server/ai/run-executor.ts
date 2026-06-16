@@ -1,17 +1,11 @@
-import { streamText, stepCountIs, type UIMessage } from 'ai';
+import type { UIMessage } from 'ai';
 import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import { logger } from '$lib/utils/logger';
-import { myProvider } from '$lib/server/ai/models';
-import { systemPrompt } from '$lib/server/ai/prompts';
-import { resolveModelRequestConfig } from '$lib/ai/model-registry';
+import { validateModelApiKey, validateModelVisionCompatibility } from '$lib/server/ai/utils';
 import {
-	convertToCoreMessagesWithResolvedImages,
-	mapModelProviderErrorToErrorKey,
-	validateModelApiKey,
-	validateModelVisionCompatibility
-} from '$lib/server/ai/utils';
-import { selectTools, buildToolContext } from '$lib/server/ai/tools/selection';
-import { toAiTools } from '$lib/server/ai/tools/ai-adapter';
+	executeGenerationCore,
+	mapGenerationProviderErrorToErrorKey
+} from '$lib/server/ai/generation-core';
 import { env as privateEnv } from '$env/dynamic/private';
 import {
 	appendRunEvent,
@@ -151,47 +145,22 @@ class RunExecutor {
 		await updateGenerationRunStatus({ runId, status: 'running' });
 
 		try {
-			const coreMessages = await convertToCoreMessagesWithResolvedImages(
-				run.messages as unknown as UIMessage[]
-			);
-			let nextSearchResultId = 1;
-			const allocateSearchResultId = () => nextSearchResultId++;
-			const selectionCtx = {
-				modelId: run.modelId,
-				userId: run.userId,
-				chatId: run.chatId,
-				allocateSearchResultId
-			};
-			const selectedToolRecords = selectTools(selectionCtx);
-			const tools =
-				selectedToolRecords.length > 0
-					? toAiTools(selectedToolRecords, () => buildToolContext(selectionCtx))
-					: undefined;
-
 			const now = new Date();
 			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-			const modelRequestConfig = resolveModelRequestConfig({
-				modelId: run.modelId,
-				modelOptions: run.modelOptions
-			});
 
-			const result = streamText({
-				model: myProvider.languageModel(run.modelId),
-				system: systemPrompt({
-					selectedChatModel: run.modelId,
-					personalization: run.personalization as never,
-					context: {
-						nowIso: now.toISOString(),
-						timeZone,
-						locale: undefined,
-						url: undefined
-					}
-				}),
-				messages: coreMessages,
-				...(tools ? { tools, stopWhen: stepCountIs(30) } : {}),
-				...(modelRequestConfig.providerOptions
-					? { providerOptions: modelRequestConfig.providerOptions }
-					: {}),
+			const { result } = await executeGenerationCore({
+				selectedChatModel: run.modelId,
+				messages: run.messages as unknown as UIMessage[],
+				chatId: run.chatId,
+				userId: run.userId,
+				modelOptions: run.modelOptions,
+				personalization: run.personalization as never,
+				context: {
+					nowIso: now.toISOString(),
+					timeZone,
+					locale: undefined,
+					url: undefined
+				},
 				abortSignal: abortController.signal
 			});
 
@@ -348,7 +317,7 @@ class RunExecutor {
 				await updateGenerationRunStatus({ runId, status: 'canceled' });
 			} else {
 				logger.error('Run execution failed', e);
-				const errorKey = mapModelProviderErrorToErrorKey(e) || 'run.failed';
+				const errorKey = mapGenerationProviderErrorToErrorKey(e) || 'run.failed';
 				await updateGenerationRunStatus({ runId, status: 'failed', error: errorKey });
 				await this.emitRunFailureEvents(runId, errorKey);
 			}

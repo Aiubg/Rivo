@@ -1,14 +1,10 @@
 import { logger } from '$lib/utils/logger';
-import { myProvider } from '$lib/server/ai/models';
-import { systemPrompt } from '$lib/server/ai/prompts';
-import { resolveModelRequestConfig } from '$lib/ai/model-registry';
-import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import {
-	convertToCoreMessagesWithResolvedImages,
-	generateTitleFromUserMessage,
-	mapModelProviderErrorToErrorKey,
-	assertValidModelRequest
-} from '$lib/server/ai/utils';
+	executeGenerationCore,
+	mapGenerationProviderErrorToErrorKey
+} from '$lib/server/ai/generation-core';
+import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
+import { generateTitleFromUserMessage, assertValidModelRequest } from '$lib/server/ai/utils';
 import {
 	deleteChatById,
 	getChatById,
@@ -23,16 +19,7 @@ import { allowAnonymousChats } from '$lib/utils/constants';
 import { ChatRequestSchema, DeleteChatSchema } from '$lib/utils/zod';
 import { verifyChatOwnership, handleServerError, parseJsonBody } from '$lib/server/utils';
 import { error } from '@sveltejs/kit';
-import {
-	streamText,
-	stepCountIs,
-	type UIMessage,
-	type UIMessagePart,
-	type UIDataTypes,
-	type UITools
-} from 'ai';
-import { selectTools, buildToolContext } from '$lib/server/ai/tools/selection';
-import { toAiTools } from '$lib/server/ai/tools/ai-adapter';
+import { type UIMessage, type UIMessagePart, type UIDataTypes, type UITools } from 'ai';
 import type { Attachment } from '$lib/types/attachment';
 import { ok, safeTry } from 'neverthrow';
 import type { RequestHandler } from './$types';
@@ -138,22 +125,6 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 		});
 	}
 
-	const coreMessages = await convertToCoreMessagesWithResolvedImages(messages);
-	let nextSearchResultId = 1;
-	const allocateSearchResultId = () => nextSearchResultId++;
-
-	const selectionCtx = {
-		modelId: selectedChatModel,
-		userId: user?.id,
-		chatId: id,
-		allocateSearchResultId
-	};
-	const selectedToolRecords = selectTools(selectionCtx);
-	const tools =
-		selectedToolRecords.length > 0
-			? toAiTools(selectedToolRecords, () => buildToolContext(selectionCtx))
-			: undefined;
-
 	const sendReasoning = true;
 
 	const now = new Date();
@@ -161,29 +132,21 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 	const primaryLocale = localeHeader.split(',')[0] || undefined;
 	const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const requestUrl = url.toString();
-	const modelRequestConfig = resolveModelRequestConfig({
-		modelId: selectedChatModel,
-		modelOptions
-	});
 
 	try {
-		const result = streamText({
-			model: myProvider.languageModel(selectedChatModel),
-			system: systemPrompt({
-				selectedChatModel,
-				personalization,
-				context: {
-					nowIso: now.toISOString(),
-					timeZone,
-					locale: primaryLocale,
-					url: requestUrl
-				}
-			}),
-			messages: coreMessages,
-			...(tools ? { tools, stopWhen: stepCountIs(30) } : {}),
-			...(modelRequestConfig.providerOptions
-				? { providerOptions: modelRequestConfig.providerOptions }
-				: {}),
+		const { result } = await executeGenerationCore({
+			selectedChatModel,
+			messages,
+			chatId: id,
+			userId: user?.id,
+			modelOptions,
+			personalization,
+			context: {
+				nowIso: now.toISOString(),
+				timeZone,
+				locale: primaryLocale,
+				url: requestUrl
+			},
 			abortSignal: request.signal
 		});
 
@@ -244,7 +207,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 			headers: new Headers(uiResponse.headers)
 		});
 	} catch (e) {
-		const mappedErrorKey = mapModelProviderErrorToErrorKey(e);
+		const mappedErrorKey = mapGenerationProviderErrorToErrorKey(e);
 		if (mappedErrorKey) {
 			handleServerError(e, mappedErrorKey, { id, selectedChatModel }, 400);
 		}
