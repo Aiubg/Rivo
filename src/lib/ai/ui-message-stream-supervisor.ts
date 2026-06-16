@@ -55,7 +55,7 @@ function cloneToolInvocation(part: MessagePart): MessagePart {
 	};
 }
 
-export function cloneMessageParts(parts: ReadonlyArray<MessagePart>): MessagePart[] {
+function cloneMessageParts(parts: ReadonlyArray<MessagePart>): MessagePart[] {
 	return parts.map((part) => cloneToolInvocation(part));
 }
 

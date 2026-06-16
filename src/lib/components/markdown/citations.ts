@@ -32,7 +32,7 @@ export function isCitationHref(href: unknown): boolean {
 	return typeof href === 'string' && href.startsWith('cite:');
 }
 
-export function toSourceLabel(hostname: string): string {
+function toSourceLabel(hostname: string): string {
 	const cleaned = hostname.replace(/^www\./i, '').toLowerCase();
 	const parts = cleaned.split('.').filter(Boolean);
 	if (parts.length === 0) return '';

@@ -303,17 +303,7 @@ export function createFileService(storage: StoragePort) {
 			await removeUploadMetadataRecord(storageKey, scope);
 		},
 		async assertUploadAccess(url: string, scope: UploadAccessScope): Promise<string> {
-			const storageKey = parseStorageKeyFromUrl(storage, url);
-			if (!storageKey) {
-				throw new UploadForbiddenError();
-			}
-
-			const metadata = await getUploadMetadataByKey(storageKey);
-			if (!metadata || !matchesUploadOwnership(metadata, scope)) {
-				throw new UploadForbiddenError();
-			}
-
-			return storageKey;
+			return getUploadAccess(url, scope);
 		},
 		async getUploadPreview(
 			url: string,

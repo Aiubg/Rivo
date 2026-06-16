@@ -141,7 +141,7 @@ export function modelSupportsThinkingMode(modelId: string): boolean {
 	);
 }
 
-export function getModelRequestPreset(modelId: string): ModelRequestPreset | undefined {
+function getModelRequestPreset(modelId: string): ModelRequestPreset | undefined {
 	return getModelRegistryItem(modelId)?.requestPreset;
 }
 
