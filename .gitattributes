@@ -1,0 +1,5 @@
+# Normalize line endings to LF in the repository and on checkout.
+* text=auto eol=lf
+
+# Fonts are binary; never touch their bytes.
+*.ttf binary

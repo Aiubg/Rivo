@@ -13,7 +13,9 @@
 	const signInSignUp = $derived(isSignUp ? $t('auth.sign_up') : $t('auth.sign_in'));
 </script>
 
-<div class="relative flex min-h-dvh w-screen items-center justify-center overflow-hidden px-4 py-12">
+<div
+	class="relative flex min-h-dvh w-screen items-center justify-center overflow-hidden px-4 py-12"
+>
 	<div class="absolute inset-x-0 top-0 z-10 p-2">
 		<div class="flex h-10 flex-row items-center justify-between">
 			<a
@@ -25,9 +27,7 @@
 			</a>
 		</div>
 	</div>
-	<div
-		class="rounded-dialog relative flex w-full max-w-md flex-col gap-7 p-7 sm:p-9"
-	>
+	<div class="rounded-dialog relative flex w-full max-w-md flex-col gap-7 p-7 sm:p-9">
 		<div class="flex flex-col items-center justify-center gap-2 text-center select-none">
 			<h3 class="text-foreground text-2xl font-semibold tracking-tight">{signInSignUp}</h3>
 			<p class="text-muted-foreground text-sm leading-relaxed text-balance">

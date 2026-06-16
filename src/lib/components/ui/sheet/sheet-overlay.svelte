@@ -13,7 +13,7 @@
 	bind:ref
 	data-slot="sheet-overlay"
 	class={cn(
-		'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:animation-duration-140 data-[state=open]:animation-duration-180 fixed inset-0 z-50 bg-overlay backdrop-blur-[2px] data-[state=closed]:pointer-events-none data-[state=closed]:ease-in data-[state=open]:ease-out motion-reduce:data-[state=closed]:animate-none motion-reduce:data-[state=open]:animate-none',
+		'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:animation-duration-140 data-[state=open]:animation-duration-180 bg-overlay fixed inset-0 z-50 backdrop-blur-[2px] data-[state=closed]:pointer-events-none data-[state=closed]:ease-in data-[state=open]:ease-out motion-reduce:data-[state=closed]:animate-none motion-reduce:data-[state=open]:animate-none',
 		className
 	)}
 	{...restProps}

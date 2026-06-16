@@ -48,7 +48,9 @@
 	const currentThemeLabelKey = $derived.by(() => {
 		const preset = THEME_PRESETS.find((item) => item.id === currentThemeId);
 		return (
-			preset?.labelKey ?? getThemePreset(DEFAULT_THEME_ID)?.labelKey ?? 'settings.color_theme_neutral'
+			preset?.labelKey ??
+			getThemePreset(DEFAULT_THEME_ID)?.labelKey ??
+			'settings.color_theme_neutral'
 		);
 	});
 	const themeOptions = $derived.by(() => THEME_PRESETS);

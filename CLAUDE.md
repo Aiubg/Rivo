@@ -7,6 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Rivo is an open-source AI chatbot application built with SvelteKit and the Vercel AI SDK. It supports multiple LLM providers (OpenAI, Anthropic, Google, Groq, DeepSeek, xAI, OpenRouter) with features including file uploads, persistent chat storage, real-time streaming, and multi-platform deployment.
 
 **Tech Stack:**
+
 - Frontend: SvelteKit 2.x + Svelte 5 + Tailwind CSS 4.x
 - Backend: Node.js >= 20.19.0, Vercel AI SDK
 - Database: libsql (SQLite/Turso) with Drizzle ORM
@@ -15,6 +16,7 @@ Rivo is an open-source AI chatbot application built with SvelteKit and the Verce
 ## Development Commands
 
 ### Setup
+
 ```bash
 pnpm install                    # Install dependencies
 cp .env.example .env.local      # Create environment file
@@ -23,6 +25,7 @@ pnpm db:init-sqlite             # Initialize local SQLite database
 ```
 
 ### Development
+
 ```bash
 pnpm dev                        # Start dev server (http://localhost:5173)
 pnpm check                      # Run Svelte + TypeScript checks
@@ -34,6 +37,7 @@ pnpm test:watch                 # Run tests in watch mode
 ```
 
 ### Database
+
 ```bash
 pnpm db:generate                # Generate Drizzle migration files
 pnpm db:push                    # Push schema changes to database
@@ -43,6 +47,7 @@ pnpm uploads:migrate-metadata   # Migrate upload metadata to database
 ```
 
 ### Build & Deploy
+
 ```bash
 pnpm build:local                # Build for self-hosted (adapter-node)
 pnpm build:vercel               # Build for Vercel (adapter-vercel)
@@ -64,6 +69,7 @@ The codebase uses a ports-and-adapters pattern for platform independence:
 - **`src/lib/server/composition/`** - Wires drivers and services from environment config
 
 Runtime drivers are selected via environment variables:
+
 - `DEPLOY_TARGET`: local, vercel, cloudflare
 - `DB_DRIVER`: libsql-local, libsql-remote
 - `STORAGE_DRIVER`: local-fs, s3
@@ -119,6 +125,7 @@ src/
 ### Database Schema
 
 Core tables (see `src/lib/server/db/schema.ts`):
+
 - **User** - User accounts with email/password authentication
 - **Session** - User sessions with expiration
 - **Chat** - Chat conversations with title, visibility, pinned/unread status
@@ -130,6 +137,7 @@ Core tables (see `src/lib/server/db/schema.ts`):
 ### AI Integration
 
 The AI layer (`src/lib/server/ai/`) handles:
+
 - **Model providers** - Configured in `models.ts` using AI SDK providers
 - **System prompts** - Defined in `prompts.ts`
 - **Tool calling** - Registry in `tools/registry.ts`, implementations in `tools/builtin/`
@@ -151,6 +159,7 @@ Built-in tools include: calculator, Tavily search/extract, Wolfram Alpha, Bilibi
 ### Authentication
 
 Session-based authentication with secure cookies:
+
 - Passwords hashed with bcrypt-ts
 - Sessions stored in database with expiration
 - Anonymous chats supported via `PUBLIC_ALLOW_ANONYMOUS_CHATS` flag
@@ -159,6 +168,7 @@ Session-based authentication with secure cookies:
 ### File Uploads
 
 File upload system supports `.txt`, `.md`, `.docx`, `.xlsx`:
+
 - Upload handling in `src/lib/server/uploads/` and `src/lib/server/files/`
 - Storage abstracted via `StoragePort` (local-fs or S3)
 - Metadata stored in `StoredUpload` table
@@ -167,29 +177,35 @@ File upload system supports `.txt`, `.md`, `.docx`, `.xlsx`:
 ## Development Guidelines
 
 ### TypeScript
+
 - Use strict TypeScript settings
 - Avoid `any` types, use proper type definitions
 - Types are in `src/lib/types/` and co-located with modules
 
 ### Svelte 5
+
 - Use Svelte 5 runes (`$state`, `$derived`, `$effect`)
 - Keep components focused and reusable
 - Follow reactive patterns appropriately
 
 ### Styling
+
 - Use Tailwind CSS 4.x utility classes
 - Theme tokens in `src/styles/tokens/`
 - Component-specific styles in `src/styles/components/`
 - Support light/dark mode via `mode-watcher`
 
 ### Testing
+
 - Tests in `tests/` directory using Vitest
 - Test utilities, components, and API routes
 - Run `pnpm test` before committing
 - Maintain test coverage for new features
 
 ### Commit Messages
+
 Use conventional commit format:
+
 - `feat`: New features
 - `fix`: Bug fixes
 - `docs`: Documentation
@@ -201,6 +217,7 @@ Use conventional commit format:
 ### Environment Configuration
 
 Key environment variables (see `.env.example`):
+
 - **Deployment**: `DEPLOY_TARGET`, `DB_DRIVER`, `STORAGE_DRIVER`
 - **Database**: `LIBSQL_URL`, `LIBSQL_AUTH_TOKEN`
 - **Storage**: `LOCAL_UPLOAD_STORAGE_ROOT` or S3 credentials
@@ -209,6 +226,7 @@ Key environment variables (see `.env.example`):
 - **Run Executor**: `RUN_EXECUTOR_MAX_CONCURRENCY`, `RUN_EVENT_MAX_CHARS`
 
 Minimum local development setup:
+
 ```bash
 LIBSQL_URL=file:./data/app.db
 OPENAI_API_KEY=your_key_here
@@ -232,6 +250,7 @@ OPENAI_API_KEY=your_key_here
 ### Security
 
 Security headers configured in `hooks.server.ts`:
+
 - `x-content-type-options: nosniff`
 - `x-frame-options: DENY`
 - `referrer-policy: same-origin`
@@ -240,23 +259,27 @@ Security headers configured in `hooks.server.ts`:
 ## Common Tasks
 
 ### Adding a New AI Provider
+
 1. Install AI SDK provider package (e.g., `@ai-sdk/provider-name`)
 2. Add API key to `.env.example` and `.env.local`
 3. Configure provider in `src/lib/server/ai/models.ts`
 4. Update model selection UI in settings components
 
 ### Modifying Database Schema
+
 1. Edit `src/lib/server/db/schema.ts`
 2. Run `pnpm db:generate` to create migration
 3. Run `pnpm db:push` to apply changes
 4. Update TypeScript types as needed
 
 ### Adding Translations
+
 1. Add translation keys to `src/lib/i18n/locales/en.json`
 2. Add corresponding translations to `src/lib/i18n/locales/zh-CN.json`
 3. Use `$t('key')` in Svelte components
 
 ### Debugging
+
 - Check browser console for client-side errors
 - Check server logs for API errors
 - Use `pnpm db:studio` to inspect database

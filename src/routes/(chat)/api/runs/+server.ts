@@ -1,7 +1,4 @@
-import {
-	generateTitleFromUserMessage,
-	assertValidModelRequest
-} from '$lib/server/ai/utils';
+import { generateTitleFromUserMessage, assertValidModelRequest } from '$lib/server/ai/utils';
 import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import {
 	createGenerationRun,

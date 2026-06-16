@@ -8,7 +8,9 @@ export type ThemePresetId = ThemePreset['id'];
 
 export const DEFAULT_THEME_ID: ThemePresetId = 'neutral';
 
-const PRESET_BY_ID = new Map<string, ThemePreset>(THEME_PRESETS.map((preset) => [preset.id, preset]));
+const PRESET_BY_ID = new Map<string, ThemePreset>(
+	THEME_PRESETS.map((preset) => [preset.id, preset])
+);
 
 export function getThemePreset(id: string): ThemePreset | null {
 	return PRESET_BY_ID.get(id) ?? null;
