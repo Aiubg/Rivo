@@ -1,11 +1,12 @@
 import type { UIMessage } from 'ai';
 import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
 import { logger } from '$lib/utils/logger';
-import { validateModelApiKey, validateModelVisionCompatibility } from '$lib/server/ai/utils';
 import {
-	executeGenerationCore,
-	mapGenerationProviderErrorToErrorKey
-} from '$lib/server/ai/generation-core';
+	validateModelApiKey,
+	validateModelVisionCompatibility,
+	mapModelProviderErrorToErrorKey
+} from '$lib/server/ai/utils';
+import { executeGenerationCore } from '$lib/server/ai/generation-core';
 import { env as privateEnv } from '$env/dynamic/private';
 import {
 	appendRunEvent,
@@ -148,7 +149,7 @@ class RunExecutor {
 			const now = new Date();
 			const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-			const { result } = await executeGenerationCore({
+			const result = await executeGenerationCore({
 				selectedChatModel: run.modelId,
 				messages: run.messages as unknown as UIMessage[],
 				chatId: run.chatId,
@@ -317,7 +318,7 @@ class RunExecutor {
 				await updateGenerationRunStatus({ runId, status: 'canceled' });
 			} else {
 				logger.error('Run execution failed', e);
-				const errorKey = mapGenerationProviderErrorToErrorKey(e) || 'run.failed';
+				const errorKey = mapModelProviderErrorToErrorKey(e) || 'run.failed';
 				await updateGenerationRunStatus({ runId, status: 'failed', error: errorKey });
 				await this.emitRunFailureEvents(runId, errorKey);
 			}

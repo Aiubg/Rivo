@@ -7,7 +7,6 @@ const mocks = vi.hoisted(() => ({
 	languageModel: vi.fn((modelId: string) => ({ modelId })),
 	systemPrompt: vi.fn(() => 'resolved system prompt'),
 	convertToCoreMessagesWithResolvedImages: vi.fn(),
-	mapModelProviderErrorToErrorKey: vi.fn(),
 	selectTools: vi.fn(),
 	buildToolContext: vi.fn((ctx: unknown) => ({ ctx })),
 	toAiTools: vi.fn()
@@ -33,8 +32,7 @@ vi.mock('$lib/server/ai/prompts', () => ({
 }));
 
 vi.mock('$lib/server/ai/utils', () => ({
-	convertToCoreMessagesWithResolvedImages: mocks.convertToCoreMessagesWithResolvedImages,
-	mapModelProviderErrorToErrorKey: mocks.mapModelProviderErrorToErrorKey
+	convertToCoreMessagesWithResolvedImages: mocks.convertToCoreMessagesWithResolvedImages
 }));
 
 vi.mock('$lib/server/ai/tools/selection', () => ({
@@ -46,10 +44,7 @@ vi.mock('$lib/server/ai/tools/ai-adapter', () => ({
 	toAiTools: mocks.toAiTools
 }));
 
-import {
-	executeGenerationCore,
-	mapGenerationProviderErrorToErrorKey
-} from '$lib/server/ai/generation-core';
+import { executeGenerationCore } from '$lib/server/ai/generation-core';
 
 describe('executeGenerationCore', () => {
 	beforeEach(() => {
@@ -58,7 +53,6 @@ describe('executeGenerationCore', () => {
 			{ role: 'user', content: [{ type: 'text', text: 'hello' }] }
 		]);
 		mocks.resolveModelRequestConfig.mockReturnValue({ modelOptions: {} });
-		mocks.mapModelProviderErrorToErrorKey.mockReturnValue(null);
 		mocks.selectTools.mockReturnValue([]);
 		mocks.toAiTools.mockReturnValue({});
 		mocks.streamText.mockReturnValue({ streamId: 'result' });
@@ -89,7 +83,7 @@ describe('executeGenerationCore', () => {
 			abortSignal: abortController.signal
 		});
 
-		expect(result.result).toEqual({ streamId: 'result' });
+		expect(result).toEqual({ streamId: 'result' });
 		expect(mocks.convertToCoreMessagesWithResolvedImages).toHaveBeenCalledWith(messages);
 		expect(mocks.languageModel).toHaveBeenCalledWith('model-1');
 		expect(mocks.systemPrompt).toHaveBeenCalledWith({
@@ -129,7 +123,7 @@ describe('executeGenerationCore', () => {
 			providerOptions
 		});
 
-		const output = await executeGenerationCore({
+		await executeGenerationCore({
 			selectedChatModel: 'deepseek-v4-flash',
 			messages: [] as never,
 			chatId: 'chat-2',
@@ -137,11 +131,6 @@ describe('executeGenerationCore', () => {
 			modelOptions: { thinking: { mode: 'enabled' } }
 		});
 
-		expect(output.modelRequestConfig).toEqual({
-			modelOptions: { thinking: { mode: 'enabled' } },
-			providerOptions
-		});
-		expect(output.selectedToolRecords).toEqual([toolRecord]);
 		expect(mocks.selectTools).toHaveBeenCalledWith(
 			expect.objectContaining({
 				modelId: 'deepseek-v4-flash',
@@ -158,13 +147,5 @@ describe('executeGenerationCore', () => {
 				providerOptions
 			})
 		);
-	});
-
-	it('shares provider error mapping for generation callers', () => {
-		const error = new Error('does not support image input');
-		mocks.mapModelProviderErrorToErrorKey.mockReturnValue('models.vision_not_supported');
-
-		expect(mapGenerationProviderErrorToErrorKey(error)).toBe('models.vision_not_supported');
-		expect(mocks.mapModelProviderErrorToErrorKey).toHaveBeenCalledWith(error);
 	});
 });

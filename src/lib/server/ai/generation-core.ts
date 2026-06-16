@@ -3,10 +3,7 @@ import { resolveModelRequestConfig } from '$lib/ai/model-registry';
 import type { ModelRequestOptions } from '$lib/ai/model-options';
 import { myProvider } from '$lib/server/ai/models';
 import { systemPrompt } from '$lib/server/ai/prompts';
-import {
-	convertToCoreMessagesWithResolvedImages,
-	mapModelProviderErrorToErrorKey
-} from '$lib/server/ai/utils';
+import { convertToCoreMessagesWithResolvedImages } from '$lib/server/ai/utils';
 import { selectTools, buildToolContext } from '$lib/server/ai/tools/selection';
 import { toAiTools } from '$lib/server/ai/tools/ai-adapter';
 
@@ -45,7 +42,7 @@ export async function executeGenerationCore(options: ExecuteGenerationCoreOption
 		modelOptions: options.modelOptions
 	});
 
-	const result = streamText({
+	return streamText({
 		model: myProvider.languageModel(options.selectedChatModel),
 		system: systemPrompt({
 			selectedChatModel: options.selectedChatModel,
@@ -59,14 +56,4 @@ export async function executeGenerationCore(options: ExecuteGenerationCoreOption
 			: {}),
 		...(options.abortSignal ? { abortSignal: options.abortSignal } : {})
 	});
-
-	return {
-		result,
-		modelRequestConfig,
-		selectedToolRecords
-	};
-}
-
-export function mapGenerationProviderErrorToErrorKey(e: unknown): string | null {
-	return mapModelProviderErrorToErrorKey(e);
 }

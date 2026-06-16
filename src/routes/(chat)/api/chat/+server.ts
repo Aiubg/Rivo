@@ -1,10 +1,11 @@
 import { logger } from '$lib/utils/logger';
-import {
-	executeGenerationCore,
-	mapGenerationProviderErrorToErrorKey
-} from '$lib/server/ai/generation-core';
+import { executeGenerationCore } from '$lib/server/ai/generation-core';
 import { consumeUIMessageStream } from '$lib/ai/ui-message-stream-supervisor';
-import { generateTitleFromUserMessage, assertValidModelRequest } from '$lib/server/ai/utils';
+import {
+	generateTitleFromUserMessage,
+	assertValidModelRequest,
+	mapModelProviderErrorToErrorKey
+} from '$lib/server/ai/utils';
 import {
 	deleteChatById,
 	getChatById,
@@ -134,7 +135,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 	const requestUrl = url.toString();
 
 	try {
-		const { result } = await executeGenerationCore({
+		const result = await executeGenerationCore({
 			selectedChatModel,
 			messages,
 			chatId: id,
@@ -207,7 +208,7 @@ export const POST: RequestHandler = async ({ request, locals: { user }, cookies,
 			headers: new Headers(uiResponse.headers)
 		});
 	} catch (e) {
-		const mappedErrorKey = mapGenerationProviderErrorToErrorKey(e);
+		const mappedErrorKey = mapModelProviderErrorToErrorKey(e);
 		if (mappedErrorKey) {
 			handleServerError(e, mappedErrorKey, { id, selectedChatModel }, 400);
 		}
