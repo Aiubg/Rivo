@@ -148,7 +148,10 @@
 		"no_content": "No content",
 		"enter_question": "Type a message to continue",
 		"stop_output": "Stop output",
-		"resize_sidebar": "Resize sidebar"
+		"resize_sidebar": "Resize sidebar",
+		"copy_link": "Copy link",
+		"open_link": "Open link",
+		"send_suggestion": "Send this question"
 	},
 	"upload": {
 		"invalid_response": "Upload response is invalid",
@@ -249,6 +252,9 @@
 	},
 	"settings": {
 		"appearance_description": "Customize the application's appearance.",
+		"color_theme": "Color Theme",
+		"color_theme_neutral": "Neutral",
+		"color_theme_claude": "Claude",
 		"font": "Font",
 		"font_inter": "Inter",
 		"font_harmonyos_sans_sc": "HarmonyOS Sans SC",

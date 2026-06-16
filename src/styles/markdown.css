@@ -182,6 +182,21 @@
 		@apply bg-popover text-popover-foreground border-border/70 rounded-popover shadow-popover border;
 	}
 
+	/* Shared inline style for assistant action links (external links + ask chips):
+	   no border/background, persistent underline marker, normal color that
+	   highlights only on hover. */
+	.action-inline {
+		@apply text-foreground hover:text-primary underline decoration-from-font underline-offset-3 transition-colors;
+	}
+
+	.action-inline-symbol {
+		@apply ms-0.5 inline shrink-0 align-[-0.15em];
+	}
+
+	.action-inline-static {
+		@apply text-muted-foreground underline decoration-from-font underline-offset-3;
+	}
+
 	/* HLJS Styles */
 	.hljs {
 		display: block;

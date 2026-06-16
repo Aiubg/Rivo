@@ -8,7 +8,19 @@
 			(function () {
 				try {
 					var DEFAULT_THEME_ID = 'neutral';
-					document.documentElement.setAttribute('data-theme', DEFAULT_THEME_ID);
+					var THEME_STORAGE_KEY = 'rivo:v1:preference:color-theme';
+					var LEGACY_THEME_STORAGE_KEY = 'app-color-theme';
+					var presetThemes = { neutral: true, claude: true };
+
+					var storedThemeId =
+						localStorage.getItem(THEME_STORAGE_KEY) ||
+						localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
+					var themeId = presetThemes[storedThemeId] ? storedThemeId : DEFAULT_THEME_ID;
+					if (themeId !== storedThemeId) {
+						localStorage.setItem(THEME_STORAGE_KEY, themeId);
+					}
+					localStorage.removeItem(LEGACY_THEME_STORAGE_KEY);
+					document.documentElement.setAttribute('data-theme', themeId);
 
 					var mode = localStorage.getItem('mode-watcher-mode') || 'system';
 					var prefersDark =

@@ -35,7 +35,7 @@
 	} = $props();
 </script>
 
-<div class="mt-1 flex flex-row items-start gap-2">
+<div class="-mt-1 flex flex-row items-start gap-2">
 	<div
 		class={cn('flex w-full items-center gap-2', {
 			'flex-row-reverse': message.role === 'user',

@@ -9,7 +9,6 @@
 	import PreviewMessage from '$lib/components/messages/preview-message.svelte';
 	import ThinkingMessage from '$lib/components/messages/thinking-message.svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { page } from '$app/state';
 	import type { UIMessageWithTree } from '$lib/types/message';
 	import {
@@ -475,23 +474,15 @@
 			class="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex justify-center px-4"
 			transition:fade={{ duration: 200 }}
 		>
-			<Tooltip>
-				<TooltipTrigger>
-					{#snippet child({ props })}
-						<Button
-							{...props}
-							size="icon-sm"
-							variant="outline"
-							class="bg-background/80 focus:border-border! focus-visible:border-border! shadow-popover pointer-events-auto rounded-full backdrop-blur-sm"
-							onclick={handleScrollToBottom}
-							aria-label={$t('chat.scroll_to_latest')}
-						>
-							<ArrowDownIcon size={14} />
-						</Button>
-					{/snippet}
-				</TooltipTrigger>
-				<TooltipContent>{$t('chat.scroll_to_latest')}</TooltipContent>
-			</Tooltip>
+			<Button
+				size="icon-sm"
+				variant="outline"
+				class="bg-background/80 focus:border-border! focus-visible:border-border! shadow-popover pointer-events-auto rounded-full backdrop-blur-sm"
+				onclick={handleScrollToBottom}
+				aria-label={$t('chat.scroll_to_latest')}
+			>
+				<ArrowDownIcon size={14} />
+			</Button>
 		</div>
 	{/if}
 </div>

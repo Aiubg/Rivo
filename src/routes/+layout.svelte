@@ -8,6 +8,7 @@
 	import Logo from '$lib/components/ui/logo/logo.svelte';
 	import { TooltipProvider } from '$lib/components/ui/tooltip';
 	import ThemeManager from '$lib/theme/theme-manager.svelte';
+	import { storageKeys } from '$lib/utils/storage-keys';
 
 	let { children } = $props();
 
@@ -44,7 +45,7 @@
 	{/if}
 </svelte:head>
 
-<ModeWatcher defaultTheme="neutral" />
+<ModeWatcher defaultTheme="neutral" themeStorageKey={storageKeys.preference.colorTheme} />
 <ThemeManager />
 
 {#await waitLocale()}

@@ -39,7 +39,6 @@
 
 	let mode = $state<'view' | 'edit'>('view');
 	let editText = $state('');
-	let originalText = $state('');
 	let copiedIndex = $state<number | null>(null);
 	let textareaRef = $state<HTMLTextAreaElement | null>(null);
 
@@ -51,17 +50,11 @@
 
 	$effect(() => {
 		if (mode === 'edit') {
-			const text = extractTextFromMessage(message);
-			editText = text;
-			originalText = text;
+			editText = extractTextFromMessage(message);
 		}
 	});
 
-	const trimmedEditText = $derived(editText.trim());
-	const trimmedOriginalText = $derived(originalText.trim());
-	const canSubmitEdit = $derived(
-		trimmedEditText.length > 0 && trimmedEditText !== trimmedOriginalText
-	);
+	const canSubmitEdit = $derived(editText.trim().length > 0);
 
 	function handleKeyDown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {

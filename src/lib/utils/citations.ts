@@ -1,5 +1,6 @@
 import type { UIMessage } from 'ai';
 import type { UIMessageWithTree } from '$lib/types/message';
+import { transformMarkdownOutsideCodeFences, WORD_JOINER } from '$lib/utils/markdown-transform';
 
 export type CitationSource = {
 	id: number;
@@ -10,9 +11,7 @@ export type CitationSource = {
 	score?: number;
 };
 
-const FENCED_CODE_BLOCK_RE = /```[\s\S]*?```/g;
 const CITATION_MARKER_RE = /\[@(\d+)\]/g;
-const WORD_JOINER = '\u2060';
 
 function asRecord(value: unknown): Record<string, unknown> | null {
 	if (!value || typeof value !== 'object') return null;
@@ -95,27 +94,6 @@ export function extractSearchCitationsFromMessage(
 ): CitationSource[] {
 	const parts = Array.isArray(message?.parts) ? message.parts : [];
 	return extractSearchCitationsFromParts(parts as unknown[]);
-}
-
-function transformMarkdownOutsideCodeFences(
-	md: string,
-	transform: (segment: string) => string
-): string {
-	if (!md) return '';
-	let out = '';
-	let lastIndex = 0;
-	let match: RegExpExecArray | null;
-
-	FENCED_CODE_BLOCK_RE.lastIndex = 0;
-	while ((match = FENCED_CODE_BLOCK_RE.exec(md)) !== null) {
-		const blockStart = match.index;
-		const blockText = match[0] ?? '';
-		out += transform(md.slice(lastIndex, blockStart));
-		out += blockText;
-		lastIndex = blockStart + blockText.length;
-	}
-	out += transform(md.slice(lastIndex));
-	return out;
 }
 
 export function convertCitationMarkersToMarkdownLinks(md: string): string {

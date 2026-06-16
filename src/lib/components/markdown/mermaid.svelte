@@ -134,11 +134,24 @@
 		fullscreenSrc = nextSrc;
 	}
 
-	function getExportSvg() {
+	function resolveExportSvgEl(): SVGElement | null {
+		// Prefer the live, on-screen SVG node. It is guaranteed parseable because the
+		// browser already rendered it, so it avoids strict XML parse failures (e.g. HTML
+		// entities like &nbsp; that mermaid emits but image/svg+xml rejects).
+		const liveEl = wrapperEl?.querySelector('svg');
+		if (liveEl) return liveEl.cloneNode(true) as SVGElement;
+
 		if (!svg || typeof DOMParser === 'undefined') return null;
 		const doc = new DOMParser().parseFromString(svg, 'image/svg+xml');
-		const svgEl = doc.documentElement;
-		if (!svgEl || svgEl.nodeName.toLowerCase() !== 'svg') return null;
+		const parsed = doc.documentElement;
+		if (!parsed || parsed.nodeName.toLowerCase() !== 'svg') return null;
+		return parsed as unknown as SVGElement;
+	}
+
+	function getExportSvg() {
+		if (typeof window === 'undefined') return null;
+		const svgEl = resolveExportSvgEl();
+		if (!svgEl) return null;
 
 		const fallback = { width: 1000, height: 1000 };
 		const rawDimensions = dimensions ?? getSvgDimensions(svg) ?? fallback;
@@ -147,6 +160,9 @@
 
 		if (!svgEl.getAttribute('xmlns')) {
 			svgEl.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+		}
+		if (!svgEl.getAttribute('xmlns:xlink')) {
+			svgEl.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 		}
 		if (!svgEl.getAttribute('width')) {
 			svgEl.setAttribute('width', String(width));
@@ -158,7 +174,8 @@
 			svgEl.setAttribute('viewBox', `0 0 ${width} ${height}`);
 		}
 
-		return { svg: svgEl.outerHTML, width, height };
+		const serialized = new XMLSerializer().serializeToString(svgEl);
+		return { svg: serialized, width, height };
 	}
 
 	function ensureFullscreenSrc(force = false) {

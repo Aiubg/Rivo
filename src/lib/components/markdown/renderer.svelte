@@ -18,6 +18,13 @@
 		parseCitationMeta,
 		resolveCitationFromMap
 	} from '$lib/components/markdown/citations';
+	import { isActionHref, parseActionHref } from '$lib/utils/action-links';
+	import ActionLink from '$lib/components/markdown/action-link.svelte';
+	import ExternalLink from '$lib/components/markdown/external-link.svelte';
+
+	function isHttpHref(href: unknown): href is string {
+		return typeof href === 'string' && /^https?:\/\//i.test(href);
+	}
 
 	let {
 		md,
@@ -251,6 +258,19 @@
 				<span class="text-muted-foreground align-baseline text-xs font-normal">
 					{fallbackCitationId}
 				</span>
+			{:else if isActionHref(href)}
+				{@const action = parseActionHref(href)}
+				{#if action}
+					<ActionLink type={action.type} payload={action.payload}>
+						{@render children?.()}
+					</ActionLink>
+				{:else}
+					{@render children?.()}
+				{/if}
+			{:else if isHttpHref(href)}
+				<ExternalLink {href} class={typeof className === 'string' ? className : ''}>
+					{@render children?.()}
+				</ExternalLink>
 			{:else}
 				<a
 					{...rest}

@@ -148,7 +148,10 @@
 		"no_content": "无内容",
 		"enter_question": "请输入消息后再发送",
 		"stop_output": "停止输出",
-		"resize_sidebar": "调整侧边栏宽度"
+		"resize_sidebar": "调整侧边栏宽度",
+		"copy_link": "复制链接",
+		"open_link": "打开链接",
+		"send_suggestion": "发送此问题"
 	},
 	"upload": {
 		"invalid_response": "上传响应无效",
@@ -249,6 +252,9 @@
 	},
 	"settings": {
 		"appearance_description": "自定义应用外观。",
+		"color_theme": "颜色主题",
+		"color_theme_neutral": "中性",
+		"color_theme_claude": "Claude",
 		"font": "字体",
 		"font_inter": "Inter",
 		"font_harmonyos_sans_sc": "鸿蒙 Sans SC",

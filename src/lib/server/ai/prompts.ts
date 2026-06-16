@@ -74,6 +74,14 @@ export const mathInstructions =
 	'- For display/block math, use LaTeX math delimiters: \\[ ... \\].\n' +
 	'- Do not use plain [ ... ] or other ad-hoc delimiters for math.\n';
 
+export const actionLinkInstructions =
+	'\n## Links & Suggested Questions\n' +
+	'- For any URL you want to share, use a standard markdown link `[text](url)`. The UI automatically upgrades these into a card where the user can open the link or copy it, so do not output raw HTML anchors.\n' +
+	'- You can offer clickable follow-up questions with this exact syntax: `[[ask:<question>]]`. The text is shown as a clickable suggestion and is sent verbatim as the user’s next message when clicked, so write a complete, self-contained question phrased from the user’s point of view.\n' +
+	'- To show a short label but send a longer message, use `[[ask:<label>|<message>]]`: the part before `|` is displayed, the part after `|` is sent.\n' +
+	'- Place suggested questions at the very end of your reply, each `[[ask:...]]` on its own line, and offer at most 1–3 that are genuinely useful next steps.\n' +
+	'- Only suggest questions when they add real value. Do not use `[[ask:...]]` inside code blocks, do not nest other markdown inside it, and keep each question to a single concise sentence.\n';
+
 export const musicInstructions =
 	'\n## Music\n' +
 	'- Separate link retrieval and player-card creation.\n' +
@@ -121,6 +129,9 @@ export const systemPrompt = ({
 
 	// Mermaid diagrams (always enabled for now as it's not a specific tool)
 	prompt += diagramInstructions;
+
+	// Action links: standard-link cards + suggested-question chips (always available, no tool needed)
+	prompt += actionLinkInstructions;
 
 	// Math instructions
 	if (isEnabled('calculator') || isEnabled('wolfram_alpha')) {

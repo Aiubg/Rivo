@@ -30,6 +30,7 @@ export const storageKeys = {
 	},
 
 	preference: {
+		colorTheme: scopedStorageKey('preference', 'color-theme'),
 		fontSize: scopedStorageKey('preference', 'font-size'),
 		fontFamily: scopedStorageKey('preference', 'font-family'),
 		language: scopedStorageKey('preference', 'language'),
@@ -57,6 +58,7 @@ export const legacyStorageKeys = {
 	},
 
 	preference: {
+		colorTheme: 'app-color-theme',
 		fontSize: 'app-font-size',
 		fontFamily: 'app-font-family',
 		language: 'app-language',

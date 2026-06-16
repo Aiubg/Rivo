@@ -7,6 +7,7 @@
 		convertCitationMarkersToMarkdownLinks,
 		extractSearchCitationsFromMessage
 	} from '$lib/utils/citations';
+	import { convertActionMarkersToMarkdownLinks } from '$lib/utils/action-links';
 	import type { MessagePart, UIMessageWithTree } from '$lib/types/message';
 
 	type ReasoningGroup = {
@@ -180,10 +181,12 @@
 					})}
 				>
 					{#if message.role === 'user'}
-						<div class="break-anywhere whitespace-pre-wrap">{p.text}</div>
+						<div class="wrap-anywhere whitespace-pre-wrap">{p.text}</div>
 					{:else}
 						<Markdown
-							md={convertCitationMarkersToMarkdownLinks(p.text ?? '')}
+							md={convertActionMarkersToMarkdownLinks(
+								convertCitationMarkersToMarkdownLinks(p.text ?? '')
+							)}
 							streaming={messageLoading}
 							citations={messageCitations}
 						/>
