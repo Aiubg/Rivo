@@ -234,43 +234,6 @@ export function getActiveRunChatIdsByUserId({
 	});
 }
 
-export function failAllActiveGenerationRuns({
-	errorKey
-}: {
-	errorKey?: string | null;
-} = {}): ResultAsync<number, DbError> {
-	return safeTry(async function* () {
-		const ids = yield* fromPromise(
-			db
-				.select({ id: generationRun.id })
-				.from(generationRun)
-				.where(or(eq(generationRun.status, 'queued'), eq(generationRun.status, 'running'))),
-			(error) => new DbInternalError({ cause: error })
-		);
-
-		const runIds = ids
-			.map((row) => row.id)
-			.filter((id): id is string => typeof id === 'string' && id.length > 0);
-		if (runIds.length === 0) return ok(0);
-
-		yield* fromPromise(
-			runSerializedWrite(() =>
-				db
-					.update(generationRun)
-					.set({
-						status: 'failed',
-						error: errorKey ?? 'run.failed',
-						finishedAt: new Date()
-					})
-					.where(inArray(generationRun.id, runIds))
-			),
-			(error) => new DbInternalError({ cause: error })
-		);
-
-		return ok(runIds.length);
-	});
-}
-
 type ActiveGenerationRunForRecovery = Pick<
 	GenerationRun,
 	'id' | 'status' | 'createdAt' | 'startedAt'

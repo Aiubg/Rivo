@@ -2,7 +2,6 @@ export {
 	createAuthUser,
 	createSession,
 	deleteSession,
-	deleteSessionsForUser,
 	extendSession,
 	getAuthUser,
 	getFullSession,
@@ -14,7 +13,6 @@ export {
 	appendRunEvent,
 	appendRunEvents,
 	createGenerationRun,
-	failAllActiveGenerationRuns,
 	failStaleGenerationRuns,
 	getActiveGenerationRunByChatId,
 	getActiveRunChatIdsByUserId,
@@ -37,8 +35,6 @@ export {
 
 export {
 	deleteMessageById,
-	deleteMessagesByChatIdAfterTimestamp,
-	deleteTrailingMessages,
 	getMessageById,
 	getMessagesByChatId,
 	getMessagesByChatIds,

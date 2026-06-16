@@ -1,4 +1,4 @@
-import { and, asc, gte, inArray } from 'drizzle-orm';
+import { asc, inArray } from 'drizzle-orm';
 import { fromPromise, ok, safeTry, type ResultAsync } from 'neverthrow';
 import {
 	chat,
@@ -219,35 +219,6 @@ export function deleteMessageById({ id }: { id: string }): ResultAsync<undefined
 			runSerializedWrite(() => db.delete(message).where(eq(message.id, id))),
 			(error) => new DbInternalError({ cause: error })
 		);
-		return ok(undefined);
-	});
-}
-
-export function deleteMessagesByChatIdAfterTimestamp({
-	chatId,
-	timestamp
-}: {
-	chatId: string;
-	timestamp: Date;
-}): ResultAsync<undefined, DbError> {
-	return safeTry(async function* () {
-		yield* fromPromise(
-			runSerializedWrite(() =>
-				db.delete(message).where(and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)))
-			),
-			(error) => new DbInternalError({ cause: error })
-		);
-		return ok(undefined);
-	});
-}
-
-export function deleteTrailingMessages({ id }: { id: string }): ResultAsync<undefined, DbError> {
-	return safeTry(async function* () {
-		const currentMessage = yield* getMessageById({ id });
-		yield* deleteMessagesByChatIdAfterTimestamp({
-			chatId: currentMessage.chatId,
-			timestamp: currentMessage.createdAt
-		});
 		return ok(undefined);
 	});
 }

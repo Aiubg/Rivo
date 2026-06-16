@@ -140,14 +140,3 @@ export function extendSession(sessionId: string): ResultAsync<Session, DbError> 
 		return unwrapSingleQueryResult(sessionResult, sessionId, 'Session');
 	});
 }
-
-export function deleteSessionsForUser(userId: string): ResultAsync<undefined, DbError> {
-	return safeTry(async function* () {
-		yield* fromPromise(
-			db.delete(session).where(eq(session.userId, userId)),
-			(error) => new DbInternalError({ cause: error })
-		);
-
-		return ok(undefined);
-	});
-}
