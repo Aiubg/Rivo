@@ -80,11 +80,7 @@
 	async function handleDeleteChat() {
 		if (!chatIdToDelete) return;
 
-		const success = await chatHistory.deleteChat(chatIdToDelete);
-		if (!success) {
-			// Optional: toast error
-		}
-
+		await chatHistory.deleteChat(chatIdToDelete);
 		alertDialogOpen = false;
 
 		if (chatIdToDelete === page.params.chatId || chatIdToDelete === chatHistory.activeChatId) {
