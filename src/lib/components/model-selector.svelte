@@ -31,7 +31,7 @@
 	);
 </script>
 
-<DropdownMenu {open} onOpenChange={(val) => (open = val)}>
+<DropdownMenu bind:open>
 	<DropdownMenuTrigger>
 		{#snippet child({ props: menuProps })}
 			<Button
