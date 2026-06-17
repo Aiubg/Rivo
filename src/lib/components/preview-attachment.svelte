@@ -6,6 +6,7 @@
 	import XIcon from '@lucide/svelte/icons/x';
 	import { getSearchSidebarContext } from '$lib/hooks/search-sidebar.svelte';
 	import { cn } from '$lib/utils/shadcn';
+	import { formatFileSize } from '$lib/utils/files';
 	import { t } from 'svelte-i18n';
 
 	let {
@@ -30,12 +31,7 @@
 		!uploading && content === undefined && contentType !== undefined && !isImageAttachment
 	);
 
-	const sizeDisplay = $derived.by(() => {
-		if (size === undefined) return '';
-		if (size < 1024) return `${size} B`;
-		if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
-		return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-	});
+	const sizeDisplay = $derived(size === undefined ? '' : formatFileSize(size));
 
 	const typeDisplay = $derived.by(() => {
 		if (!name) return '';
