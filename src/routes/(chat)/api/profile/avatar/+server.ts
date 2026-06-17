@@ -14,11 +14,10 @@ export const POST: RequestHandler = async ({ request, locals: { user } }) => {
 
 	try {
 		const formData = await request.formData();
-		const fileEntry = formData.get('file');
-		if (!(fileEntry instanceof File)) {
+		const file = formData.get('file');
+		if (!(file instanceof File)) {
 			throw error(400, 'upload.no_file_uploaded');
 		}
-		const file = fileEntry;
 		if (file.size > MAX_AVATAR_FILE_SIZE) {
 			throw error(400, 'profile.avatar_too_large');
 		}

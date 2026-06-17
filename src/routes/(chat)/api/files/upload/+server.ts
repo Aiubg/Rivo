@@ -14,12 +14,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
 	try {
 		const formData = await request.formData();
-		const fileEntry = formData.get('file');
+		const file = formData.get('file');
 
-		if (!(fileEntry instanceof File)) {
+		if (!(file instanceof File)) {
 			throw error(400, 'upload.no_file_uploaded');
 		}
-		const file = fileEntry;
 
 		if (file.size > MAX_UPLOAD_FILE_SIZE) {
 			throw error(400, 'upload.file_size_too_large');
