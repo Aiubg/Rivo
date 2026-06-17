@@ -121,26 +121,12 @@
 	});
 
 	$effect(() => {
-		if (value !== undefined) {
-			scheduleAdjustHeight();
-		}
-	});
-
-	$effect(() => {
+		void value;
 		void c;
-		scheduleAdjustHeight();
-	});
-
-	$effect(() => {
 		void minHeight;
 		void minLines;
 		void maxHeight;
-		scheduleAdjustHeight();
-	});
-
-	$effect(() => {
-		const viewportInnerHeight = innerHeight.current;
-		void viewportInnerHeight;
+		void innerHeight.current;
 		scheduleAdjustHeight();
 	});
 </script>
