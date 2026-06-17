@@ -53,13 +53,11 @@
 			'settings.color_theme_neutral'
 		);
 	});
-	const themeOptions = $derived.by(() => THEME_PRESETS);
 	const currentFontId = $derived.by(() => {
 		const current = fontPreference.value as string | undefined;
 		if (!current) return DEFAULT_FONT_PRESET_ID;
 		return isFontPresetId(current) ? current : DEFAULT_FONT_PRESET_ID;
 	});
-	const fontOptions = $derived.by(() => FONT_PRESETS);
 	const currentFontLabel = $derived.by(() => {
 		const preset = FONT_PRESETS.find((item) => item.id === currentFontId);
 		return preset?.labelKey ?? FONT_PRESETS[0]?.labelKey ?? 'settings.font_inter';
@@ -69,7 +67,6 @@
 		if (!current) return DEFAULT_FONT_SIZE_PRESET_ID;
 		return isFontSizePresetId(current) ? current : DEFAULT_FONT_SIZE_PRESET_ID;
 	});
-	const fontSizeOptions = $derived.by(() => FONT_SIZE_PRESETS);
 	const currentFontSizeLabel = $derived.by(() => {
 		const preset = FONT_SIZE_PRESETS.find((item) => item.id === currentFontSizeId);
 		return preset?.labelKey ?? FONT_SIZE_PRESETS[0]?.labelKey ?? 'settings.font_size_default';
@@ -235,7 +232,7 @@
 						align="end"
 						collisionPadding={16}
 					>
-						{#each themeOptions as option (option.id)}
+						{#each THEME_PRESETS as option (option.id)}
 							<DropdownMenu.Item
 								class="flex items-center justify-between"
 								data-theme-value={option.id}
@@ -356,7 +353,7 @@
 					align="end"
 					collisionPadding={16}
 				>
-					{#each fontOptions as option (option.id)}
+					{#each FONT_PRESETS as option (option.id)}
 						<DropdownMenu.Item
 							class="flex items-center justify-between"
 							data-font-value={option.id}
@@ -400,7 +397,7 @@
 					align="end"
 					collisionPadding={16}
 				>
-					{#each fontSizeOptions as option (option.id)}
+					{#each FONT_SIZE_PRESETS as option (option.id)}
 						<DropdownMenu.Item
 							class="flex items-center justify-between"
 							data-font-size-value={option.id}
