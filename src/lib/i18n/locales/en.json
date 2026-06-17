@@ -118,11 +118,8 @@
 		"input_aria_label": "Chat input",
 		"input_shortcuts_hint": "Press Enter to send. Press Shift+Enter for a new line.",
 		"upload_attachment": "Upload attachment",
-		"upload_attachment_hint": "Choose local files",
 		"recent_files": "Recent Files",
-		"recent_files_hint": "Use recent files",
 		"deep_thinking": "Deep thinking",
-		"deep_thinking_hint": "Use extended reasoning",
 		"deep_thinking_badge": "Thinking",
 		"disable_deep_thinking": "Turn off deep thinking",
 		"area": "Chat area",
@@ -149,7 +146,6 @@
 		"stop_output": "Stop output",
 		"resize_sidebar": "Resize sidebar",
 		"copy_link": "Copy link",
-		"open_link": "Open link",
 		"send_suggestion": "Send this question"
 	},
 	"upload": {

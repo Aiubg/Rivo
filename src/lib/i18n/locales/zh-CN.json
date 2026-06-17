@@ -118,11 +118,8 @@
 		"input_aria_label": "聊天输入框",
 		"input_shortcuts_hint": "按 Enter 发送，按 Shift+Enter 换行。",
 		"upload_attachment": "上传附件",
-		"upload_attachment_hint": "选择本地文件",
 		"recent_files": "近期文件",
-		"recent_files_hint": "使用近期文件",
 		"deep_thinking": "深度思考",
-		"deep_thinking_hint": "启用更充分的推理",
 		"deep_thinking_badge": "思考",
 		"disable_deep_thinking": "关闭深度思考",
 		"area": "聊天区域",
@@ -149,7 +146,6 @@
 		"stop_output": "停止输出",
 		"resize_sidebar": "调整侧边栏宽度",
 		"copy_link": "复制链接",
-		"open_link": "打开链接",
 		"send_suggestion": "发送此问题"
 	},
 	"upload": {
