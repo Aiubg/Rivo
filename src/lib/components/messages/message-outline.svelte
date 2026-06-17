@@ -23,40 +23,14 @@
 
 	const activeIndex = $derived(messages.findIndex((m) => m.id === activeMessageId));
 
-	function handleNavigate(id: string) {
-		onnavigate(id);
-	}
-
 	function navigatePrevious() {
-		if (activeIndex > 0) {
-			const prev = messages[activeIndex - 1];
-			if (prev) {
-				handleNavigate(prev.id);
-				return;
-			}
-		}
-		if (messages.length > 0) {
-			const first = messages[0];
-			if (first) {
-				handleNavigate(first.id);
-			}
-		}
+		const prev = messages[activeIndex - 1];
+		if (prev) onnavigate(prev.id);
 	}
 
 	function navigateNext() {
-		if (activeIndex < messages.length - 1) {
-			const next = messages[activeIndex + 1];
-			if (next) {
-				handleNavigate(next.id);
-				return;
-			}
-		}
-		if (messages.length > 0) {
-			const last = messages[messages.length - 1];
-			if (last) {
-				handleNavigate(last.id);
-			}
-		}
+		const next = messages[activeIndex + 1];
+		if (next) onnavigate(next.id);
 	}
 </script>
 
@@ -89,7 +63,7 @@
 							class="ui-focus-ring group/timeline-tick relative flex h-3 w-10 cursor-pointer items-center justify-end px-2 transition-colors duration-100 outline-none select-none disabled:cursor-not-allowed disabled:opacity-60"
 							type="button"
 							aria-label={$t('common.go_to_message')}
-							onclick={() => handleNavigate(message.id)}
+							onclick={() => onnavigate(message.id)}
 						>
 							<div
 								class="h-px rounded-full transition-all duration-150
