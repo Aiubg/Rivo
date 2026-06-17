@@ -42,19 +42,13 @@
 		userOverride = updated;
 	}
 
-	const displayName = $derived(currentUser?.displayName ?? currentUser?.email ?? user?.email ?? '');
-	const avatarSrc = $derived(currentUser?.avatarUrl ?? null);
+	const displayName = $derived(currentUser.displayName ?? currentUser.email);
+	const avatarSrc = $derived(currentUser.avatarUrl);
 	const avatarInitial = $derived(Array.from(displayName.trim())[0]?.toUpperCase() ?? 'U');
-	const handle = $derived(
-		currentUser?.email
-			? `@${currentUser.email.split('@')[0]}`
-			: user?.email
-				? `@${user.email.split('@')[0]}`
-				: ''
-	);
+	const handle = $derived(`@${currentUser.email.split('@')[0]}`);
 
 	$effect(() => {
-		if (avatarSrc === undefined) return;
+		void avatarSrc;
 		avatarLoadFailed = false;
 	});
 </script>
@@ -68,7 +62,7 @@
 						{#if avatarSrc && !avatarLoadFailed}
 							<img
 								src={avatarSrc}
-								alt={displayName ?? $t('common.user_avatar')}
+								alt={displayName}
 								width={28}
 								height={28}
 								class="aspect-square rounded-full object-cover"
@@ -79,7 +73,7 @@
 						{:else}
 							<div
 								class="bg-primary text-primary-foreground flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
-								aria-label={displayName ?? $t('common.user_avatar')}
+								aria-label={displayName}
 							>
 								{avatarInitial}
 							</div>
