@@ -3,9 +3,6 @@ import { transformMarkdownOutsideCodeFences, WORD_JOINER } from '$lib/utils/mark
 /** Custom link scheme used to carry assistant-driven actions through markdown. */
 export const ACTION_SCHEME = 'action:';
 
-/** Known action types. Extend this union when adding new action kinds. */
-export type ActionType = 'ask';
-
 export type ParsedAction = {
 	type: string;
 	payload: string;
