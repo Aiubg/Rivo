@@ -1,4 +1,4 @@
-import type { Chat as ChatClient } from '$lib/types/chat-client';
+import type { ChatStatus } from '$lib/types/chat-client';
 import type { MessagePart, UIMessageWithTree } from '$lib/types/message';
 import type { Attachment } from '$lib/types/attachment';
 import { ChatHistory } from '$lib/hooks/chat-history.svelte';
@@ -50,7 +50,7 @@ export class ChatState {
 	/** Mapping of parent message ID to selected child message ID for branching */
 	selectedMessageIds = $state<Record<string, string>>({});
 	/** Current status of the chat (ready, submitted, streaming, error) */
-	status = $state<ChatClient['status']>('ready');
+	status = $state<ChatStatus>('ready');
 	/** Current text input value */
 	input = $state('');
 	/** List of uploaded attachments */
@@ -463,37 +463,5 @@ export class ChatState {
 	 */
 	async handleSwitchBranch(parentId: string, messageId: string): Promise<void> {
 		await this.actions.handleSwitchBranch(parentId, messageId);
-	}
-
-	/**
-	 * Returns a client-compatible chat interface object.
-	 */
-	get chatClient(): ChatClient {
-		return {
-			id: this.chatId,
-			messages: this.visibleMessages,
-			status: this.status,
-			input: this.input,
-			append: async (payload) => {
-				const experimental_attachments = (payload as { experimental_attachments?: Attachment[] })
-					.experimental_attachments;
-				await this.handleSubmit(undefined, {
-					content: payload.content,
-					experimental_attachments
-				});
-			},
-			reload: async () => {
-				const lastUserMessage = [...this.visibleMessages].reverse().find((m) => m.role === 'user');
-				if (lastUserMessage) {
-					await this.handleSubmit(undefined, {
-						regenerateMessageId: lastUserMessage.id
-					});
-				}
-			},
-			handleSubmit: (event, options) => this.handleSubmit(event, options),
-			stop: () => {
-				void this.stop();
-			}
-		};
 	}
 }
