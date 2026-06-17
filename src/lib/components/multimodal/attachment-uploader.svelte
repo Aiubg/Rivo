@@ -88,10 +88,6 @@
 			navigator.userAgent.toUpperCase().includes('MAC'));
 	const modifier = $derived(isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win'));
 
-	function isImageFile(file: File): boolean {
-		return isUploadImageFile(file);
-	}
-
 	function openUploadPicker() {
 		fileInputRef?.click();
 		menuOpen = false;
@@ -103,13 +99,13 @@
 		if (allowedFiles.length !== files.length) {
 			toast.error(get(t)('upload.file_type_not_allowed'));
 		}
-		const imageFiles = allowedFiles.filter((file) => isImageFile(file));
+		const imageFiles = allowedFiles.filter((file) => isUploadImageFile(file));
 		const blockedByVision = !supportsVisionInput && imageFiles.length > 0;
 		if (blockedByVision) {
 			toast.error(get(t)('models.vision_not_supported'));
 		}
 		const acceptedFiles = blockedByVision
-			? allowedFiles.filter((file) => !isImageFile(file))
+			? allowedFiles.filter((file) => !isUploadImageFile(file))
 			: allowedFiles;
 		if (acceptedFiles.length > 0) {
 			onchange(acceptedFiles);
