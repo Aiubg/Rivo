@@ -2,7 +2,6 @@
 	import { Tooltip, TooltipContent, TooltipTrigger } from '$lib/components/ui/tooltip';
 	import { cn } from '$lib/utils/shadcn';
 	import { copyToClipboard } from '$lib/utils/misc';
-	import { logger } from '$lib/utils/logger';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import ArrowUpRightIcon from '@lucide/svelte/icons/arrow-up-right';
@@ -23,17 +22,13 @@
 	let copyTimer: ReturnType<typeof setTimeout> | null = null;
 
 	async function handleCopy() {
-		try {
-			const success = await copyToClipboard(href);
-			if (!success) return;
-			copied = true;
-			if (copyTimer) clearTimeout(copyTimer);
-			copyTimer = setTimeout(() => {
-				copied = false;
-			}, 1500);
-		} catch (e) {
-			logger.error('Failed to copy link', e);
-		}
+		const success = await copyToClipboard(href);
+		if (!success) return;
+		copied = true;
+		if (copyTimer) clearTimeout(copyTimer);
+		copyTimer = setTimeout(() => {
+			copied = false;
+		}, 1500);
 	}
 </script>
 
