@@ -4,16 +4,11 @@
 	import * as Kbd from '$lib/components/ui/kbd';
 	import { t } from 'svelte-i18n';
 	import XIcon from '@lucide/svelte/icons/x';
+	import { isMacPlatform } from '$lib/utils/misc';
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
 
-	const isMac =
-		typeof navigator !== 'undefined' &&
-		((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform
-			?.toUpperCase()
-			.includes('MAC') ??
-			navigator.userAgent.toUpperCase().includes('MAC'));
-	const modifier = isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win');
+	const modifier = isMacPlatform() ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win');
 
 	const shortcuts = $derived([
 		{ label: $t('common.new_chat'), keys: [modifier, $t('shortcuts.shift'), 'O'] },

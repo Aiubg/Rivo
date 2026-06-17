@@ -7,6 +7,7 @@
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { isMacPlatform } from '$lib/utils/misc';
 
 	const newChatTrigger = NewChatTrigger.fromContext();
 	const settingsState = SettingsState.fromContext();
@@ -18,11 +19,7 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (isMobile.current) return;
 
-		const isMac =
-			(navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform
-				?.toUpperCase()
-				.includes('MAC') ?? navigator.userAgent.toUpperCase().includes('MAC');
-		const modifier = isMac ? event.metaKey : event.ctrlKey;
+		const modifier = isMacPlatform() ? event.metaKey : event.ctrlKey;
 
 		// New Chat: Cmd/Ctrl + Shift + O
 		if (modifier && event.shiftKey && event.key.toLowerCase() === 'o') {

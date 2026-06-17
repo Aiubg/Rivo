@@ -24,6 +24,7 @@
 	import SidebarToggle from '$lib/components/sidebar-toggle.svelte';
 	import * as Kbd from '$lib/components/ui/kbd';
 	import { page } from '$app/state';
+	import { isMacPlatform } from '$lib/utils/misc';
 	let { user }: { user: User | undefined } = $props();
 
 	const context = useSidebar();
@@ -31,13 +32,7 @@
 	const chatHistory = ChatHistory.fromContext();
 	const chatSearch = getChatSearchContext();
 
-	const isMac =
-		typeof navigator !== 'undefined' &&
-		((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform
-			?.toUpperCase()
-			.includes('MAC') ??
-			navigator.userAgent.toUpperCase().includes('MAC'));
-	const modifier = isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win');
+	const modifier = isMacPlatform() ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win');
 	const isFilesPage = $derived(page.url.pathname === '/files');
 	const shortcutClass =
 		'ms-auto opacity-0 transition-opacity group-hover/menu-item:opacity-100 group-data-[collapsible=icon]:hidden';

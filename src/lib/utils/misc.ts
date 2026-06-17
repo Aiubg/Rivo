@@ -19,6 +19,19 @@ export function randomId() {
 }
 
 /**
+ * Detects whether the current browser runs on macOS, preferring the modern
+ * userAgentData.platform and falling back to the userAgent string.
+ */
+export function isMacPlatform() {
+	if (typeof navigator === 'undefined') return false;
+	const platform = (navigator as Navigator & { userAgentData?: { platform?: string } })
+		.userAgentData?.platform;
+	return (
+		platform?.toUpperCase().includes('MAC') ?? navigator.userAgent.toUpperCase().includes('MAC')
+	);
+}
+
+/**
  * Copies text to the clipboard using the modern API or a fallback.
  */
 export async function copyToClipboard(text: string) {

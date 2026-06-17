@@ -42,6 +42,7 @@
 		isAllowedUploadFile,
 		isUploadImageFile
 	} from '$lib/utils/upload-constraints';
+	import { isMacPlatform } from '$lib/utils/misc';
 
 	let {
 		disabled = false,
@@ -80,12 +81,7 @@
 	);
 	const RECENT_FILES_LIMIT = 5;
 	const RECENT_FILES_TTL_MS = 15_000;
-	const isMac =
-		typeof navigator !== 'undefined' &&
-		((navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform
-			?.toUpperCase()
-			.includes('MAC') ??
-			navigator.userAgent.toUpperCase().includes('MAC'));
+	const isMac = isMacPlatform();
 	const modifier = $derived(isMac ? $t('shortcuts.modifier_mac') : $t('shortcuts.modifier_win'));
 
 	function openUploadPicker() {
