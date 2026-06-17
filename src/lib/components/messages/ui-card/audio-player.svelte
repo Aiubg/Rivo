@@ -12,17 +12,9 @@
 		artist?: string;
 		coverUrl?: string;
 		sourceUrl?: string;
-		duration?: string;
 	};
 
-	let {
-		audioUrl,
-		title,
-		artist,
-		coverUrl,
-		sourceUrl,
-		duration: _durationLabel
-	}: AudioPlayerProps = $props();
+	let { audioUrl, title, artist, coverUrl, sourceUrl }: AudioPlayerProps = $props();
 
 	let audio = $state<HTMLAudioElement>();
 	let paused = $state(true);
@@ -196,7 +188,7 @@
 			/>
 			<div class="text-muted-foreground flex justify-between px-1 text-xs font-medium">
 				<span>{formatTime(currentTime)}</span>
-				<span>{formatTime(duration) || '0:00'}</span>
+				<span>{formatTime(duration)}</span>
 			</div>
 		</div>
 	</div>

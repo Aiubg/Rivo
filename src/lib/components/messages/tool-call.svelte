@@ -62,7 +62,6 @@
 	const playerArtist = $derived(readStringValue(playerCard, 'artist'));
 	const playerSourceUrl = $derived(readStringValue(playerCard, 'sourceUrl'));
 	const playerCoverUrl = $derived(readStringValue(playerCard, 'coverUrl'));
-	const playerDuration = $derived(readStringValue(playerCard, 'duration'));
 	const uiCardError = $derived(readStringValue(cardResult, 'error'));
 	const hasUiCardError = $derived(isUiCardTool && uiCardError.length > 0);
 
@@ -235,7 +234,6 @@
 				artist={playerArtist}
 				coverUrl={playerCoverUrl}
 				sourceUrl={playerSourceUrl}
-				duration={playerDuration}
 			/>
 		</div>
 	{/if}
