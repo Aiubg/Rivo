@@ -255,35 +255,37 @@ export class ChatHistory {
 		this.syncTransientState();
 	};
 
-	/**
-	 * Updates the title of a chat both locally and on the server.
-	 */
-	updateTitle = async (chatId: string, title: string) => {
+	private patchChat = async (
+		chatId: string,
+		patch: Partial<Chat>,
+		endpoint: string,
+		errorMessage: string
+	) => {
 		const previousChats = this.chats;
-		this.chats = this.chats.map((chat) => (chat.id === chatId ? { ...chat, title } : chat));
+		this.chats = this.chats.map((chat) => (chat.id === chatId ? { ...chat, ...patch } : chat));
 
 		this.#updateControllers.get(chatId)?.abort();
 		const controller = new AbortController();
 		this.#updateControllers.set(chatId, controller);
 
 		try {
-			const res = await fetchWithTimeout('/api/chat/title', {
+			const res = await fetchWithTimeout(endpoint, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ chatId, title }),
+				body: JSON.stringify({ chatId, ...patch }),
 				timeout: 5000,
 				retries: 1,
 				signal: controller.signal
 			});
 			if (!res.ok) {
-				logger.error('Failed to update chat title', { chatId, title });
+				logger.error(errorMessage, { chatId, ...patch });
 				await this.refetch();
 			}
 		} catch (error) {
 			if ((error as Error).name === 'AbortError') return;
-			logger.error('Failed to update chat title', error);
+			logger.error(errorMessage, error);
 			this.chats = previousChats;
 		} finally {
 			if (this.#updateControllers.get(chatId) === controller) {
@@ -291,43 +293,18 @@ export class ChatHistory {
 			}
 		}
 	};
+
+	/**
+	 * Updates the title of a chat both locally and on the server.
+	 */
+	updateTitle = (chatId: string, title: string) =>
+		this.patchChat(chatId, { title }, '/api/chat/title', 'Failed to update chat title');
 
 	/**
 	 * Updates the pinned status of a chat both locally and on the server.
 	 */
-	updatePinned = async (chatId: string, pinned: boolean) => {
-		const previousChats = this.chats;
-		this.chats = this.chats.map((chat) => (chat.id === chatId ? { ...chat, pinned } : chat));
-
-		this.#updateControllers.get(chatId)?.abort();
-		const controller = new AbortController();
-		this.#updateControllers.set(chatId, controller);
-
-		try {
-			const res = await fetchWithTimeout('/api/chat/pinned', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ chatId, pinned }),
-				timeout: 5000,
-				retries: 1,
-				signal: controller.signal
-			});
-			if (!res.ok) {
-				logger.error('Failed to update chat pinned status', { chatId, pinned });
-				await this.refetch();
-			}
-		} catch (error) {
-			if ((error as Error).name === 'AbortError') return;
-			logger.error('Failed to update chat pinned status', error);
-			this.chats = previousChats;
-		} finally {
-			if (this.#updateControllers.get(chatId) === controller) {
-				this.#updateControllers.delete(chatId);
-			}
-		}
-	};
+	updatePinned = (chatId: string, pinned: boolean) =>
+		this.patchChat(chatId, { pinned }, '/api/chat/pinned', 'Failed to update chat pinned status');
 
 	/**
 	 * Deletes a chat record both locally and on the server.
