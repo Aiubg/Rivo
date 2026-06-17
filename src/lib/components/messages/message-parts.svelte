@@ -38,12 +38,7 @@
 
 	const hasTextPart = $derived(
 		Array.isArray(message.parts) &&
-			message.parts.some((part) => {
-				const p = part as { type?: string };
-				const rawText = (p as { text?: string }).text;
-				const text = typeof rawText === 'string' ? rawText.trim() : '';
-				return p?.type === 'text' && text.length > 0;
-			})
+			message.parts.some((part) => part.type === 'text' && (part.text ?? '').trim().length > 0)
 	);
 
 	const messageCitations = $derived.by(() => {
@@ -96,22 +91,11 @@
 			} else if (isTool) {
 				flushReasoning();
 				currentToolGroup.push(p);
-			} else if (p.type === 'text') {
+			} else {
 				flushReasoning();
 				flushTools();
 				groups.push({
 					type: 'text',
-					text: typeof p.text === 'string' ? p.text : '',
-					part: p
-				});
-			} else {
-				// For other types, we might want to keep them as is or treat as reasoning if appropriate
-				// For now, let's treat unknown types as separate to avoid breaking things
-				flushReasoning();
-				flushTools();
-				// We'll just push it as a special group or handle it in the each loop
-				groups.push({
-					type: 'text', // fallback to text-like rendering if unknown
 					text: typeof p.text === 'string' ? p.text : '',
 					part: p
 				});
