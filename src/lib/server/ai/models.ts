@@ -65,11 +65,6 @@ export const myProvider = {
 			throw new Error(`Unknown model id: ${id}`);
 		}
 
-		const providerFn = providers[registryItem.provider];
-		if (!providerFn) {
-			throw new Error(`Unsupported provider: ${registryItem.provider} for model ${id}`);
-		}
-
-		return providerFn(registryItem.model);
+		return providers[registryItem.provider](registryItem.model);
 	}
 };

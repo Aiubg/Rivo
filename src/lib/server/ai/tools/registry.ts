@@ -18,10 +18,6 @@ const records: ToolRecord[] = [
 
 const toolByName = new Map(records.map((tool) => [tool.definition.name, tool]));
 
-function isToolEnabledForModel(tool: ToolRecord, modelId: string): boolean {
-	return !!getModelRegistryItem(modelId) && toolByName.get(tool.definition.name) === tool;
-}
-
 export const ToolRegistry = {
 	list(): ToolRecord[] {
 		return records;
@@ -32,12 +28,10 @@ export const ToolRegistry = {
 	},
 
 	listForModel(modelId: string): ToolRecord[] {
-		return records.filter((t) => isToolEnabledForModel(t, modelId));
+		return getModelRegistryItem(modelId) ? records : [];
 	},
 
 	isEnabledForModel(toolName: string, modelId: string): boolean {
-		const tool = this.get(toolName);
-		if (!tool) return false;
-		return isToolEnabledForModel(tool, modelId);
+		return !!this.get(toolName) && !!getModelRegistryItem(modelId);
 	}
 };
