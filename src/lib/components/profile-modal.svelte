@@ -35,15 +35,13 @@
 
 	const avatarInputId = `profile-avatar-${Math.random().toString(36).slice(2)}`;
 	const trimmedDisplayName = $derived(displayName.trim());
-	const fallbackName = $derived(trimmedDisplayName || user?.email || 'U');
-	const avatarSrc = $derived(avatarUrl ?? null);
+	const fallbackName = $derived(trimmedDisplayName || user.email);
 	const avatarInitial = $derived(Array.from(fallbackName.trim())[0]?.toUpperCase() ?? 'U');
 	const isDirty = $derived(
 		trimmedDisplayName !== originalDisplayName.trim() || avatarUrl !== originalAvatarUrl
 	);
 
 	async function loadProfile() {
-		if (!user) return;
 		loading = true;
 		try {
 			const res = await fetchWithTimeout('/api/profile', { timeout: 10000, retries: 1 });
@@ -135,7 +133,7 @@
 	});
 
 	$effect(() => {
-		if (avatarSrc === undefined) return;
+		void avatarUrl;
 		avatarLoadFailed = false;
 	});
 </script>
@@ -164,9 +162,9 @@
 				<div class="flex flex-col gap-6">
 					<div class="flex flex-col items-center gap-4">
 						<div class="group relative overflow-hidden rounded-full">
-							{#if avatarSrc && !avatarLoadFailed}
+							{#if avatarUrl && !avatarLoadFailed}
 								<img
-									src={avatarSrc}
+									src={avatarUrl}
 									alt={fallbackName}
 									width={96}
 									height={96}
