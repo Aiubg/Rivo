@@ -118,12 +118,6 @@
 	}
 
 	onMount(() => {
-		if (window.matchMedia('(min-width: 768px)').matches && shouldShowOutline) {
-			void loadMessageOutline();
-		}
-	});
-
-	onMount(() => {
 		enableIntro = true;
 		if (containerRef && messages.length > 0) {
 			containerRef.scrollTop = containerRef.scrollHeight;
