@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { logger } from '$lib/utils/logger';
 	import { cn } from '$lib/utils/shadcn';
 	import { Button } from '$lib/components/ui/button';
 	import MessageActions from '$lib/components/messages/message-actions.svelte';
@@ -67,18 +66,13 @@
 	}
 
 	async function handleCopy() {
-		try {
-			const text = extractTextFromMessage(message);
-			const success = await copyToClipboard(text);
-			if (success) {
-				copiedIndex = 999;
-				setTimeout(() => {
-					if (copiedIndex === 999) copiedIndex = null;
-				}, 1500);
-			}
-		} catch (e) {
-			logger.error('Failed to copy text', e);
-		}
+		const text = extractTextFromMessage(message);
+		const success = await copyToClipboard(text);
+		if (!success) return;
+		copiedIndex = 999;
+		setTimeout(() => {
+			if (copiedIndex === 999) copiedIndex = null;
+		}, 1500);
 	}
 
 	async function handleEdit() {
